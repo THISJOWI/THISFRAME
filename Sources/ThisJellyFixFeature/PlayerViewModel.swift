@@ -151,6 +151,9 @@ final class PlayerViewModel {
     func configureNowPlaying(title: String) {
         guard !nowPlayingActive else { return }
         nowPlayingActive = true
+        // This player owns Handoff from mount until stop: browsing must yield
+        // so the Mac Dock advertises the PLAYING activity, not browsing.
+        HandoffCenter.shared.setPlaybackActive(true)
         nowPlayingSession = NowPlayingController.shared.activate(title: title, duration: duration)
         if let serverURL, let itemId {
             let artwork = URL(string: "\(serverURL.absoluteString)/Items/\(itemId)/Images/Primary?maxWidth=400&quality=90")
@@ -988,12 +991,14 @@ final class PlayerViewModel {
         stopUpdating()
         engineStopped = true
         // Playback is over (not a PiP handoff — that never reaches stopSync):
-        // clear the lock screen and stop answering remote commands.
+        // clear the lock screen, stop answering remote commands and hand
+        // Handoff back to the browsing activity.
         if nowPlayingActive {
             nowPlayingActive = false
             NowPlayingController.shared.deactivate(session: nowPlayingSession)
             nowPlayingSession = nil
         }
+        HandoffCenter.shared.setPlaybackActive(false)
     }
 
     // MARK: - Picture in Picture (iOS)

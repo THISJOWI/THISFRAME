@@ -57,6 +57,7 @@ struct DirectPlayer: View {
                     serverURL: serverURL,
                     token: token,
                     userId: userId,
+                    mediaType: item.type,
                     playSessionId: playSessionId,
                     mediaStreams: mediaStreams,
                     nextEpisode: nextEpisode,

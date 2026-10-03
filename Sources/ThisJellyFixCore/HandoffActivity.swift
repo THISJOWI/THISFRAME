@@ -60,6 +60,11 @@ public enum HandoffActivity {
             Key.title:     item.name,
             Key.mediaType: item.type,
         ]
+        // The system may deliver userInfo STRIPPED without these (cold launch
+        // then receives an empty payload and "nothing happens"); the target id
+        // routes the continuation to the right scene instead of a bare launch.
+        activity.requiredUserInfoKeys = [Key.itemId, Key.serverURL]
+        activity.targetContentIdentifier = targetIdentifier(serverURL: serverURL, itemId: item.id)
         return activity
     }
 
@@ -83,7 +88,14 @@ public enum HandoffActivity {
             Key.userId:    userId,
             Key.position:  position,
         ]
+        activity.requiredUserInfoKeys = [Key.itemId, Key.serverURL]
+        activity.targetContentIdentifier = targetIdentifier(serverURL: serverURL, itemId: item.id)
         return activity
+    }
+
+    /// Stable identifier for the content this activity represents.
+    private static func targetIdentifier(serverURL: URL, itemId: String) -> String {
+        "\(serverURL.absoluteString)/\(Key.itemId)/\(itemId)"
     }
 }
 

@@ -51,6 +51,13 @@ struct DetailView: View {
 
     private static let episodesAnchor = "episodes"
 
+    /// Media type of what is actually playing: an episode swap changes
+    /// `currentItemId` away from the navigated item (series → episode).
+    private var playingMediaType: String {
+        if let currentItemId, currentItemId != item.id { return "Episode" }
+        return detail?.type ?? item.type
+    }
+
     var body: some View {
         #if os(macOS)
         ZStack {
@@ -83,6 +90,7 @@ struct DetailView: View {
                     serverURL: serverURL,
                     token: token,
                     userId: userId,
+                    mediaType: playingMediaType,
                     playSessionId: currentPlaySessionId,
                     mediaStreams: currentMediaStreams,
                     nextEpisode: nextEpisode,
@@ -113,6 +121,7 @@ struct DetailView: View {
                         serverURL: serverURL,
                         token: token,
                         userId: userId,
+                        mediaType: playingMediaType,
                         playSessionId: currentPlaySessionId,
                         mediaStreams: currentMediaStreams,
                         nextEpisode: nextEpisode,

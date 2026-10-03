@@ -42,6 +42,9 @@ struct PlayerView: View {
     var serverURL: URL? = nil
     var token: String? = nil
     var userId: String? = nil
+    /// Jellyfin media type of the playing item ("Movie", "Episode", …) —
+    /// carried into the Handoff payload so the receiver knows what it is.
+    var mediaType: String = ""
     var playSessionId: String? = nil
     // Server media streams — needed to load external subtitle files
     var mediaStreams: [MediaStream] = []
@@ -87,6 +90,7 @@ struct PlayerView: View {
         serverURL: URL? = nil,
         token: String? = nil,
         userId: String? = nil,
+        mediaType: String = "",
         playSessionId: String? = nil,
         mediaStreams: [MediaStream] = [],
         nextEpisode: JellyfinEpisode? = nil,
@@ -102,6 +106,7 @@ struct PlayerView: View {
         self.serverURL = serverURL
         self.token = token
         self.userId = userId
+        self.mediaType = mediaType
         self.playSessionId = playSessionId
         self.mediaStreams = mediaStreams
         self.nextEpisode = nextEpisode
@@ -459,7 +464,7 @@ struct PlayerView: View {
             isActive: itemId != nil && serverURL != nil && userId != nil
         ) { activity in
             guard let itemId, let serverURL, let userId else { return }
-            let handoffItem = HandoffMediaItem(id: itemId, name: title, type: "")
+            let handoffItem = HandoffMediaItem(id: itemId, name: title, type: mediaType)
             let built = HandoffActivity.playingActivity(
                 item: handoffItem,
                 serverURL: serverURL,

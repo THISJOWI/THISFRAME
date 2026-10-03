@@ -33,9 +33,13 @@ struct HomeView: View {
                 #endif
         }
         // Publish a Handoff activity so the user can continue browsing on
-        // another Apple device. The activity is always active while this
-        // view is visible; the system picks it up via Bluetooth/Wi-Fi.
-        .userActivity(HandoffActivity.browsing) { activity in
+        // another Apple device. YIELDS while playback owns Handoff — two
+        // eligible activities competing is how the Mac Dock advertised
+        // "browsing" (a no-op handler on macOS) instead of "playing".
+        .userActivity(
+            HandoffActivity.browsing,
+            isActive: HandoffCenter.shared.shouldPublishBrowsing
+        ) { activity in
             activity.title = "Explorando la biblioteca"
             activity.isEligibleForHandoff = true
             activity.isEligibleForSearch  = false
