@@ -63,6 +63,9 @@ struct PlayerView: View {
     @State private var seekIndicator: SeekIndicator?
     @State private var controlsTimer: Timer?
     @State private var wasPlaying = false
+    /// The system route sheet is on screen: the host view must not unmount
+    /// (dead picker) and control toggles must not race its presentation.
+    @State private var isRouteSheetPresenting = false
     /// In-flight playback work. Untracked tasks kept running after the player
     /// was dismissed and called `engine.play()` on a stopped engine — audio with
     /// no UI. Cancelled in `onDisappear`.
@@ -220,6 +223,10 @@ struct PlayerView: View {
                         viewModel.setFill(!viewModel.isFill)
                     }
                     .onTapGesture {
+                        // A6: taps while the route sheet is up must never
+                        // toggle controls — unmounting ControlsOverlay mid-
+                        // presentation is what left AVRoutePickerView dead.
+                        guard !isRouteSheetPresenting else { return }
                         withAnimation(.easeInOut(duration: 0.2)) {
                             viewModel.showControls.toggle()
                         }
@@ -264,6 +271,7 @@ struct PlayerView: View {
                             #endif
                         },
                         onAirPlayPresenting: { presenting in
+                            isRouteSheetPresenting = presenting
                             if presenting {
                                 // System route sheet up: freeze auto-hide so
                                 // this overlay (the picker's host view) can't
