@@ -14,11 +14,21 @@ final class IntegrationConfigTests: XCTestCase {
         defaults = UserDefaults(suiteName: suiteName)
         keychain = InMemoryKeychain()
         config = IntegrationConfig(defaults: defaults, keychain: keychain)
+        clearStandardURLKeys()
     }
 
     override func tearDown() {
         defaults.removePersistentDomain(forName: suiteName)
+        // Setters also mirror URLs into UserDefaults.standard (that is what
+        // @AppStorage reads). The test host's standard domain persists across
+        // runs, so without clearing it `testEmptyByDefault` failed on run 2+.
+        clearStandardURLKeys()
         super.tearDown()
+    }
+
+    private func clearStandardURLKeys() {
+        UserDefaults.standard.removeObject(forKey: IntegrationConfig.DefaultsKey.radarrURL)
+        UserDefaults.standard.removeObject(forKey: IntegrationConfig.DefaultsKey.sonarrURL)
     }
 
     // MARK: - Empty by default
