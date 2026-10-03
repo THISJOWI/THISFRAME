@@ -1,17 +1,53 @@
 import Foundation
+import OSLog
 
 // MARK: - Debug Logging
 
-/// Debug logger: writes to stdout (Xcode console, including physical devices)
-/// and to a capped file in `NSTemporaryDirectory()/tjf_playback.log`.
+/// Console routing: which OSLog category a TJFLog line belongs to, so
+/// `log stream --predicate 'category == "airplay"'` can isolate one flow.
+public enum TJFLogCategory: String, Sendable, Equatable {
+    case airplay
+    case handoff
+    case playback
+    case network
+    case general
+}
+
+/// Pure keyword→category mapping (unit-tested). Order matters: the first
+/// rule whose keywords appear wins.
+public enum TJFLogRouting {
+    private static let rules: [(keywords: [String], category: TJFLogCategory)] = [
+        (["airplay", "audio session"], .airplay),
+        (["handoff", "useractivity"], .handoff),
+        (["extsubs", "segments fetch", "keychain", "http "], .network),
+        (["prepare:", "engine ", "report", "pip", "subtitles", "timer", "seek", "tracks", "langpref", "skip"], .playback),
+    ]
+
+    public static func category(for message: String) -> TJFLogCategory {
+        let lower = message.lowercased()
+        for rule in rules where rule.keywords.contains(where: { lower.contains($0) }) {
+            return rule.category
+        }
+        return .general
+    }
+}
+
+/// Debug logger: writes to stdout (Xcode console, including physical devices),
+/// to the unified log (Console.app / `log stream`, subsystem
+/// `com.thisjellyfix`, category from `TJFLogRouting`) and to a capped file in
+/// `NSTemporaryDirectory()/tjf_playback.log`.
 ///
 /// Every line passes through `redactSecrets(_:)` first: Jellyfin stream URLs
 /// and PlaybackInfo bodies carry `api_key`/`AccessToken`, and those used to be
 /// written verbatim to disk and stdout.
 public func TJFLog(_ message: String) {
-    let line = "[TJF \(TJFLogClock.timestamp())] \(TJFLogSanitizer.redactSecrets(message))"
+    let redacted = TJFLogSanitizer.redactSecrets(message)
+    let line = "[TJF \(TJFLogClock.timestamp())] \(redacted)"
     print(line)
     TJFLogFile.append(line)
+    let category = TJFLogRouting.category(for: message)
+    Logger(subsystem: "com.thisjellyfix", category: category.rawValue)
+        .info("\(redacted, privacy: .public)")
 }
 
 /// Location of the rolling playback log, for the in-app "share diagnostics"
