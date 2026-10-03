@@ -288,6 +288,31 @@ struct PlayerView: View {
                 }
             }
 
+            // AirPlay status: connecting (transport blocked) or last failure.
+            .overlay(alignment: .top) {
+                #if !os(visionOS)
+                if viewModel.isAirPlayConnecting {
+                    Label("Conectando AirPlay…", systemImage: "airplayvideo")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(.black.opacity(0.6), in: Capsule())
+                        .padding(.top, 56)
+                        .transition(.opacity)
+                } else if let message = viewModel.airplayMessage {
+                    Label(message, systemImage: "airplay.exclamationmark")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(.red.opacity(0.75), in: Capsule())
+                        .padding(.top, 56)
+                        .transition(.opacity)
+                }
+                #endif
+            }
+
             // Seek/buffering feedback — the transport is working even though
             // the picture hasn't caught up yet.
             .overlay {

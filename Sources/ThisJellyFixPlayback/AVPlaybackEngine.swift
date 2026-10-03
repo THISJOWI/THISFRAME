@@ -38,6 +38,19 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     #if os(iOS)
     private var routeObserver: NSObjectProtocol?
     #endif
+    #if !os(visionOS)
+    // AirPlay route lifecycle (pure machine, unit-tested in PlaybackTests).
+    private let airplayLock = NSLock()
+    private var _routeState = AirPlayRouteState()
+    /// 10 s deadline from route selection to `isExternalPlaybackActive`.
+    private var airplayTimeout: DispatchWorkItem?
+    public var onRouteStateChanged: ((AirPlayRouteState) -> Void)?
+    public var routeState: AirPlayRouteState {
+        airplayLock.lock()
+        defer { airplayLock.unlock() }
+        return _routeState
+    }
+    #endif
     private var audioGroup: AVMediaSelectionGroup?
     private var legibleGroup: AVMediaSelectionGroup?
     /// The VM's legible choice (-1 = off/external-overlay). Re-asserted when
@@ -80,6 +93,9 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
             NotificationCenter.default.removeObserver(routeObserver)
         }
         #endif
+        #if !os(visionOS)
+        airplayTimeout?.cancel()
+        #endif
     }
 
     // MARK: - PlaybackEngine
@@ -98,6 +114,15 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         // AirPlay video only carries MP4/HLS-class streams; a raw MKV URL
         // makes route selection a silent no-op.
         TJFLog("prepare: ext=\(request.streamURL.pathExtension.isEmpty ? "-" : request.streamURL.pathExtension) path=\(request.streamURL.path.suffix(70))")
+
+        #if !os(visionOS)
+        // A pending AirPlay handoff dies with the item swap — surface it
+        // instead of silently reverting to local playback (A7).
+        if routeState.isConnecting {
+            TJFLog("airplay: item replaced while connecting — handoff aborted")
+        }
+        airplayApply { $0.noteItemReplaced() }
+        #endif
 
         let item = AVPlayerItem(url: request.streamURL)
         // Keep the previous frame until the new one decodes — no black flash
@@ -131,6 +156,10 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         clearItemObservations()
         generation += 1 // orphan any in-flight track load
         player.replaceCurrentItem(with: nil)
+        #if !os(visionOS)
+        // Teardown kills any pending/active handoff state.
+        airplayApply { $0.reset() }
+        #endif
         stateLock.lock()
         _audioOptions = []
         _subtitleOptions = []
@@ -287,23 +316,87 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         // the player (discovery/connection); if it fires but there is no
         // picture, the stream format is the suspect.
         playerObservations.append(
-            player.observe(\.isExternalPlaybackActive, options: [.new]) { player, _ in
-                TJFLog("airplay: externalPlaybackActive=\(player.isExternalPlaybackActive) rate=\(player.rate)")
+            player.observe(\.isExternalPlaybackActive, options: [.new]) { [weak self] player, _ in
+                let active = player.isExternalPlaybackActive
+                TJFLog("airplay: externalPlaybackActive=\(active) rate=\(player.rate)")
+                self?.airplayApply { machine in
+                    if active {
+                        machine.externalPlaybackChanged(true)
+                    } else {
+                        // Active → false: receiver went away. While still
+                        // connecting this is a no-op (keep waiting).
+                        machine.noteRouteLost()
+                    }
+                }
             }
         )
         #endif
         #if os(iOS)
-        // Route changes (audio side of AirPlay) as a second signal.
+        // Route changes (audio side of AirPlay) as a second signal. A new
+        // device appearing is the only public signal that a SELECTION happened
+        // (the picker delegate never reports the chosen route) — it arms the
+        // connection phase and its 10 s timeout.
         routeObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.routeChangeNotification,
             object: nil,
             queue: nil
-        ) { note in
+        ) { [weak self] note in
             let raw = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt).map(String.init) ?? "?"
             TJFLog("airplay: audio route change reason=\(raw)")
+            guard let self else { return }
+            // 4 = .newDeviceAvailable
+            if raw == "4" {
+                let name = AVAudioSession.sharedInstance().currentRoute.outputs.first?.portName ?? "AirPlay"
+                TJFLog("airplay: new device → connecting to \(name)")
+                self.noteRouteSelected(name: name)
+            }
         }
         #endif
     }
+
+    #if !os(visionOS)
+    /// A receiver was picked → connection window opens (10 s deadline).
+    /// Called from the iOS route-change observer; on macOS the public APIs do
+    /// not expose "which route was chosen", so the machine only tracks
+    /// active/idle transitions there (logged either way).
+    public func noteRouteSelected(name: String) {
+        airplayApply { $0.routeSelected(name: name) }
+        airplayTimeout?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            TJFLog("airplay: connect TIMEOUT after 10 s (\(self.routeState.selectedRouteName ?? "?"))")
+            self.airplayApply { $0.timedOut() }
+        }
+        airplayTimeout = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: work)
+    }
+
+    /// Mutate the machine under lock, log the transition, notify on main.
+    private func airplayApply(_ body: (inout AirPlayRouteState) -> Void) {
+        airplayLock.lock()
+        let before = _routeState
+        body(&_routeState)
+        let after = _routeState
+        airplayLock.unlock()
+        guard before != after else { return }
+        if case .connecting(let name) = after.phase {
+            TJFLog("airplay: phase=connecting route=\(name)")
+        } else if case .failed(let reason) = after.phase {
+            TJFLog("airplay: phase=failed reason=\(reason)")
+        } else {
+            TJFLog("airplay: phase=\(String(describing: after.phase))")
+        }
+        // Settle the timeout bookkeeping for terminal transitions.
+        if case .connecting = after.phase {} else { airplayTimeout?.cancel(); airplayTimeout = nil }
+        if Thread.isMainThread {
+            onRouteStateChanged?(after)
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                self?.onRouteStateChanged?(after)
+            }
+        }
+    }
+    #endif
 
     private func observe(item: AVPlayerItem, generation gen: Int) {
         itemObservations.append(

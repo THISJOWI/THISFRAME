@@ -109,6 +109,19 @@ final class PlayerViewModel {
     private var nowPlayingActive = false
     private var nowPlayingSession: Int?
 
+    #if !os(visionOS)
+    // MARK: - AirPlay route state
+    /// Latest phase from the engine's route machine; nil until first event.
+    private(set) var airplayPhase: AirPlayRouteState.Phase?
+    /// True while a receiver handoff is negotiating (transport blocked).
+    var isAirPlayConnecting: Bool {
+        if case .connecting = airplayPhase { return true }
+        return false
+    }
+    /// Transient status line: connection failure shown until the next event.
+    var airplayMessage: String?
+    #endif
+
     init(
         engine: AVPlaybackEngine = AVPlaybackEngine(),
         segmentClient: any JellyfinSegmentProviding = JellyfinSegmentClient()
@@ -122,6 +135,13 @@ final class PlayerViewModel {
                 self?.handleEngineState(state)
             }
         }
+        #if !os(visionOS)
+        engine.onRouteStateChanged = { [weak self] state in
+            Task { @MainActor in
+                self?.handleRouteState(state)
+            }
+        }
+        #endif
         // Lock-screen / headphone remote commands → the same VM entry points.
         let np = NowPlayingController.shared
         np.onPlay = { [weak self] in
@@ -177,6 +197,33 @@ final class PlayerViewModel {
             break
         }
     }
+
+    #if !os(visionOS)
+    /// AirPlay route machine → UI state. During a connect window the timer's
+    /// `timeControlStatus` sampling makes the screen FLICKER to "paused";
+    /// the phase (not the sample) is what the status line and transport guard
+    /// follow.
+    private func handleRouteState(_ state: AirPlayRouteState) {
+        airplayPhase = state.phase
+        switch state.phase {
+        case .connecting(let name):
+            airplayMessage = nil
+            TJFLog("airplay: vm connecting route=\(name)")
+        case .active:
+            airplayMessage = nil
+            // Ground truth from AVPlayer — resync whatever the timer guessed.
+            isPlaying = engine.isPlaying
+            TJFLog("airplay: vm external active isPlaying=\(isPlaying)")
+        case .failed(let reason):
+            airplayMessage = reason
+            // Local playback never stopped; make the UI reflect that.
+            isPlaying = engine.isPlaying
+        case .idle:
+            airplayMessage = nil
+            isPlaying = engine.isPlaying
+        }
+    }
+    #endif
 
     /// Configure playback reporting. Call before starting playback.
     func configureReporting(userId: String, serverURL: URL, token: String, itemId: String, playSessionId: String? = nil) {
@@ -252,6 +299,14 @@ final class PlayerViewModel {
         // Zombie guard: playback work that outlived the player (dismissal
         // during the post-prepare delay) must not restart audio.
         guard !engineStopped else { return }
+        #if !os(visionOS)
+        // A1: play/pause while a receiver handoff is negotiating aborts the
+        // connection in AVPlayer — the "starts but never completes" race.
+        if engine.routeState.blocksTransportCommands {
+            TJFLog("airplay: transport command ignored — handoff connecting")
+            return
+        }
+        #endif
         if isPlaying {
             engine.pause()
             userPaused = true
@@ -988,6 +1043,11 @@ final class PlayerViewModel {
             stopReported = reportStopped()
         }
         engine.stopSync()
+        #if !os(visionOS)
+        // Teardown ends any pending handoff — no stale "connecting" status.
+        airplayPhase = nil
+        airplayMessage = nil
+        #endif
         stopUpdating()
         engineStopped = true
         // Playback is over (not a PiP handoff — that never reaches stopSync):
