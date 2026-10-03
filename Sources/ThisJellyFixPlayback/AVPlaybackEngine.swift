@@ -35,6 +35,9 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     private var itemObservations: [NSKeyValueObservation] = []
     private var playerObservations: [NSKeyValueObservation] = []
     private var endObserver: NSObjectProtocol?
+    #if os(iOS)
+    private var routeObserver: NSObjectProtocol?
+    #endif
     private var audioGroup: AVMediaSelectionGroup?
     private var legibleGroup: AVMediaSelectionGroup?
     /// The VM's legible choice (-1 = off/external-overlay). Re-asserted when
@@ -72,6 +75,11 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         if let endObserver {
             NotificationCenter.default.removeObserver(endObserver)
         }
+        #if os(iOS)
+        if let routeObserver {
+            NotificationCenter.default.removeObserver(routeObserver)
+        }
+        #endif
     }
 
     // MARK: - PlaybackEngine
@@ -85,6 +93,11 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         // belong to the old asset). VM re-selects after loadTracks.
         withStateLock { desiredSubtitleIndex = nil }
         notify(.loading)
+
+        // AirPlay diagnostics: what container is being offered to the system —
+        // AirPlay video only carries MP4/HLS-class streams; a raw MKV URL
+        // makes route selection a silent no-op.
+        TJFLog("prepare: ext=\(request.streamURL.pathExtension.isEmpty ? "-" : request.streamURL.pathExtension) path=\(request.streamURL.path.suffix(70))")
 
         let item = AVPlayerItem(url: request.streamURL)
         // Keep the previous frame until the new one decodes — no black flash
@@ -268,6 +281,28 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
                 }
             }
         )
+        #if !os(visionOS)
+        // AirPlay: did the SYSTEM actually engage external playback after the
+        // user picked a receiver? If this never fires, the break is outside
+        // the player (discovery/connection); if it fires but there is no
+        // picture, the stream format is the suspect.
+        playerObservations.append(
+            player.observe(\.isExternalPlaybackActive, options: [.new]) { player, _ in
+                TJFLog("airplay: externalPlaybackActive=\(player.isExternalPlaybackActive) rate=\(player.rate)")
+            }
+        )
+        #endif
+        #if os(iOS)
+        // Route changes (audio side of AirPlay) as a second signal.
+        routeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: nil
+        ) { note in
+            let raw = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt).map(String.init) ?? "?"
+            TJFLog("airplay: audio route change reason=\(raw)")
+        }
+        #endif
     }
 
     private func observe(item: AVPlayerItem, generation gen: Int) {

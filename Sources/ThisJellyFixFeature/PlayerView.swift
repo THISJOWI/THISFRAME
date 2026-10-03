@@ -723,10 +723,12 @@ private struct AirPlayRoutePicker: UIViewRepresentable {
         }
 
         func routePickerViewWillBeginPresentingRoutes(_ routePickerView: AVRoutePickerView) {
+            TJFLog("airplay: picker presenting BEGIN")
             onPresentingChanged(true)
         }
 
         func routePickerViewDidEndPresentingRoutes(_ routePickerView: AVRoutePickerView) {
+            TJFLog("airplay: picker presenting END")
             onPresentingChanged(false)
         }
     }
@@ -765,10 +767,12 @@ private struct AirPlayRoutePicker: NSViewRepresentable {
         }
 
         func routePickerViewWillBeginPresentingRoutes(_ routePickerView: AVRoutePickerView) {
+            TJFLog("airplay: picker presenting BEGIN")
             onPresentingChanged(true)
         }
 
         func routePickerViewDidEndPresentingRoutes(_ routePickerView: AVRoutePickerView) {
+            TJFLog("airplay: picker presenting END")
             onPresentingChanged(false)
         }
     }
