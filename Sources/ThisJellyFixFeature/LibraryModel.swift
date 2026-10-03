@@ -40,6 +40,14 @@ final class LibraryModel {
     /// known library item. HomeView consumes this value immediately by pushing
     /// it onto the NavigationStack, then resets it to nil.
     var pendingNavigationItem: JellyfinMediaItem?
+    /// Handoff playback position (seconds) to resume at once DetailView opens.
+    /// nil = plain detail navigation (no autoplay).
+    var pendingNavigationPosition: Double?
+
+    /// True once `load()` has completed (all rows in). Handoff resolution
+    /// waits for this — resolving against a not-yet-loaded library was the
+    /// cold-launch "Dock → app → nothing" bug.
+    var hasLoaded = false
 
     private let libraryClient: any JellyfinLibraryProviding
     private let serverURL: URL
@@ -73,7 +81,10 @@ final class LibraryModel {
     func load() async {
         isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            hasLoaded = true
+        }
 
         // Views first: the Movies/Series rows need their folder ids. Everything
         // else is independent, so the row fetches run IN PARALLEL and each row

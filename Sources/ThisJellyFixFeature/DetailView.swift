@@ -8,6 +8,10 @@ struct DetailView: View {
     let token: String
     let userId: String
     var onPlayerDismiss: (() -> Void)? = nil
+    /// Handoff: playback position (seconds) published by another device.
+    /// Non-nil → start playback automatically (max with server resume) once
+    /// the detail loads, instead of just showing the screen.
+    var handoffPosition: Double? = nil
 
     @State private var detail: JellyfinItemDetail?
     @State private var isLoading = true
@@ -22,6 +26,9 @@ struct DetailView: View {
     @State private var isPreparingPlayback = false
     @State private var playbackError: String?
     @State private var nextEpisode: JellyfinEpisode?
+    /// Handoff autoplay fires at most once per DetailView instance — a SwiftUI
+    /// rebuild must not restart playback over the user's head.
+    @State private var handoffAutoplayStarted = false
 
     // MARK: - Seasons & Episodes
     @State private var seasons: [JellyfinSeason] = []
@@ -61,7 +68,7 @@ struct DetailView: View {
                             .padding(.top, 60)
                     }
                 }
-                .task { await loadDetail() }
+                .task { await loadDetailAndMaybeAutoplay() }
                 .onChange(of: showPlayer) { _, showing in
                     if !showing { onPlayerDismiss?() }
                 }
@@ -116,7 +123,7 @@ struct DetailView: View {
                     .ignoresSafeArea()
                 }
             }
-            .task { await loadDetail() }
+            .task { await loadDetailAndMaybeAutoplay() }
             .onChange(of: showPlayer) { _, showing in
                 if !showing { onPlayerDismiss?() }
             }
@@ -558,6 +565,19 @@ struct DetailView: View {
     }
 
     // MARK: - Playback
+
+    /// Load the detail, then honour a pending Handoff autoplay (once).
+    private func loadDetailAndMaybeAutoplay() async {
+        await loadDetail()
+        guard let handoffPosition, !handoffAutoplayStarted else { return }
+        handoffAutoplayStarted = true
+
+        let serverResume = detail.flatMap { resumeSeconds($0) } ?? item.resumePositionSeconds
+        let start = HandoffResolver.effectiveStart(handoff: handoffPosition, serverResume: serverResume)
+        TJFLog("handoff: autoplay item=\(item.id) start=\(Int(start)) (handoff=\(Int(handoffPosition)) server=\(serverResume.map(Int.init) ?? -1))")
+        streamTitle = detail?.name ?? item.name
+        await preparePlayback(itemId: item.id, startPosition: start > 0 ? start : nil)
+    }
 
     private func playMovie(_ detail: JellyfinItemDetail) async {
         streamTitle = detail.name

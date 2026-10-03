@@ -42,17 +42,9 @@ public struct ThisJellyFixRootView: View {
 
     public init() {}
 
-    /// Decoded Handoff payload waiting to be acted on once the library is loaded.
-    @State private var pendingHandoff: HandoffPayload?
-
-    /// Lightweight struct carrying everything decoded from a NSUserActivity.
-    private struct HandoffPayload {
-        let itemId: String
-        let serverURL: URL
-        let title: String
-        let mediaType: String
-        let position: Double?   // non-nil only for "playing" activities
-    }
+    /// Decoded Handoff payload waiting to be acted on until the library is
+    /// actually loaded (kept, never consumed early — see `HandoffResolver`).
+    @State private var pendingHandoff: HandoffIntent?
 
     public var body: some View {
         ZStack {
@@ -185,7 +177,7 @@ public struct ThisJellyFixRootView: View {
                 return
             }
 
-            pendingHandoff = HandoffPayload(
+            pendingHandoff = HandoffIntent(
                 itemId: itemId,
                 serverURL: serverURL,
                 title: title,
@@ -213,7 +205,7 @@ public struct ThisJellyFixRootView: View {
             let position = info[HandoffActivity.Key.position] as? Double
             TJFLog("handoff: 'playing' itemId=\(itemId) pos=\(String(describing: position)) server=\(serverURL)")
 
-            pendingHandoff = HandoffPayload(
+            pendingHandoff = HandoffIntent(
                 itemId: itemId,
                 serverURL: serverURL,
                 title: title,
@@ -232,7 +224,7 @@ public struct ThisJellyFixRootView: View {
             let itemId = identifier.hasPrefix(prefix) ? String(identifier.dropFirst(prefix.count)) : identifier
             guard let server = model.server else { return }
 
-            pendingHandoff = HandoffPayload(
+            pendingHandoff = HandoffIntent(
                 itemId: itemId,
                 serverURL: server.baseURL,
                 title: "",
@@ -253,6 +245,13 @@ public struct ThisJellyFixRootView: View {
         }
         .onChange(of: libraryModel != nil) { _, ready in
             guard ready else { return }
+            resolveHandoffIfReady()
+        }
+        // The library model exists BEFORE its rows load (published so Home can
+        // render its skeleton). A pending Handoff must survive until load()
+        // completes — this is the trigger the cold-launch path was missing.
+        .onChange(of: libraryModel?.hasLoaded ?? false) { _, loaded in
+            guard loaded else { return }
             resolveHandoffIfReady()
         }
     }
@@ -446,23 +445,32 @@ public struct ThisJellyFixRootView: View {
 
         // Find the item in the already-loaded library rows.
         let match = lib.allItems.first { $0.id == payload.itemId }
+        let state: HandoffLibraryState = lib.hasLoaded
+            ? .loaded(itemCount: lib.allItems.count)
+            : .notLoaded
 
-        // Clear the pending payload regardless of whether we found the item —
-        // a second trigger (e.g. library reloaded) must not repeat the navigation.
-        pendingHandoff = nil
-
-        guard let item = match else {
-            // Item not in the local library yet (e.g. library still loading).
-            // Could try a direct API call here in a future iteration.
-            TJFLog("handoff: item \(payload.itemId) NOT in library (\(lib.allItems.count) items) — no navigation")
+        switch HandoffResolver.resolve(intent: payload, library: state, itemExists: match != nil) {
+        case .idle:
             return
+        case .keepWaiting(let reason):
+            // NOT consumed: the payload stays pending until load() finishes.
+            // The old code cleared it here, so a cold launch resolved against
+            // an empty library and navigated nowhere ("Dock → app → nothing").
+            TJFLog("handoff: resolve deferred (\(reason)) item=\(payload.itemId)")
+            return
+        case .notFound:
+            TJFLog("handoff: item \(payload.itemId) NOT in library (\(lib.allItems.count) items, loaded=\(lib.hasLoaded)) — no navigation")
+            pendingHandoff = nil
+            return
+        case .navigate:
+            guard let item = match else { return }
+            TJFLog("handoff: → pendingNavigationItem \(item.name) pos=\(String(describing: payload.position))")
+            // Handoff position rides along so DetailView can start playback
+            // exactly where the other device was (max with server resume).
+            lib.pendingNavigationPosition = payload.position
+            lib.pendingNavigationItem = item
+            pendingHandoff = nil
         }
-
-        TJFLog("handoff: → pendingNavigationItem \(item.name) pos=\(String(describing: payload.position))")
-        // For iOS: switch to home tab and inject the item for NavigationLink.
-        // The navigation is handled by the NavigationStack in HomeView, so we
-        // store it in LibraryModel as a pending navigation target.
-        lib.pendingNavigationItem = item
     }
 }
 

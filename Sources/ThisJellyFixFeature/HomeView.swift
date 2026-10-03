@@ -24,17 +24,7 @@ struct HomeView: View {
         NavigationStack(path: $navigationPath) {
             scrollContent
                 .navigationDestination(for: JellyfinMediaItem.self) { item in
-                    DetailView(
-                        item: item, serverURL: serverURL, token: token, userId: userId,
-                        onPlayerDismiss: { Task {
-                            // Wait for the async reportStopped HTTP request to land
-                            // before re-fetching, otherwise the server has no progress yet.
-                            // Only the resume row changes after playback, so refresh
-                            // just that row instead of re-running the whole library load.
-                            try? await Task.sleep(for: .seconds(2))
-                            await libraryModel.refreshResume(force: true)
-                        } }
-                    )
+                    detailDestination(for: item)
                 }
                 #if os(iOS) || os(macOS)
                 .navigationDestination(for: CatalogItem.self) { item in
@@ -56,7 +46,34 @@ struct HomeView: View {
             navigationPath.append(item)
             libraryModel.pendingNavigationItem = nil
         }
+        // C3: if the intent landed BEFORE this stack subscribed (cold launch),
+        // onChange never fires for a value already set — consume it here too.
+        .onAppear {
+            guard let item = libraryModel.pendingNavigationItem else { return }
+            TJFLog("handoff: ios consumed pre-subscription item \(item.name)")
+            navigationPath.append(item)
+            libraryModel.pendingNavigationItem = nil
+        }
         #endif
+    }
+
+    /// Shared DetailView factory: hands over the one-shot Handoff position so
+    /// a stale value can't hijack a later manual open of the same item.
+    private func detailDestination(for item: JellyfinMediaItem) -> DetailView {
+        let handoffPosition = libraryModel.pendingNavigationPosition
+        libraryModel.pendingNavigationPosition = nil
+        return DetailView(
+            item: item, serverURL: serverURL, token: token, userId: userId,
+            onPlayerDismiss: { Task {
+                // Wait for the async reportStopped HTTP request to land
+                // before re-fetching, otherwise the server has no progress yet.
+                // Only the resume row changes after playback, so refresh
+                // just that row instead of re-running the whole library load.
+                try? await Task.sleep(for: .seconds(2))
+                await libraryModel.refreshResume(force: true)
+            } },
+            handoffPosition: handoffPosition
+        )
     }
 
     // MARK: - macOS Sidebar
@@ -112,6 +129,15 @@ struct HomeView: View {
             libraryModel.pendingNavigationItem = nil
             TJFLog("handoff: mac pushed \(item.name) onto navigationPath")
         }
+        // C3: cold launch can set the intent before the consumer subscribes —
+        // an already-set value never triggers onChange. Consume on appear too.
+        .onAppear {
+            guard let item = libraryModel.pendingNavigationItem else { return }
+            TJFLog("handoff: mac consumed pre-subscription item \(item.name)")
+            selectedTab = .home
+            navigationPath.append(item)
+            libraryModel.pendingNavigationItem = nil
+        }
     }
 
     @ViewBuilder
@@ -124,17 +150,7 @@ struct HomeView: View {
             NavigationStack(path: $navigationPath) {
                 scrollContent
                     .navigationDestination(for: JellyfinMediaItem.self) { item in
-                        DetailView(
-                            item: item, serverURL: serverURL, token: token, userId: userId,
-                            onPlayerDismiss: { Task {
-                            // Wait for the async reportStopped HTTP request to land
-                            // before re-fetching, otherwise the server has no progress yet.
-                            // Only the resume row changes after playback, so refresh
-                            // just that row instead of re-running the whole library load.
-                            try? await Task.sleep(for: .seconds(2))
-                            await libraryModel.refreshResume(force: true)
-                        } }
-                        )
+                        detailDestination(for: item)
                     }
                     #if os(iOS) || os(macOS)
                     .navigationDestination(for: CatalogItem.self) { item in
