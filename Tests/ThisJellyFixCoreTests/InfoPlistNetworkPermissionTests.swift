@@ -62,4 +62,38 @@ final class InfoPlistNetworkPermissionTests: XCTestCase {
         XCTAssertTrue(bonjourServices.contains("_http._tcp"), "Must contain _http._tcp")
         XCTAssertTrue(bonjourServices.contains("_bonjour._tcp"), "Must contain _bonjour._tcp")
     }
+
+    /// NSBonjourServices entries must be bare service types: a trailing dot
+    /// ("_lnp._tcp.") is a malformed registration and the entry silently
+    /// stops matching — the AirPlay/discovery permission prompt never fires.
+    func testIOSBonjourServicesHaveNoTrailingDot() throws {
+        let info = try plist("Apps/iOS/Info.plist")
+        let services = try XCTUnwrap(info["NSBonjourServices"] as? [String])
+        for service in services {
+            XCTAssertFalse(service.hasSuffix("."), "\(service) must not end with '.'")
+        }
+    }
+
+    func testMacOSBonjourServicesHaveNoTrailingDot() throws {
+        let info = try plist("Apps/macOS/Info.plist")
+        let services = try XCTUnwrap(info["NSBonjourServices"] as? [String])
+        for service in services {
+            XCTAssertFalse(service.hasSuffix("."), "\(service) must not end with '.'")
+        }
+    }
+
+    /// Every activity type the code can publish/receive must be declared —
+    /// an undeclared NSUserActivityType is dropped by the system on arrival.
+    func testBothPlistsDeclareAllHandoffActivityTypes() throws {
+        let expected: Set<String> = [
+            "com.thisjellyfix.activity.browsing",
+            "com.thisjellyfix.activity.detail",
+            "com.thisjellyfix.activity.playing",
+        ]
+        for path in ["Apps/iOS/Info.plist", "Apps/macOS/Info.plist"] {
+            let info = try plist(path)
+            let declared = try XCTUnwrap(info["NSUserActivityTypes"] as? [String], "\(path)")
+            XCTAssertEqual(Set(declared), expected, "\(path) NSUserActivityTypes mismatch")
+        }
+    }
 }

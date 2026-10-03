@@ -37,6 +37,8 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     private var endObserver: NSObjectProtocol?
     #if os(iOS)
     private var routeObserver: NSObjectProtocol?
+    private var interruptionObserver: NSObjectProtocol?
+    private var mediaServicesObserver: NSObjectProtocol?
     #endif
     #if !os(visionOS)
     // AirPlay route lifecycle (pure machine, unit-tested in PlaybackTests).
@@ -92,6 +94,12 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         if let routeObserver {
             NotificationCenter.default.removeObserver(routeObserver)
         }
+        if let interruptionObserver {
+            NotificationCenter.default.removeObserver(interruptionObserver)
+        }
+        if let mediaServicesObserver {
+            NotificationCenter.default.removeObserver(mediaServicesObserver)
+        }
         #endif
         #if !os(visionOS)
         airplayTimeout?.cancel()
@@ -138,6 +146,16 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     }
 
     public func play() {
+        #if os(iOS)
+        // Activate the playback session before starting: an inactive session
+        // is why route changes/picks were occasionally ignored (A5). Category
+        // (.playback/.moviePlayback) is configured once at app start.
+        do {
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            TJFLog("audio session: activate FAILED \(error)")
+        }
+        #endif
         player.rate = desiredRate
         notify(.playing)
     }
@@ -350,6 +368,24 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
                 TJFLog("airplay: new device → connecting to \(name)")
                 self.noteRouteSelected(name: name)
             }
+        }
+        // Interruptions (Siri, calls) and media-services resets desync playback
+        // and AirPlay silently — at minimum they must be visible in the log.
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: nil,
+            queue: nil
+        ) { note in
+            let rawType = (note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt).map(String.init) ?? "?"
+            let rawReason = (note.userInfo?[AVAudioSessionInterruptionReasonKey] as? UInt).map(String.init) ?? "?"
+            TJFLog("airplay: audio interruption type=\(rawType) reason=\(rawReason)")
+        }
+        mediaServicesObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.mediaServicesWereResetNotification,
+            object: nil,
+            queue: nil
+        ) { _ in
+            TJFLog("airplay: media services were RESET — player may need rebuild")
         }
         #endif
     }
