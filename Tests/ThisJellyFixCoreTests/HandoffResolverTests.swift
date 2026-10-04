@@ -69,4 +69,56 @@ final class HandoffResolverTests: XCTestCase {
     func testEffectiveStartWithNothingIsZero() {
         XCTAssertEqual(HandoffResolver.effectiveStart(handoff: nil, serverResume: nil), 0)
     }
+
+    // MARK: - Expiry (stale intent must not autoplay hours later)
+
+    private func intent(receivedAt: Date) -> HandoffIntent {
+        HandoffIntent(
+            itemId: "abc",
+            serverURL: URL(string: "https://jellyfin.example.com")!,
+            title: "Episodio 1",
+            mediaType: "Episode",
+            position: 123.5,
+            receivedAt: receivedAt
+        )
+    }
+
+    func testFreshIntentKeepsWaitingWhileLibraryLoads() {
+        let now = Date()
+        XCTAssertEqual(
+            HandoffResolver.resolve(
+                intent: intent(receivedAt: now),
+                library: .notLoaded, itemExists: false, now: now
+            ),
+            .keepWaiting("library not loaded")
+        )
+    }
+
+    func testExpiredIntentIsConsumedNotNavigated() {
+        let now = Date()
+        let stale = intent(receivedAt: now.addingTimeInterval(-600))
+        XCTAssertEqual(
+            HandoffResolver.resolve(
+                intent: stale, library: .loaded(itemCount: 10), itemExists: true, now: now
+            ),
+            .expired
+        )
+        XCTAssertEqual(
+            HandoffResolver.resolve(
+                intent: stale, library: .notLoaded, itemExists: false, now: now
+            ),
+            .expired
+        )
+    }
+
+    func testIntentWithinWindowStillNavigates() {
+        let now = Date()
+        let fresh = intent(receivedAt: now.addingTimeInterval(-60))
+        XCTAssertEqual(
+            HandoffResolver.resolve(
+                intent: fresh, library: .loaded(itemCount: 10), itemExists: true, now: now
+            ),
+            .navigate
+        )
+    }
 }

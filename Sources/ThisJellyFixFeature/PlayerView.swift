@@ -495,6 +495,10 @@ struct PlayerView: View {
         .userActivity(
             HandoffActivity.playing,
             isActive: itemId != nil && serverURL != nil && userId != nil
+                // F3: never advertise `playing` while the center says another
+                // owner holds the slot — a desync would otherwise publish
+                // detail/browsing AND playing simultaneously.
+                && HandoffCenter.shared.isPlaybackActive
         ) { activity in
             guard let itemId, let serverURL, let userId else { return }
             let handoffItem = HandoffMediaItem(id: itemId, name: title, type: mediaType)

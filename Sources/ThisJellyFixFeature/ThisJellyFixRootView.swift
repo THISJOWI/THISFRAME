@@ -465,6 +465,10 @@ public struct ThisJellyFixRootView: View {
             // an empty library and navigated nowhere ("Dock → app → nothing").
             TJFLog("handoff: resolve deferred (\(reason)) item=\(payload.itemId)")
             return
+        case .expired:
+            TJFLog("handoff: intent EXPIRED item=\(payload.itemId) (unresolvable within \(Int(HandoffResolver.intentLifetime)) s) — dropped")
+            pendingHandoff = nil
+            return
         case .notFound:
             TJFLog("handoff: item \(payload.itemId) NOT in library (\(lib.allItems.count) items, loaded=\(lib.hasLoaded)) — no navigation")
             pendingHandoff = nil

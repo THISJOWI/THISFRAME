@@ -34,7 +34,9 @@ final class HandoffActivityTests: XCTestCase {
         // `title` is required too: the receiving guard demands it.
         XCTAssertEqual(
             activity.requiredUserInfoKeys,
-            [HandoffActivity.Key.itemId, HandoffActivity.Key.serverURL, HandoffActivity.Key.title]
+            [HandoffActivity.Key.itemId, HandoffActivity.Key.serverURL,
+             HandoffActivity.Key.title, HandoffActivity.Key.position,
+             HandoffActivity.Key.userId]
         )
         // targetContentIdentifier lets the system route the continuation to
         // the right window/scene instead of just launching the app.
@@ -66,5 +68,19 @@ final class HandoffActivityTests: XCTestCase {
         )
         XCTAssertNotNil(built.requiredUserInfoKeys)
         XCTAssertNotNil(built.targetContentIdentifier)
+    }
+
+    /// F5: position/userId ride in requiredUserInfoKeys — if the system
+    /// strips them in transit the receiver silently degrades to server-resume.
+    func testPlayingActivityRequiresPositionAndUser() {
+        let activity = HandoffActivity.playingActivity(
+            item: item, serverURL: server, userId: "user-1", position: 42.5
+        )
+        XCTAssertEqual(
+            activity.requiredUserInfoKeys,
+            [HandoffActivity.Key.itemId, HandoffActivity.Key.serverURL,
+             HandoffActivity.Key.title, HandoffActivity.Key.position,
+             HandoffActivity.Key.userId]
+        )
     }
 }

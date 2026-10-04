@@ -91,7 +91,9 @@ public enum HandoffActivity {
             Key.userId:    userId,
             Key.position:  position,
         ]
-        activity.requiredUserInfoKeys = [Key.itemId, Key.serverURL, Key.title]
+        activity.requiredUserInfoKeys = [
+            Key.itemId, Key.serverURL, Key.title, Key.position, Key.userId,
+        ]
         activity.targetContentIdentifier = targetIdentifier(serverURL: serverURL, itemId: item.id)
         return activity
     }

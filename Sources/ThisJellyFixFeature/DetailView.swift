@@ -12,6 +12,10 @@ struct DetailView: View {
     /// Non-nil → start playback automatically (max with server resume) once
     /// the detail loads, instead of just showing the screen.
     var handoffPosition: Double? = nil
+    /// F2: called the moment the handoff position has been read for autoplay,
+    /// so the shared LibraryModel value dies immediately (a stale one could
+    /// otherwise be re-applied to a DIFFERENT destination on identity churn).
+    var onHandoffConsumed: (() -> Void)? = nil
 
     @State private var detail: JellyfinItemDetail?
     @State private var isLoading = true
@@ -615,6 +619,7 @@ struct DetailView: View {
         await loadDetail()
         guard let handoffPosition, !handoffAutoplayStarted else { return }
         handoffAutoplayStarted = true
+        onHandoffConsumed?()
 
         let serverResume = detail.flatMap { resumeSeconds($0) } ?? item.resumePositionSeconds
         let start = HandoffResolver.effectiveStart(handoff: handoffPosition, serverResume: serverResume)

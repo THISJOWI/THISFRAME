@@ -10,13 +10,24 @@ public struct HandoffIntent: Sendable, Equatable {
     public let mediaType: String
     /// Playback position in seconds at publish time; nil for "detail" intents.
     public let position: Double?
+    /// When the continuation was received — expiry stops an intent that was
+    /// never resolvable (failed/empty library) from autoplaying hours later.
+    public let receivedAt: Date
 
-    public init(itemId: String, serverURL: URL, title: String, mediaType: String, position: Double?) {
+    public init(
+        itemId: String,
+        serverURL: URL,
+        title: String,
+        mediaType: String,
+        position: Double?,
+        receivedAt: Date = Date()
+    ) {
         self.itemId = itemId
         self.serverURL = serverURL
         self.title = title
         self.mediaType = mediaType
         self.position = position
+        self.receivedAt = receivedAt
     }
 }
 
@@ -40,16 +51,28 @@ public enum HandoffResolution: Sendable, Equatable {
     case navigate
     /// Library ready but the item is genuinely absent — consume and log.
     case notFound
+    /// The intent outlived its usefulness (never resolvable within the
+    /// window) — consume and log instead of autoplaying stale content.
+    case expired
 }
 
 /// Pure decision logic for Handoff continuations (unit-tested).
 public enum HandoffResolver {
+    /// How long a not-yet-resolvable intent stays alive. Long enough for a
+    /// cold launch + slow library load; short enough that a later unrelated
+    /// successful load doesn't replay it.
+    public static let intentLifetime: TimeInterval = 300
+
     public static func resolve(
         intent: HandoffIntent?,
         library: HandoffLibraryState,
-        itemExists: Bool
+        itemExists: Bool,
+        now: Date = Date()
     ) -> HandoffResolution {
         guard let intent else { return .idle }
+        guard now.timeIntervalSince(intent.receivedAt) <= intentLifetime else {
+            return .expired
+        }
         switch library {
         case .notLoaded:
             return .keepWaiting("library not loaded")
