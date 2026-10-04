@@ -31,9 +31,10 @@ final class HandoffActivityTests: XCTestCase {
         )
         // Without requiredUserInfoKeys the system may deliver the activity
         // with userInfo stripped (cold launch receives an EMPTY payload).
+        // `title` is required too: the receiving guard demands it.
         XCTAssertEqual(
             activity.requiredUserInfoKeys,
-            [HandoffActivity.Key.itemId, HandoffActivity.Key.serverURL]
+            [HandoffActivity.Key.itemId, HandoffActivity.Key.serverURL, HandoffActivity.Key.title]
         )
         // targetContentIdentifier lets the system route the continuation to
         // the right window/scene instead of just launching the app.
@@ -49,9 +50,21 @@ final class HandoffActivityTests: XCTestCase {
         XCTAssertTrue(activity.isEligibleForHandoff)
         XCTAssertEqual(
             activity.requiredUserInfoKeys,
-            [HandoffActivity.Key.itemId, HandoffActivity.Key.serverURL]
+            [HandoffActivity.Key.itemId, HandoffActivity.Key.serverURL,
+             HandoffActivity.Key.title, HandoffActivity.Key.mediaType]
         )
         XCTAssertNotNil(activity.targetContentIdentifier)
         XCTAssertNil(activity.userInfo?[HandoffActivity.Key.position])
+    }
+
+    /// The PlayerView publication closure copies fields off a throwaway
+    /// `built` activity — those two must survive the copy or the continuation
+    /// never routes to the right scene (M3).
+    func testBuiltActivityCarriesEverythingTheClosureMustCopy() {
+        let built = HandoffActivity.playingActivity(
+            item: item, serverURL: server, userId: "user-1", position: 42.5
+        )
+        XCTAssertNotNil(built.requiredUserInfoKeys)
+        XCTAssertNotNil(built.targetContentIdentifier)
     }
 }

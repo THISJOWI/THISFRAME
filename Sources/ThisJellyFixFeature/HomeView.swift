@@ -35,14 +35,23 @@ struct HomeView: View {
         // Publish a Handoff activity so the user can continue browsing on
         // another Apple device. YIELDS while playback owns Handoff — two
         // eligible activities competing is how the Mac Dock advertised
-        // "browsing" (a no-op handler on macOS) instead of "playing".
+        // "browsing" (a no-op handler on macOS) instead of "playing" — AND
+        // while a detail screen is up: the pushed DetailView owns the slot
+        // (single owner at every stack depth).
         .userActivity(
             HandoffActivity.browsing,
-            isActive: HandoffCenter.shared.shouldPublishBrowsing
+            isActive: HandoffCenter.shared.shouldPublishBrowsing && navigationPath.isEmpty
         ) { activity in
             activity.title = "Explorando la biblioteca"
             activity.isEligibleForHandoff = true
             activity.isEligibleForSearch  = false
+        }
+        // m7: the destination builder READS pendingNavigationPosition without
+        // clearing (side effects there raced SwiftUI's re-evaluations). The
+        // value dies here — when the stack pops — or when the next Handoff
+        // overwrites it.
+        .onChange(of: navigationPath) { _, path in
+            if path.isEmpty { libraryModel.pendingNavigationPosition = nil }
         }
         // React to a Handoff-resolved item coming from LibraryModel.
         .onChange(of: libraryModel.pendingNavigationItem) { _, item in
@@ -61,11 +70,11 @@ struct HomeView: View {
         #endif
     }
 
-    /// Shared DetailView factory: hands over the one-shot Handoff position so
-    /// a stale value can't hijack a later manual open of the same item.
+    /// Shared DetailView factory: hands over the Handoff position.
+    /// m7: READ-only — the builder runs on every SwiftUI re-evaluation, so
+    /// clearing here could instantiate DetailView with nil on a second pass
+    /// and kill the autoplay. Cleared on stack pop instead.
     private func detailDestination(for item: JellyfinMediaItem) -> DetailView {
-        let handoffPosition = libraryModel.pendingNavigationPosition
-        libraryModel.pendingNavigationPosition = nil
         return DetailView(
             item: item, serverURL: serverURL, token: token, userId: userId,
             onPlayerDismiss: { Task {
@@ -76,7 +85,7 @@ struct HomeView: View {
                 try? await Task.sleep(for: .seconds(2))
                 await libraryModel.refreshResume(force: true)
             } },
-            handoffPosition: handoffPosition
+            handoffPosition: libraryModel.pendingNavigationPosition
         )
     }
 
@@ -161,6 +170,11 @@ struct HomeView: View {
                         CatalogDetailView(item: item)
                     }
                     #endif
+            }
+            // m7 (mac mirror): Handoff position dies on pop, not in the
+            // destination builder.
+            .onChange(of: navigationPath) { _, path in
+                if path.isEmpty { libraryModel.pendingNavigationPosition = nil }
             }
         case .search:
             SearchView(serverURL: serverURL, token: token, userId: userId)

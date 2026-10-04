@@ -63,7 +63,10 @@ public enum HandoffActivity {
         // The system may deliver userInfo STRIPPED without these (cold launch
         // then receives an empty payload and "nothing happens"); the target id
         // routes the continuation to the right scene instead of a bare launch.
-        activity.requiredUserInfoKeys = [Key.itemId, Key.serverURL]
+        // `title`/`mediaType` are in the set because the receiving guards
+        // read them — a required-key set that omits them re-creates the
+        // "payload arrives empty" bug on those keys.
+        activity.requiredUserInfoKeys = [Key.itemId, Key.serverURL, Key.title, Key.mediaType]
         activity.targetContentIdentifier = targetIdentifier(serverURL: serverURL, itemId: item.id)
         return activity
     }
@@ -88,7 +91,7 @@ public enum HandoffActivity {
             Key.userId:    userId,
             Key.position:  position,
         ]
-        activity.requiredUserInfoKeys = [Key.itemId, Key.serverURL]
+        activity.requiredUserInfoKeys = [Key.itemId, Key.serverURL, Key.title]
         activity.targetContentIdentifier = targetIdentifier(serverURL: serverURL, itemId: item.id)
         return activity
     }

@@ -169,11 +169,13 @@ final class PlayerViewModel {
     /// Lock screen / Control Center: publish what's playing (title + poster).
     /// Called once when the player mounts; the timer keeps time/rate fresh.
     func configureNowPlaying(title: String) {
+        // Idempotent, BEFORE the guard: a restored session (PiP float tapped
+        // again) already has nowPlayingActive = true but the view re-appearing
+        // must re-claim Handoff (m5: float used to leave browsing suppressed
+        // with no player advertising `playing`).
+        HandoffCenter.shared.setPlaybackActive(true)
         guard !nowPlayingActive else { return }
         nowPlayingActive = true
-        // This player owns Handoff from mount until stop: browsing must yield
-        // so the Mac Dock advertises the PLAYING activity, not browsing.
-        HandoffCenter.shared.setPlaybackActive(true)
         nowPlayingSession = NowPlayingController.shared.activate(title: title, duration: duration)
         if let serverURL, let itemId {
             let artwork = URL(string: "\(serverURL.absoluteString)/Items/\(itemId)/Images/Primary?maxWidth=400&quality=90")
@@ -204,6 +206,10 @@ final class PlayerViewModel {
     /// the phase (not the sample) is what the status line and transport guard
     /// follow.
     private func handleRouteState(_ state: AirPlayRouteState) {
+        // m1: async events enqueued before teardown (Task/Dispatch main) can
+        // arrive after stopSync cleared the phase — drop them instead of
+        // resurrecting stale UI state.
+        guard !engineStopped else { return }
         airplayPhase = state.phase
         switch state.phase {
         case .connecting(let name):

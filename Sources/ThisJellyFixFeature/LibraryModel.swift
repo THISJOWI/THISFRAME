@@ -83,7 +83,14 @@ final class LibraryModel {
         errorMessage = nil
         defer {
             isLoading = false
-            hasLoaded = true
+            // M4: `hasLoaded` means "usable library", not "load() returned".
+            // A failed cold launch (0 rows + error) must NOT flip this — the
+            // Handoff resolver would see .loaded(itemCount: 0), consume the
+            // pending intent as .notFound and reproduce "Dock → app → nothing"
+            // (retry can no longer recover it). Partial loads (some rows)
+            // count as loaded: a found item resolves, only a genuinely
+            // absent one is consumed.
+            hasLoaded = !rows.isEmpty
         }
 
         // Views first: the Movies/Series rows need their folder ids. Everything

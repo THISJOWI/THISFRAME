@@ -79,6 +79,25 @@ struct DetailView: View {
                 .onChange(of: showPlayer) { _, showing in
                     if !showing { onPlayerDismiss?() }
                 }
+                // m4: while this screen is the top one it OWNS the Handoff
+                // slot (browsing yields on push, playing yields once the
+                // player mounts) — this also makes the receiving
+                // `.onContinueUserActivity(detail)` path non-dead.
+                .userActivity(
+                    HandoffActivity.detail,
+                    isActive: HandoffCenter.shared.shouldPublishBrowsing
+                ) { activity in
+                    let built = HandoffActivity.detailActivity(
+                        item: HandoffMediaItem(id: item.id, name: item.name, type: item.type),
+                        serverURL: serverURL
+                    )
+                    activity.title                = built.title
+                    activity.isEligibleForHandoff = true
+                    activity.isEligibleForSearch  = false
+                    activity.userInfo             = built.userInfo
+                    activity.requiredUserInfoKeys  = built.requiredUserInfoKeys
+                    activity.targetContentIdentifier = built.targetContentIdentifier
+                }
 
             if showPlayer, let streamURL {
                 PlayerView(
@@ -135,6 +154,22 @@ struct DetailView: View {
             .task { await loadDetailAndMaybeAutoplay() }
             .onChange(of: showPlayer) { _, showing in
                 if !showing { onPlayerDismiss?() }
+            }
+            // m4 (iOS mirror): detail owns the Handoff slot at this depth.
+            .userActivity(
+                HandoffActivity.detail,
+                isActive: HandoffCenter.shared.shouldPublishBrowsing
+            ) { activity in
+                let built = HandoffActivity.detailActivity(
+                    item: HandoffMediaItem(id: item.id, name: item.name, type: item.type),
+                    serverURL: serverURL
+                )
+                activity.title                = built.title
+                activity.isEligibleForHandoff = true
+                activity.isEligibleForSearch  = false
+                activity.userInfo             = built.userInfo
+                activity.requiredUserInfoKeys  = built.requiredUserInfoKeys
+                activity.targetContentIdentifier = built.targetContentIdentifier
             }
         #endif
     }

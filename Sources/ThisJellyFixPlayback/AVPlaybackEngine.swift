@@ -102,7 +102,10 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         }
         #endif
         #if !os(visionOS)
+        airplayLock.lock()
         airplayTimeout?.cancel()
+        airplayTimeout = nil
+        airplayLock.unlock()
         #endif
     }
 
@@ -396,14 +399,31 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     /// not expose "which route was chosen", so the machine only tracks
     /// active/idle transitions there (logged either way).
     public func noteRouteSelected(name: String) {
+        // m2: a route-change can arrive while external playback is ALREADY
+        // live (reason 4 re-fires on a second device). Entering the connect
+        // window then would block transport for 10 s and fail a healthy
+        // session — KVO will not re-fire to save us.
+        if player.isExternalPlaybackActive {
+            TJFLog("airplay: route change but external playback already active — no connect window")
+            airplayApply { $0.externalPlaybackChanged(true) }
+            return
+        }
         airplayApply { $0.routeSelected(name: name) }
-        airplayTimeout?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
+            // Cancelled work items never run, but a timeout armed against a
+            // transition that settled in between must stay silent too.
+            guard self.routeState.isConnecting else { return }
             TJFLog("airplay: connect TIMEOUT after 10 s (\(self.routeState.selectedRouteName ?? "?"))")
             self.airplayApply { $0.timedOut() }
         }
+        // M1: every read/write of airplayTimeout happens under airplayLock —
+        // noteRouteSelected (route-change thread), airplayApply (KVO thread)
+        // and deinit used to touch it unsynchronized.
+        airplayLock.lock()
+        airplayTimeout?.cancel()
         airplayTimeout = work
+        airplayLock.unlock()
         DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: work)
     }
 
@@ -413,6 +433,9 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         let before = _routeState
         body(&_routeState)
         let after = _routeState
+        // Settle timeout bookkeeping for terminal transitions — inside the
+        // lock (cancel never executes the block, so no deadlock).
+        if case .connecting = after.phase {} else { airplayTimeout?.cancel(); airplayTimeout = nil }
         airplayLock.unlock()
         guard before != after else { return }
         if case .connecting(let name) = after.phase {
@@ -422,8 +445,6 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         } else {
             TJFLog("airplay: phase=\(String(describing: after.phase))")
         }
-        // Settle the timeout bookkeeping for terminal transitions.
-        if case .connecting = after.phase {} else { airplayTimeout?.cancel(); airplayTimeout = nil }
         if Thread.isMainThread {
             onRouteStateChanged?(after)
         } else {

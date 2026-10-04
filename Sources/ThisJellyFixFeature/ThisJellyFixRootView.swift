@@ -169,13 +169,16 @@ public struct ThisJellyFixRootView: View {
             guard let info       = activity.userInfo,
                   let itemId     = info[HandoffActivity.Key.itemId]     as? String,
                   let serverStr  = info[HandoffActivity.Key.serverURL]  as? String,
-                  let serverURL  = URL(string: serverStr),
-                  let title      = info[HandoffActivity.Key.title]      as? String,
-                  let mediaType  = info[HandoffActivity.Key.mediaType]  as? String
+                  let serverURL  = URL(string: serverStr)
             else {
                 TJFLog("handoff: 'detail' payload DECODE FAILED info=\(String(describing: activity.userInfo))")
                 return
             }
+            // itemId/serverURL are the hard requirements (they locate the
+            // content); title/mediaType are cosmetic — tolerate their absence
+            // instead of dropping the whole continuation (M2).
+            let title     = info[HandoffActivity.Key.title]     as? String ?? ""
+            let mediaType = info[HandoffActivity.Key.mediaType] as? String ?? ""
 
             pendingHandoff = HandoffIntent(
                 itemId: itemId,
@@ -195,21 +198,22 @@ public struct ThisJellyFixRootView: View {
             guard let info       = activity.userInfo,
                   let itemId     = info[HandoffActivity.Key.itemId]     as? String,
                   let serverStr  = info[HandoffActivity.Key.serverURL]  as? String,
-                  let serverURL  = URL(string: serverStr),
-                  let title      = info[HandoffActivity.Key.title]      as? String
+                  let serverURL  = URL(string: serverStr)
             else {
                 TJFLog("handoff: 'playing' payload DECODE FAILED info=\(String(describing: activity.userInfo))")
                 return
             }
 
-            let position = info[HandoffActivity.Key.position] as? Double
+            let position  = info[HandoffActivity.Key.position] as? Double
+            let title     = info[HandoffActivity.Key.title]     as? String ?? ""
+            let mediaType = info[HandoffActivity.Key.mediaType] as? String ?? ""
             TJFLog("handoff: 'playing' itemId=\(itemId) pos=\(String(describing: position)) server=\(serverURL)")
 
             pendingHandoff = HandoffIntent(
                 itemId: itemId,
                 serverURL: serverURL,
                 title: title,
-                mediaType: "",
+                mediaType: mediaType,
                 position: position
             )
             #if os(iOS)
@@ -239,8 +243,11 @@ public struct ThisJellyFixRootView: View {
         // Once a payload arrives AND the library is loaded, find the item and
         // push the DetailView. The library may still be loading when the
         // activity fires, so we watch both triggers.
-        .onChange(of: pendingHandoff?.itemId) { _, newId in
-            guard newId != nil else { return }
+        .onChange(of: pendingHandoff) { _, newPayload in
+            // m6: observe the WHOLE struct — a second continuation for the
+            // same itemId (new position) never changes `pendingHandoff?.itemId`
+            // and would be silently ignored.
+            guard newPayload != nil else { return }
             resolveHandoffIfReady()
         }
         .onChange(of: libraryModel != nil) { _, ready in

@@ -508,6 +508,18 @@ struct PlayerView: View {
             activity.isEligibleForHandoff = true
             activity.isEligibleForSearch  = false
             activity.userInfo           = built.userInfo
+            // M3: the closure configures a DIFFERENT activity instance than
+            // `built` — these two must be copied too, or the continuation
+            // never routes to the right scene / gets its userInfo stripped.
+            activity.requiredUserInfoKeys  = built.requiredUserInfoKeys
+            activity.targetContentIdentifier = built.targetContentIdentifier
+        }
+        // m5: while this view is gone (PiP float window) NO player advertises
+        // `playing` — with the center still holding Handoff, zero activities
+        // were announced. Hand it back to browsing; the restored player
+        // re-claims it in configureNowPlaying.
+        .onDisappear {
+            HandoffCenter.shared.setPlaybackActive(false)
         }
         .sheet(isPresented: $viewModel.showAudioPicker) {
             AudioPickerSheet(
