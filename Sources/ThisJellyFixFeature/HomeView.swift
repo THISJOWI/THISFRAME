@@ -16,12 +16,6 @@ struct HomeView: View {
     /// Programmatic navigation path: Handoff resolution injects an item here so
     /// the NavigationStack pushes the DetailView immediately.
     @State private var navigationPath = NavigationPath()
-    /// True while a JellyfinMediaItem DetailView is in the stack. NavigationPath
-    /// exposes only count/isEmpty (no element access), so this is tracked at
-    /// the push sites and cleared on any pop — the browsing activity gates on
-    /// it (a detail push means DetailView owns the Handoff slot; a CATALOG
-    /// push means browsing keeps it, since CatalogDetailView publishes none).
-    @State private var detailTop = false
 
     var body: some View {
         #if os(macOS)
@@ -39,16 +33,15 @@ struct HomeView: View {
                 #endif
         }
         // Publish a Handoff activity so the user can continue browsing on
-        // another Apple device. YIELDS while playback owns Handoff — two
+        // another Apple device. YIELDS while playback owns Handoff (two
         // eligible activities competing is how the Mac Dock advertised
-        // "browsing" (a no-op handler on macOS) instead of "playing" — AND
-        // while a DETAIL screen is up (the pushed DetailView owns the slot).
-        // A catalog push (CatalogItem) does NOT count: CatalogDetailView
-        // publishes nothing, so gating on path.isEmpty would leave ZERO
-        // activities at that depth (F1).
+        // "browsing" instead of "playing") AND while any detail screen is on
+        // top — DetailView claims the slot via onAppear (counted in
+        // HandoffCenter, so taps, handoff pushes and nested stacks all work).
+        // Catalog pushes keep browsing: CatalogDetailView publishes nothing.
         .userActivity(
             HandoffActivity.browsing,
-            isActive: HandoffCenter.shared.shouldPublishBrowsing && !detailTop
+            isActive: HandoffCenter.shared.shouldPublishBrowsing
         ) { activity in
             activity.title = "Explorando la biblioteca"
             activity.isEligibleForHandoff = true
@@ -56,18 +49,14 @@ struct HomeView: View {
         }
         // m7: the destination builder READS pendingNavigationPosition without
         // clearing (side effects there raced SwiftUI's re-evaluations). The
-        // value dies here — and any pop clears detailTop (a detail can only
-        // be the top element when it is removed).
-        .onChange(of: navigationPath) { old, new in
-            if new.count < old.count {
-                detailTop = false
-                if new.isEmpty { libraryModel.pendingNavigationPosition = nil }
-            }
+        // value normally dies at DetailView read time (onHandoffConsumed);
+        // this is the belt-and-braces clear when the stack empties.
+        .onChange(of: navigationPath) { _, path in
+            if path.isEmpty { libraryModel.pendingNavigationPosition = nil }
         }
         // React to a Handoff-resolved item coming from LibraryModel.
         .onChange(of: libraryModel.pendingNavigationItem) { _, item in
             guard let item else { return }
-            detailTop = true
             navigationPath.append(item)
             libraryModel.pendingNavigationItem = nil
         }
@@ -76,7 +65,6 @@ struct HomeView: View {
         .onAppear {
             guard let item = libraryModel.pendingNavigationItem else { return }
             TJFLog("handoff: ios consumed pre-subscription item \(item.name)")
-            detailTop = true
             navigationPath.append(item)
             libraryModel.pendingNavigationItem = nil
         }
@@ -152,7 +140,6 @@ struct HomeView: View {
             guard let item else { return }
             // Only the home detail stack is bound to navigationPath.
             selectedTab = .home
-            detailTop = true
             navigationPath.append(item)
             libraryModel.pendingNavigationItem = nil
             TJFLog("handoff: mac pushed \(item.name) onto navigationPath")
@@ -163,7 +150,6 @@ struct HomeView: View {
             guard let item = libraryModel.pendingNavigationItem else { return }
             TJFLog("handoff: mac consumed pre-subscription item \(item.name)")
             selectedTab = .home
-            detailTop = true
             navigationPath.append(item)
             libraryModel.pendingNavigationItem = nil
         }
@@ -187,13 +173,10 @@ struct HomeView: View {
                     }
                     #endif
             }
-            // m7/F1 (mac mirror): Handoff position dies on pop; any pop also
-            // clears detailTop (a detail can only be removed from the top).
-            .onChange(of: navigationPath) { old, new in
-                if new.count < old.count {
-                    detailTop = false
-                    if new.isEmpty { libraryModel.pendingNavigationPosition = nil }
-                }
+            // m7 (mac mirror): belt-and-braces clear when the stack empties —
+            // DetailView normally consumes the position at read time.
+            .onChange(of: navigationPath) { _, path in
+                if path.isEmpty { libraryModel.pendingNavigationPosition = nil }
             }
         case .search:
             SearchView(serverURL: serverURL, token: token, userId: userId)

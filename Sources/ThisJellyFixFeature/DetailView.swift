@@ -83,6 +83,11 @@ struct DetailView: View {
                 .onChange(of: showPlayer) { _, showing in
                     if !showing { onPlayerDismiss?() }
                 }
+                // Ownership: a mounted detail claims the Handoff slot (counted
+                // in HandoffCenter for nested stacks). This covers TAP pushes
+                // too — push-site tracking missed them (double activity).
+                .onAppear { HandoffCenter.shared.setDetailActive(true) }
+                .onDisappear { HandoffCenter.shared.setDetailActive(false) }
                 // m4: while this screen is the top one it OWNS the Handoff
                 // slot (browsing yields on push, playing yields once the
                 // player mounts) — this also makes the receiving
@@ -159,6 +164,9 @@ struct DetailView: View {
             .onChange(of: showPlayer) { _, showing in
                 if !showing { onPlayerDismiss?() }
             }
+            // Ownership (iOS mirror): mounted detail claims the slot.
+            .onAppear { HandoffCenter.shared.setDetailActive(true) }
+            .onDisappear { HandoffCenter.shared.setDetailActive(false) }
             // m4 (iOS mirror): detail owns the Handoff slot at this depth.
             .userActivity(
                 HandoffActivity.detail,
@@ -616,14 +624,19 @@ struct DetailView: View {
 
     /// Load the detail, then honour a pending Handoff autoplay (once).
     private func loadDetailAndMaybeAutoplay() async {
+        // F2: consume the shared position at TASK START — waiting until after
+        // loadDetail() left a window where a fast pop carried the stale value
+        // to the next destination.
+        let handoff = handoffPosition
+        if handoff != nil { onHandoffConsumed?() }
+
         await loadDetail()
-        guard let handoffPosition, !handoffAutoplayStarted else { return }
+        guard let handoff, !handoffAutoplayStarted else { return }
         handoffAutoplayStarted = true
-        onHandoffConsumed?()
 
         let serverResume = detail.flatMap { resumeSeconds($0) } ?? item.resumePositionSeconds
-        let start = HandoffResolver.effectiveStart(handoff: handoffPosition, serverResume: serverResume)
-        TJFLog("handoff: autoplay item=\(item.id) start=\(Int(start)) (handoff=\(Int(handoffPosition)) server=\(serverResume.map(Int.init) ?? -1))")
+        let start = HandoffResolver.effectiveStart(handoff: handoff, serverResume: serverResume)
+        TJFLog("handoff: autoplay item=\(item.id) start=\(Int(start)) (handoff=\(Int(handoff)) server=\(serverResume.map(Int.init) ?? -1))")
         streamTitle = detail?.name ?? item.name
         await preparePlayback(itemId: item.id, startPosition: start > 0 ? start : nil)
     }
