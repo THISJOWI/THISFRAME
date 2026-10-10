@@ -275,6 +275,27 @@ final class LibraryModel {
         }
     }
 
+    /// One page of library items for the "Ver todo" grid. The caller tracks
+    /// `startIndex` and stops when a page returns fewer than `limit` items.
+    func fetchPage(
+        parentId: String?,
+        includeTypes: String?,
+        limit: Int = 30,
+        startIndex: Int? = nil
+    ) async -> [JellyfinMediaItem] {
+        do {
+            return try await libraryClient.fetchItems(
+                userId: userId, serverURL: serverURL, token: token,
+                parentId: parentId, includeTypes: includeTypes,
+                limit: limit, orderBy: "DateCreated", filters: nil,
+                startIndex: startIndex
+            )
+        } catch {
+            noteFetchFailure(error, context: "fetchPage", surfaceMessage: false)
+            return []
+        }
+    }
+
     func imageURL(for item: JellyfinMediaItem, wide: Bool = false) -> URL? {
         guard item.hasImage else { return nil }
         let path: String

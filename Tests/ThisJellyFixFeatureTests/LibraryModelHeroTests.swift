@@ -8,6 +8,7 @@ final class StubLibraryClient: JellyfinLibraryProviding, @unchecked Sendable {
     var views: [LibraryView] = []
     var resumeItems: [JellyfinMediaItem] = []
     var latestItems: [JellyfinMediaItem] = []
+    private(set) var recordedStartIndices: [Int?] = []
 
     func fetchViews(userId: String, serverURL: URL, token: String) async throws -> [LibraryView] {
         views
@@ -18,7 +19,8 @@ final class StubLibraryClient: JellyfinLibraryProviding, @unchecked Sendable {
         parentId: String?, includeTypes: String?,
         limit: Int, orderBy: String, filters: String?, startIndex: Int?
     ) async throws -> [JellyfinMediaItem] {
-        latestItems
+        recordedStartIndices.append(startIndex)
+        return latestItems
     }
 
     func searchItems(
