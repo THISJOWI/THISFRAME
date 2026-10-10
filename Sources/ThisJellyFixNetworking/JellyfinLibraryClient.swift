@@ -35,11 +35,22 @@ struct JellyfinEpisodesResponse: Decodable {
 
 public protocol JellyfinLibraryProviding: Sendable {
     func fetchViews(userId: String, serverURL: URL, token: String) async throws -> [LibraryView]
-    func fetchItems(userId: String, serverURL: URL, token: String, parentId: String?, includeTypes: String?, limit: Int, orderBy: String, filters: String?) async throws -> [JellyfinMediaItem]
+    func fetchItems(userId: String, serverURL: URL, token: String, parentId: String?, includeTypes: String?, limit: Int, orderBy: String, filters: String?, startIndex: Int?) async throws -> [JellyfinMediaItem]
     func searchItems(userId: String, serverURL: URL, token: String, query: String, includeTypes: String?, limit: Int) async throws -> [JellyfinMediaItem]
     func fetchSeasons(userId: String, serverURL: URL, token: String, seriesId: String) async throws -> [JellyfinSeason]
     func fetchEpisodes(userId: String, serverURL: URL, token: String, seriesId: String, seasonId: String) async throws -> [JellyfinEpisode]
     func fetchResumeItems(userId: String, serverURL: URL, token: String, limit: Int) async throws -> [JellyfinMediaItem]
+}
+
+public extension JellyfinLibraryProviding {
+    /// Convenience overload: rows load unpaged (`startIndex: nil`) by default.
+    func fetchItems(userId: String, serverURL: URL, token: String, parentId: String?, includeTypes: String?, limit: Int, orderBy: String, filters: String?) async throws -> [JellyfinMediaItem] {
+        try await fetchItems(
+            userId: userId, serverURL: serverURL, token: token,
+            parentId: parentId, includeTypes: includeTypes, limit: limit,
+            orderBy: orderBy, filters: filters, startIndex: nil
+        )
+    }
 }
 
 public struct JellyfinLibraryClient: JellyfinLibraryProviding {
@@ -64,7 +75,8 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
         includeTypes: String?,
         limit: Int,
         orderBy: String,
-        filters: String?
+        filters: String?,
+        startIndex: Int? = nil
     ) async throws -> [JellyfinMediaItem] {
         var components = URLComponents(
             url: serverURL.appendingPathComponent("Users/\(userId)/Items"),
@@ -85,6 +97,9 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
         }
         if let filters {
             queryItems.append(URLQueryItem(name: "Filters", value: filters))
+        }
+        if let startIndex {
+            queryItems.append(URLQueryItem(name: "StartIndex", value: String(startIndex)))
         }
 
         components.queryItems = queryItems

@@ -40,6 +40,50 @@ final class JellyfinLibraryClientTests: XCTestCase {
         XCTAssertEqual(items[0].name, "Inception")
     }
 
+    func testFetchItemsPaginationAddsStartIndex() async throws {
+        let session = MockNetworkSession(data: """
+        {"Items":[]}
+        """.data(using: .utf8)!, statusCode: 200)
+
+        let client = JellyfinLibraryClient(session: session)
+        _ = try await client.fetchItems(
+            userId: "u1",
+            serverURL: URL(string: "http://localhost:8096")!,
+            token: "tok",
+            parentId: "v1",
+            includeTypes: "Movie",
+            limit: 30,
+            orderBy: "DateCreated",
+            filters: nil,
+            startIndex: 40
+        )
+
+        let query = session.capturedRequest?.url?.query ?? ""
+        XCTAssertTrue(query.contains("StartIndex=40"), "query was: \(query)")
+    }
+
+    func testFetchItemsWithoutStartIndexOmitsQueryParam() async throws {
+        let session = MockNetworkSession(data: """
+        {"Items":[]}
+        """.data(using: .utf8)!, statusCode: 200)
+
+        let client = JellyfinLibraryClient(session: session)
+        _ = try await client.fetchItems(
+            userId: "u1",
+            serverURL: URL(string: "http://localhost:8096")!,
+            token: "tok",
+            parentId: "v1",
+            includeTypes: "Movie",
+            limit: 20,
+            orderBy: "DateCreated",
+            filters: nil,
+            startIndex: nil
+        )
+
+        let query = session.capturedRequest?.url?.query ?? ""
+        XCTAssertFalse(query.contains("StartIndex"), "query was: \(query)")
+    }
+
     func testAuthHeaderContainsToken() async throws {
         let session = MockNetworkSession(data: """
         {"Items":[]}
