@@ -223,10 +223,14 @@ struct PlayerView: View {
                         viewModel.setFill(!viewModel.isFill)
                     }
                     .onTapGesture {
-                        // A6: taps while the route sheet is up must never
-                        // toggle controls — unmounting ControlsOverlay mid-
-                        // presentation is what left AVRoutePickerView dead.
-                        guard !isRouteSheetPresenting else { return }
+                        // The old A6 guard (`guard !isRouteSheetPresenting`)
+                        // bricked EVERY tap when the system skipped
+                        // routePickerViewDidEndPresentingRoutes — flag stuck
+                        // true, app "pillada". The route sheet is modal (its
+                        // own UI swallows touches), so the guard never
+                        // protected anything reachable; the auto-hide freeze
+                        // in onAirPlayPresenting is what keeps the host view
+                        // alive mid-presentation. Taps stay live regardless.
                         withAnimation(.easeInOut(duration: 0.2)) {
                             viewModel.showControls.toggle()
                         }

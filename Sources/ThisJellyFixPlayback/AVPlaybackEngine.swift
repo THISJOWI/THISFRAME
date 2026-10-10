@@ -114,6 +114,7 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     public func prepare(_ request: PlaybackRequest) async throws {
         generation += 1
         let gen = generation
+        let prepareStartedAt = Date()
 
         clearItemObservations()
         // New item → the previous legible choice doesn't apply (option indices
@@ -142,10 +143,16 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
 
         observe(item: item, generation: gen)
         player.replaceCurrentItem(with: item)
+        TJFLog("prepare: item attached in \(Int(Date().timeIntervalSince(prepareStartedAt) * 1000)) ms")
 
-        // Fresh asset from the URL: `item.asset` is main-actor isolated in
-        // newer SDKs and this method is not.
-        await loadTracks(asset: AVURLAsset(url: request.streamURL), generation: gen)
+        // The track groups load over the NETWORK (AVURLAsset on an http URL:
+        // two metadata round-trips). Awaiting them here delayed play() until
+        // they landed — a big slice of "las pelis tardan mucho en cargar".
+        // Generation-guarded + locked, so it runs detached; the VM re-selects
+        // when the groups land (stale generations drop themselves).
+        Task { [weak self] in
+            await self?.loadTracks(asset: AVURLAsset(url: request.streamURL), generation: gen)
+        }
     }
 
     public func play() {

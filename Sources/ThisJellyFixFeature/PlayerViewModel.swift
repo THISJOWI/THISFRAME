@@ -86,6 +86,10 @@ final class PlayerViewModel {
     /// PiP coordinator hands the same layer to the system window.
     let engine: AVPlaybackEngine
     private var updateTimer: Timer?
+    /// Fast cue refresh while an EXTERNAL track is composed client-side —
+    /// riding the 0.5 s reporting tick made subtitles appear up to half a
+    /// second late ("subtítulos desfasados").
+    private var subtitleTimer: Timer?
     private var tracksLoaded = false
     private var trackLoadAttempts = 0
     private var timerTickCount = 0
@@ -540,16 +544,40 @@ final class PlayerViewModel {
             selectedSubtitleTrackIndex = track.id
         }
         updateSubtitleText()
+        refreshSubtitleTimer()
         TJFLog("subtitles select id=\(track.id) external=\(track.isExternal)")
     }
 
-    /// Cue lookup for the overlay — called on every timer tick.
+    /// Cue lookup for the overlay — runs on the fast subtitle timer.
     private func updateSubtitleText() {
         guard let idx = selectedExternalSubIndex, idx < externalSubs.count else {
-            subtitleText = nil
+            if subtitleText != nil { subtitleText = nil }
             return
         }
-        subtitleText = SRTParser.cue(at: currentTime, in: externalSubs[idx].cues)?.text
+        // engine.currentTime is live; the sampled `currentTime` lags up to
+        // 0.5 s behind and pushed every cue switch past the audio.
+        let next = SRTParser.cue(at: engine.currentTime, in: externalSubs[idx].cues)?.text
+        if next != subtitleText { subtitleText = next }
+    }
+
+    /// Start/stop the 0.2 s cue refresh to match the current selection.
+    /// Cheap when off: the cue lookup is a binary search and the assignment
+    /// only fires observation when the TEXT changes.
+    private func refreshSubtitleTimer() {
+        let wanted = selectedExternalSubIndex != nil && updateTimer != nil
+        if wanted {
+            guard subtitleTimer == nil else { return }
+            subtitleTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    // Seek targets are held by performSeek — refresh there.
+                    guard let self, !self.isSeeking else { return }
+                    self.updateSubtitleText()
+                }
+            }
+        } else {
+            subtitleTimer?.invalidate()
+            subtitleTimer = nil
+        }
     }
 
     // MARK: - Timer
@@ -558,8 +586,7 @@ final class PlayerViewModel {
         // Handoff races must never stack timers — a leaked timer keeps
         // reporting stale progress forever.
         guard updateTimer == nil else { return }
-        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
+        updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in            Task { @MainActor [weak self] in
                 guard let self else { return }
                 if self.isSeeking {
                     // A seek holds `currentTime` at its target, but duration and
@@ -624,14 +651,16 @@ final class PlayerViewModel {
                     }
                 }
 
-                // Tracks are loaded during prepare (AVFoundation loads media
-                // selection groups eagerly) — retry a few ticks only for HLS
-                // playlists whose groups land later.
+                // The engine loads media selection groups OFF the prepare
+                // critical path (network metadata), so this poll is how the
+                // VM picks them up. Wide window: a cold/remote server can
+                // take several seconds for the two group loads.
                 if !self.tracksLoaded {
                     self.trackLoadAttempts += 1
-                    if self.trackLoadAttempts <= 10 {
+                    if self.trackLoadAttempts <= 60 {
                         await self.loadTracks()
                     } else {
+                        TJFLog("tracks: VM gave up after \(self.trackLoadAttempts) attempts")
                         self.tracksLoaded = true
                     }
                 }
@@ -641,11 +670,15 @@ final class PlayerViewModel {
                 self.evaluateSkipState(delta: 0.5)
             }
         }
+        // External cue refresh runs alongside the reporting tick.
+        refreshSubtitleTimer()
     }
 
     func stopUpdating() {
         updateTimer?.invalidate()
         updateTimer = nil
+        subtitleTimer?.invalidate()
+        subtitleTimer = nil
     }
 
     // MARK: - Skip Segments

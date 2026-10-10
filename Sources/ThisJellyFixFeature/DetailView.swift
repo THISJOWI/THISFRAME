@@ -660,6 +660,7 @@ struct DetailView: View {
 
         do {
             let client = JellyfinPlaybackClient()
+            let infoStartedAt = Date()
             let info = try await client.fetchPlaybackInfo(
                 userId: userId,
                 serverURL: serverURL,
@@ -667,6 +668,7 @@ struct DetailView: View {
                 itemId: itemId,
                 deviceProfile: .avPlayer
             )
+            TJFLog("playbackInfo: \(Int(Date().timeIntervalSince(infoStartedAt) * 1000)) ms item=\(itemId)")
 
             guard let source = info.mediaSources.first else {
                 failPlayback("No hay fuente de reproducción disponible.")
