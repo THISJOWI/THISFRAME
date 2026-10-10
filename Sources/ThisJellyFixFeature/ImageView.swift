@@ -174,7 +174,7 @@ struct MareaImageView: View {
 
     private var placeholderView: some View {
         ZStack {
-            Color(red: 0.12, green: 0.14, blue: 0.22)
+            MareaTheme.Colors.surface
             Text(placeholder)
                 .font(.title2.bold())
                 .foregroundStyle(.cyan.opacity(0.6))

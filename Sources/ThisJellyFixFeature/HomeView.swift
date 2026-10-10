@@ -294,9 +294,14 @@ struct HomeView: View {
                     #endif
 
                     ForEach(Array(libraryModel.rows.enumerated()), id: \.element.id) { index, row in
-                        ContentRowView(
-                            row: row,
-                            libraryModel: libraryModel,
+                        RowSection(
+                            title: row.title,
+                            items: row.items,
+                            wide: row.title == "Estás viendo",
+                            imageURL: { libraryModel.imageURL(for: $0, wide: row.title == "Estás viendo") },
+                            fallbackImageURL: row.title == "Estás viendo"
+                                ? { libraryModel.imageURL(for: $0, wide: false) }
+                                : nil,
                             onPlayDirect: { item in directItem = item }
                         )
 
@@ -365,62 +370,6 @@ struct HomeView: View {
         Task {
             try? await Task.sleep(for: .seconds(2))
             await libraryModel.refreshResume(force: true)
-        }
-    }
-}
-
-private struct ContentRowView: View {
-    let row: ContentRow
-    let libraryModel: LibraryModel
-    /// Direct playback taps (episodes/movies) bypass DetailView.
-    var onPlayDirect: (JellyfinMediaItem) -> Void = { _ in }
-    @State private var appeared = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(row.title)
-                .font(.title3.bold())
-                .padding(.horizontal, 32)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                // Top-align cards: text below posters varies in height (1–2 line
-                // titles, optional year, episode labels), and the default
-                // .center alignment vertically offset the posters, making them
-                // look like different heights.
-                LazyHStack(alignment: .top, spacing: 14) {
-                    ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
-                        let isResumeRow = row.title == "Estás viendo"
-                        let card = MediaCardView(
-                            item: item,
-                            imageURL: libraryModel.imageURL(for: item, wide: isResumeRow),
-                            wide: isResumeRow,
-                            // Wide (Thumb/Backdrop) fetches fail more often than
-                            // the poster: fall back so the resume tile never
-                            // sits there as a dead black card.
-                            fallbackImageURL: isResumeRow
-                                ? libraryModel.imageURL(for: item, wide: false)
-                                : nil
-                        )
-
-                        if item.type == "Episode" || item.type == "Movie" {
-                            // Direct playback — no DetailView in between.
-                            Button { onPlayDirect(item) } label: { card }
-                                .buttonStyle(.plain)
-                        } else {
-                            NavigationLink(value: item) { card }
-                                .buttonStyle(.plain)
-                        }
-                    }
-                }
-                .padding(.horizontal, 32)
-            }
-        }
-        .opacity(appeared ? 1 : 0)
-        .offset(y: appeared ? 0 : 20)
-        .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.85).delay(0.05)) {
-                appeared = true
-            }
         }
     }
 }

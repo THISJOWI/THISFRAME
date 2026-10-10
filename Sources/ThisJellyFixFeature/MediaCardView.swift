@@ -8,6 +8,8 @@ struct MediaCardView: View {
     var wide: Bool = false
     /// Portrait poster tried when the wide frame can't be fetched.
     var fallbackImageURL: URL? = nil
+    /// Overlay badge (bottom-left) — Netflix-style "Nueva temporada" / "Siguiente episodio".
+    var badge: CardBadge? = nil
     @State private var isAppeared = false
 
     private var isEpisode: Bool { item.type == "Episode" }
@@ -23,7 +25,7 @@ struct MediaCardView: View {
                 height: cardHeight,
                 fallbackURL: fallbackImageURL
             )
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.card))
             .overlay(alignment: .bottom) {
                 // Progress bar
                 if let percentage = item.playedPercentage, percentage > 0 {
@@ -35,14 +37,14 @@ struct MediaCardView: View {
                             .overlay(alignment: .leading) {
                                 GeometryReader { geo in
                                     Rectangle()
-                                        .fill(.cyan)
+                                        .fill(MareaTheme.Colors.accent)
                                         .frame(width: geo.size.width * percentage / 100.0)
                                         .animation(.easeInOut(duration: 0.5), value: percentage)
                                 }
                             }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.card))
                 }
 
                 // Play button overlay for wide cards with progress
@@ -53,6 +55,20 @@ struct MediaCardView: View {
                         .padding(10)
                         .background(.black.opacity(0.5), in: Circle())
                         .opacity(isAppeared ? 1 : 0)
+                }
+
+                // Badge overlay (bottom-left, over the image)
+                if let badge {
+                    BadgeView(badge: badge)
+                        .padding(MareaTheme.Spacing.sm)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                }
+            }
+            .overlay {
+                // Subtle light border on landscape cards
+                if isWide {
+                    RoundedRectangle(cornerRadius: MareaTheme.Radius.card)
+                        .strokeBorder(MareaTheme.Colors.borderGlow, lineWidth: 1)
                 }
             }
             .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
@@ -71,7 +87,7 @@ struct MediaCardView: View {
                     if let label = item.episodeLabel {
                         Text(label)
                             .font(.caption)
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(MareaTheme.Colors.accent)
                     }
                     Text(item.name)
                         .font(.caption)
