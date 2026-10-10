@@ -1819,75 +1819,99 @@
 				TargetAttributes = {
 					05F916F4780D98D515EC86D2 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					090DFEB4D011F060BFFA1879 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					1059FF382EA69FB63E4E6A2A = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					14858F0D2915307F3888D6BE = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					29DB5EBE083C13EA893CA93B = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					2EE52148A8E27B8A70EA2C4E = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					3335A0DE431013B44E3EF424 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					358AE2F5990897CC31C7C9BD = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					4C1D9F67B4ED5BD8530AE467 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					5A9AF7833E200A6E046A3664 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					64E9A39C57C79F16B5734167 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					6CB5B3EF9260B9ADD5A25548 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					830DDA9E219404DD8F9FFCCC = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					8DB7EA2C056CC57434752787 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					90D78AF4658722237CE7E6D5 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					9460BCDBB91510D32364FF9E = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					B4C039A3BCB82DB23E176594 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					BCE5870EECC0A3E664945C3F = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					C60197DAA77B068C0DEC64DA = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					D813E807D24C718C630BB454 = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					E2F9AE89CE7D548F8719F10E = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					E8062BD472EACAE5A4BABF4E = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					FA2253E4269C8D8C7EAA11DF = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 					FE43328FF7D8C9DF62B347CA = {
 						DevelopmentTeam = LSKYSF7629;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -3193,6 +3217,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = LSKYSF7629;
@@ -3301,6 +3326,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = LSKYSF7629;

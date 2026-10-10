@@ -12,6 +12,10 @@ settings:
     PRODUCT_NAME: thisjellyfix
     GENERATE_INFOPLIST_FILE: YES
     DEVELOPMENT_TEAM: LSKYSF7629
+    # Without this xcodegen emits no CODE_SIGN_STYLE and xcodebuild treats
+    # every target as MANUAL signing → "No profiles for … were found" on
+    # device builds (simulator hides it behind CODE_SIGNING_ALLOWED=NO).
+    CODE_SIGN_STYLE: Automatic
 targets:
   Core-iOS:
     type: framework
