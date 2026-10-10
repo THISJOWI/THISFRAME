@@ -59,12 +59,9 @@ public struct ThisJellyFixRootView: View {
             PipLayerHostView(isActive: PipCoordinator.shared.isActive)
                 .allowsHitTesting(false)
             #endif
-            LinearGradient(
-                colors: [.black, Color(red: 0.05, green: 0.08, blue: 0.15), .black],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            // Pure black — the content (cards, hero, art) provides the color.
+            MareaTheme.Colors.background
+                .ignoresSafeArea()
 
             if let server = model.server {
                 if authModel.isAuthenticated {

@@ -30,6 +30,16 @@ struct HomeView: View {
                 .navigationDestination(for: CatalogItem.self) { item in
                     CatalogDetailView(item: item)
                 }
+                .navigationDestination(for: CategoryChip.self) { chip in
+                    LibraryGridView(
+                        title: chip.title,
+                        parentId: chip.parentId,
+                        includeTypes: chip.includeTypes,
+                        serverURL: serverURL,
+                        token: token,
+                        userId: userId
+                    )
+                }
                 #endif
         }
         // Publish a Handoff activity so the user can continue browsing on
@@ -171,6 +181,16 @@ struct HomeView: View {
                     .navigationDestination(for: CatalogItem.self) { item in
                         CatalogDetailView(item: item)
                     }
+                    .navigationDestination(for: CategoryChip.self) { chip in
+                        LibraryGridView(
+                            title: chip.title,
+                            parentId: chip.parentId,
+                            includeTypes: chip.includeTypes,
+                            serverURL: serverURL,
+                            token: token,
+                            userId: userId
+                        )
+                    }
                     #endif
             }
             // m7 (mac mirror): belt-and-braces clear when the stack empties —
@@ -229,8 +249,12 @@ struct HomeView: View {
     #endif
 
     private var scrollContent: some View {
+        // Resume ids feed the card badges ("Siguiente episodio") on every row.
+        let resumeIds = Set(
+            libraryModel.rows.first(where: { $0.title == "Estás viendo" })?.items.map(\.id) ?? []
+        )
         let base = ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: MareaTheme.Spacing.lg) {
                 HStack {
                     Image("AppIcon")
                         .resizable()
@@ -247,7 +271,7 @@ struct HomeView: View {
                     }
                     #endif
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, MareaTheme.Spacing.xl)
 
                 // E4: dead token — the retry button can never succeed, so the
                 // banner (and the empty-state button) offer a real way out.
@@ -260,13 +284,18 @@ struct HomeView: View {
                             .buttonStyle(.bordered)
                             .tint(.cyan)
                     }
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, MareaTheme.Spacing.xl)
                 }
 
                 if libraryModel.isLoading && libraryModel.rows.isEmpty {
-                    ProgressView("Cargando biblioteca…")
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 60)
+                    // Shimmering placeholders shaped like the real content —
+                    // the layout is already there when the rows land.
+                    VStack(alignment: .leading, spacing: MareaTheme.Spacing.lg) {
+                        SkeletonRowView()
+                        SkeletonRowView()
+                        SkeletonRowView()
+                    }
+                    .padding(.top, MareaTheme.Spacing.lg)
                 } else if let error = libraryModel.errorMessage, libraryModel.rows.isEmpty {
                     VStack(spacing: 16) {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -288,21 +317,26 @@ struct HomeView: View {
                     .padding(.top, 60)
                 } else {
                     #if os(iOS) || os(macOS)
+                    categoryChips
                     if libraryModel.rows.isEmpty {
                         trendingShelf
                     }
                     #endif
+
+                    heroCarousel()
 
                     ForEach(Array(libraryModel.rows.enumerated()), id: \.element.id) { index, row in
                         RowSection(
                             title: row.title,
                             items: row.items,
                             wide: row.title == "Estás viendo",
+                            badgeFor: { CardBadge.badge(for: $0, resumeItems: resumeIds) },
                             imageURL: { libraryModel.imageURL(for: $0, wide: row.title == "Estás viendo") },
                             fallbackImageURL: row.title == "Estás viendo"
                                 ? { libraryModel.imageURL(for: $0, wide: false) }
                                 : nil,
-                            onPlayDirect: { item in directItem = item }
+                            onPlayDirect: { item in directItem = item },
+                            onSeeAll: seeAllAction(for: row.title)
                         )
 
                         // Trending sits right after "Estás viendo" so fresh
@@ -320,8 +354,9 @@ struct HomeView: View {
                 forYouShelf
                 #endif
             }
-            .padding(.top, 16)
+            .padding(.top, MareaTheme.Spacing.md)
         }
+        .background(MareaTheme.Colors.background)
         .refreshable {
             async let libraryReload: Void = libraryModel.load()
             #if os(iOS) || os(macOS)
@@ -361,6 +396,66 @@ struct HomeView: View {
             )
         }
         #endif
+    }
+
+    // MARK: - Premium home pieces
+
+    #if os(iOS) || os(macOS)
+    /// Netflix-style category chips (Películas, Series, …) — each opens the
+    /// paginated grid for that server view.
+    private var categoryChips: some View {
+        Group {
+            if !libraryModel.categoryChips.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: MareaTheme.Spacing.sm) {
+                        ForEach(libraryModel.categoryChips) { chip in
+                            NavigationLink(value: chip) {
+                                ChipView(title: chip.title)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, MareaTheme.Spacing.xl)
+                }
+            }
+        }
+    }
+
+    /// "Ver todo" target for a row backed by a server view. Rows without a
+    /// matching category (resume, recently-watched) get no link.
+    private func seeAllAction(for rowTitle: String) -> (() -> Void)? {
+        guard let chip = libraryModel.categoryChips.first(where: { $0.id == rowTitle }) else {
+            return nil
+        }
+        return { navigationPath.append(chip) }
+    }
+    #endif
+
+    /// Big featured carousel on top of Home — up to 5 hero cards, swipable,
+    /// with a "Reproducir" CTA that resumes playback directly.
+    private func heroCarousel() -> some View {
+        Group {
+            if !libraryModel.heroItems.isEmpty {
+                // viewAligned pages: one hero fills the width, the next one
+                // peeks at the trailing edge (Netflix billboard feel).
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: MareaTheme.Spacing.md) {
+                        ForEach(libraryModel.heroItems) { item in
+                            HeroCardView(
+                                item: item,
+                                backdropURL: libraryModel.imageURL(for: item, wide: true),
+                                posterURL: libraryModel.imageURL(for: item, wide: false),
+                                onPlay: { directItem = item }
+                            )
+                            .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: MareaTheme.Spacing.md)
+                        }
+                    }
+                    .scrollTargetLayout()
+                    .padding(.horizontal, MareaTheme.Spacing.md)
+                }
+                .scrollTargetBehavior(.viewAligned)
+            }
+        }
     }
 
     /// Player dismissed: back to this screen, then refresh progress rows
