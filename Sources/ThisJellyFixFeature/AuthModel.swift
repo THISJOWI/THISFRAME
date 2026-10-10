@@ -15,6 +15,11 @@ final class AuthModel {
     // MARK: - Auth state
     var isAuthenticated = false
     var currentUser: JellyfinUser?
+    /// Session token cached in memory at restore/login. Views read THIS
+    /// instead of the Keychain: a `KeychainStore().read` inside a SwiftUI
+    /// `body` re-ran SecItemCopyMatching on every re-render — the per-frame
+    /// driver of the keychain prompt storm.
+    private(set) var token: String?
 
     // MARK: - Dependencies
     private let authClient: any JellyfinAuthenticating
@@ -37,6 +42,7 @@ final class AuthModel {
            let userId = keychain.read(key: KeychainKey.userId),
            let userName = keychain.read(key: KeychainKey.userName),
            !token.isEmpty {
+            self.token = token
             currentUser = JellyfinUser(id: userId, name: userName)
             isAuthenticated = true
         }
@@ -64,6 +70,7 @@ final class AuthModel {
             try keychain.save(key: KeychainKey.serverURL, value: serverURL.absoluteString)
 
             currentUser = result.user
+            token = result.accessToken
             isAuthenticated = true
 
             // Clear form
@@ -90,6 +97,7 @@ final class AuthModel {
             let user = try await authClient.validateToken(
                 userId: userId, serverURL: serverURL, token: token, deviceId: deviceId
             )
+            self.token = token
             currentUser = user.name.isEmpty
                 ? JellyfinUser(id: user.id, name: userName, primaryImageTag: user.primaryImageTag)
                 : user
@@ -105,12 +113,16 @@ final class AuthModel {
     // MARK: - Logout
 
     func logout() {
-        try? keychain.delete(key: KeychainKey.accessToken)
-        try? keychain.delete(key: KeychainKey.userId)
-        try? keychain.delete(key: KeychainKey.userName)
-        try? keychain.delete(key: KeychainKey.serverURL)
+        // Propagate failures into the log: a silently failed delete is what
+        // used to leave poisoned items alive to re-prompt on every launch.
+        for key in [KeychainKey.accessToken, KeychainKey.userId,
+                    KeychainKey.userName, KeychainKey.serverURL] {
+            do { try keychain.delete(key: key) }
+            catch { TJFLog("logout: keychain delete \(key) failed: \(error.localizedDescription)") }
+        }
 
         currentUser = nil
+        token = nil
         isAuthenticated = false
         username = ""
         password = ""

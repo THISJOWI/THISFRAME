@@ -58,9 +58,10 @@ public struct KeychainStore: KeychainStoring {
             || NSClassFromString("XCTestCase") != nil
         self.systemKeychain = systemKeychain
             ?? (ProcessInfo.processInfo.environment["TJF_REAL_KEYCHAIN"] != nil || !isTestRunner)
-        // One-shot upgrade of items written before iCloud sync: once a
-        // synchronizable copy exists the legacy query stops matching.
-        // Reads the REAL keychain — never allowed under a test runner.
+        // One-shot upgrade of items written before iCloud sync. Runs at most
+        // once PER PROCESS per service (was: once per KeychainStore init, and
+        // the init runs per network request via DeviceIdentifier — the key
+        // source of the keychain prompt storm).
         if self.systemKeychain { migrateIfNeeded() }
     }
 
@@ -100,6 +101,62 @@ public struct KeychainStore: KeychainStoring {
         }
     }
 
+    // MARK: - Session state (real keychain only)
+
+    /// Process-wide session state for the REAL keychain backend:
+    ///
+    /// - `values` caches successful reads — `DeviceIdentifier().current()`
+    ///   runs per network request and `KeychainStore().read(...)` used to
+    ///   run inside SwiftUI `body`; both become dictionary lookups.
+    /// - `interactiveAttempts` bounds the number of USER-DIALOG operations
+    ///   per key per process (fail-fast reads, recovery reads, recovery
+    ///   deletes). A poisoned item can prompt at most twice per launch,
+    ///   never once per request.
+    /// - `migrated` marks services whose legacy→sync upgrade already ran.
+    ///
+    /// An item whose ACL belongs to another binary (a stale test-runner
+    /// cdhash) is healed on first contact: read interactively once, then
+    /// delete+re-add so the item carries the app's OWN ACL (stable across
+    /// rebuilds). See `heal`.
+    private static let session = SessionCache()
+
+    private final class SessionCache: @unchecked Sendable {
+        private let lock = NSLock()
+        private var values: [String: String] = [:]
+        private var interactiveAttempts: [String: Int] = [:]
+        private var migrated: Set<String> = []
+
+        func value(_ cacheKey: String) -> String? {
+            lock.lock(); defer { lock.unlock() }
+            return values[cacheKey]
+        }
+
+        func setValue(_ value: String, _ cacheKey: String) {
+            lock.lock(); defer { lock.unlock() }
+            values[cacheKey] = value
+        }
+
+        func removeValue(_ cacheKey: String) {
+            lock.lock(); defer { lock.unlock() }
+            values.removeValue(forKey: cacheKey)
+        }
+
+        /// True while the per-key interactive budget (2: one recovery read +
+        /// one recovery delete) is left.
+        func beginInteractive(_ cacheKey: String) -> Bool {
+            lock.lock(); defer { lock.unlock() }
+            let used = interactiveAttempts[cacheKey, default: 0]
+            guard used < 2 else { return false }
+            interactiveAttempts[cacheKey] = used + 1
+            return true
+        }
+
+        func markMigrated(_ service: String) -> Bool {
+            lock.lock(); defer { lock.unlock() }
+            return migrated.insert(service).inserted
+        }
+    }
+
     // MARK: - KeychainStoring
 
     /// Query for one account, in the app's default keychain group.
@@ -112,14 +169,29 @@ public struct KeychainStore: KeychainStoring {
         ]
     }
 
+    /// Query matching both the iCloud and the local copy of an account.
+    /// Without `kSecAttrSynchronizableAny` a query matches ONLY the
+    /// non-synchronizable variant — invisible on devices where the synced
+    /// item is the one that exists.
+    static func anySyncQuery(service: String, key: String) -> [String: Any] {
+        var query = baseQuery(service: service, key: key)
+        query[kSecAttrSynchronizable as String] = kSecAttrSynchronizableAny
+        return query
+    }
+
     public func save(key: String, value: String) throws {
         guard systemKeychain else {
             Self.memory.save(service: service, key: key, value: value)
             return
         }
-        deleteIfExists(key: key)
-
         guard let data = value.data(using: .utf8) else { return }
+
+        // Remove any existing copy FIRST (both sync and local variants) and
+        // PROPAGATE the failure: the old `try?` here is what let a poisoned
+        // item survive forever — delete failed silently, the subsequent add
+        // hit errSecDuplicateItem, save "failed" invisibly, and every read
+        // re-prompted. `delete` does its own bounded interactive recovery.
+        try delete(key: key)
 
         var query = Self.baseQuery(service: service, key: key)
         query[kSecValueData as String] = data
@@ -144,27 +216,55 @@ public struct KeychainStore: KeychainStoring {
         guard status == errSecSuccess else {
             throw KeychainError.saveFailed(status)
         }
+        Self.session.setValue(value, cacheKey(key))
     }
 
     public func read(key: String) -> String? {
         guard systemKeychain else {
             return Self.memory.read(service: service, key: key)
         }
-        var query = Self.baseQuery(service: service, key: key)
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
-
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-
-        guard status == errSecSuccess,
-              let data = result as? Data,
-              let string = String(data: data, encoding: .utf8)
-        else {
+        if let cached = Self.session.value(cacheKey(key)) {
+            return cached
+        }
+        // 1. Fail-fast: never allowed to display a dialog. The prompt storm
+        //    (one dialog per request while an item ACL was foreign) dies here.
+        switch lookup(key: key, interactive: false) {
+        case .found(let value):
+            Self.session.setValue(value, cacheKey(key))
+            return value
+        case .notFound:
+            return nil
+        case .authRequired:
+            break // 2. bounded recovery below
+        case .failed:
             return nil
         }
-
-        return string
+        // 2. Bounded interactive recovery: ONE dialog per key per process for
+        //    a foreign-ACL item (e.g. written by a test runner before test
+        //    isolation, so its ACL names a dead cdhash — "Always Allow" from
+        //    any build never sticks). Heal the item so it stops prompting.
+        guard Self.session.beginInteractive(cacheKey(key)) else {
+            TJFLog("keychain: \(key) denied and interactive budget spent — no further prompts")
+            return nil
+        }
+        switch lookup(key: key, interactive: true) {
+        case .found(let value):
+            TJFLog("keychain: interactive recovery for \(key) — rewriting item with app-owned ACL")
+            do {
+                try heal(key: key, value: value)
+            } catch {
+                // Value is still good this launch; the cached copy plus the
+                // attempt budget keep the dialog from repeating either way.
+                TJFLog("keychain: heal for \(key) failed: \(error.localizedDescription)")
+            }
+            Self.session.setValue(value, cacheKey(key))
+            return value
+        case .notFound, .failed:
+            return nil
+        case .authRequired:
+            TJFLog("keychain: interactive recovery for \(key) not permitted")
+            return nil
+        }
     }
 
     public func delete(key: String) throws {
@@ -172,9 +272,13 @@ public struct KeychainStore: KeychainStoring {
             Self.memory.delete(service: service, key: key)
             return
         }
-        let query = Self.baseQuery(service: service, key: key)
-
-        let status = SecItemDelete(query as CFDictionary)
+        var status = performDelete(key: key, interactive: false)
+        if isAuthStatus(status), Self.session.beginInteractive(cacheKey(key)) {
+            // Foreign-ACL item: one dialog, then it's gone (and `save`
+            // re-adds it under the app's own ACL).
+            status = performDelete(key: key, interactive: true)
+        }
+        Self.session.removeValue(cacheKey(key))
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw KeychainError.deleteFailed(status)
         }
@@ -192,6 +296,7 @@ public struct KeychainStore: KeychainStoring {
             kSecAttrService as String:        service,
             kSecReturnAttributes as String:   true,
             kSecMatchLimit as String:         kSecMatchLimitAll,
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny,
         ]
 
         var result: AnyObject?
@@ -209,12 +314,83 @@ public struct KeychainStore: KeychainStoring {
         }
     }
 
+    // MARK: - Lookup
+
+    private enum Lookup {
+        case found(String)
+        case notFound
+        /// Item exists but its ACL won't let THIS binary read it without a
+        /// user dialog (`kSecUseAuthenticationUIFail` refused the UI).
+        case authRequired
+        case failed(OSStatus)
+    }
+
+    private func lookup(key: String, interactive: Bool) -> Lookup {
+        var query = Self.anySyncQuery(service: service, key: key)
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        if !interactive {
+            query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
+        }
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        switch status {
+        case errSecSuccess:
+            guard let data = result as? Data,
+                  let string = String(data: data, encoding: .utf8)
+            else { return .failed(errSecSuccess) }
+            return .found(string)
+        case errSecItemNotFound:
+            return .notFound
+        case errSecInteractionNotAllowed, errSecAuthFailed:
+            return .authRequired
+        default:
+            return .failed(status)
+        }
+    }
+
+    /// Delete both variants (sync + local) of one account.
+    private func performDelete(key: String, interactive: Bool) -> OSStatus {
+        var query = Self.anySyncQuery(service: service, key: key)
+        if !interactive {
+            query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
+        }
+        return SecItemDelete(query as CFDictionary)
+    }
+
+    private func isAuthStatus(_ status: OSStatus) -> Bool {
+        status == errSecInteractionNotAllowed || status == errSecAuthFailed
+    }
+
+    /// Rewrite one account under the app's OWN ACL.
+    ///
+    /// The item's access control list names the identity that last touched
+    /// it. When that identity is foreign (a retired test-runner cdhash), the
+    /// app can read it only after the user approves a dialog — and approval
+    /// never survives a rebuild. Deleting and re-adding from inside the app
+    /// stamps the item with the app's designated requirement, which is
+    /// stable across rebuilds: the dialog stops permanently.
+    private func heal(key: String, value: String) throws {
+        let status = performDelete(key: key, interactive: true)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw KeychainError.deleteFailed(status)
+        }
+        try save(key: key, value: value)
+    }
+
     // MARK: - Migration
 
     /// Re-saves any item written without iCloud sync so it can start
-    /// syncing. Runs at most once per install: a synchronizable item is no
-    /// longer matched by the legacy query.
+    /// syncing. Runs at most once PER PROCESS per service: a synchronizable
+    /// item is no longer matched by the legacy query, but the init that
+    /// calls this runs constantly (per request via DeviceIdentifier), and
+    /// every SecItemCopyMatching against a foreign-ACL item was another
+    /// dialog candidate.
     private func migrateIfNeeded() {
+        guard Self.session.markMigrated(service) else { return }
+
         let keys = [
             KeychainKey.accessToken,
             KeychainKey.userId,
@@ -225,10 +401,13 @@ public struct KeychainStore: KeychainStoring {
 
         for key in keys {
             // 1. Legacy item = default group, explicitly NOT synchronizable.
+            //    Fail-fast: migration must never prompt — a foreign-ACL item
+            //    is left alone and healed by the normal read path instead.
             var legacyQuery = Self.baseQuery(service: service, key: key)
             legacyQuery[kSecAttrSynchronizable as String] = false
             legacyQuery[kSecReturnData as String] = true
             legacyQuery[kSecMatchLimit as String] = kSecMatchLimitOne
+            legacyQuery[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
 
             var result: AnyObject?
             let status = SecItemCopyMatching(legacyQuery as CFDictionary, &result)
@@ -238,15 +417,17 @@ public struct KeychainStore: KeychainStoring {
             else { continue }
 
             // 2. Drop the stale copy, then write the synchronizable one.
-            try? delete(key: key)
+            //    Fail-fast + budgeted; a poisoned legacy item surfaces no
+            //    dialog from migration.
+            _ = performDelete(key: key, interactive: false)
             try? save(key: key, value: value)
         }
     }
 
     // MARK: - Private
 
-    private func deleteIfExists(key: String) {
-        try? delete(key: key)
+    private func cacheKey(_ key: String) -> String {
+        "\(service)\u{0}\(key)"
     }
 }
 

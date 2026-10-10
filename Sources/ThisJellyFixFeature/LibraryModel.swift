@@ -20,6 +20,15 @@ struct ContentRow: Identifiable, Hashable {
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
+/// Home category chip backed by a server view (Películas, Series, …).
+struct CategoryChip: Identifiable, Equatable, Hashable {
+    /// Display title doubles as identity (chips come from server view names).
+    let id: String
+    let title: String
+    let parentId: String?
+    let includeTypes: String?
+}
+
 @MainActor
 @Observable
 final class LibraryModel {
@@ -64,6 +73,29 @@ final class LibraryModel {
             }
         }
         return heroes
+    }
+
+    /// Folder ids of the server views found during `load()`.
+    private(set) var moviesParentId: String?
+    private(set) var seriesParentId: String?
+
+    /// Category chips for the Home header — one per known server view.
+    /// Each chip opens a LibraryGridView filtered to that collection.
+    var categoryChips: [CategoryChip] {
+        var chips: [CategoryChip] = []
+        if let moviesParentId {
+            chips.append(CategoryChip(
+                id: "Películas", title: "Películas",
+                parentId: moviesParentId, includeTypes: "Movie"
+            ))
+        }
+        if let seriesParentId {
+            chips.append(CategoryChip(
+                id: "Series", title: "Series",
+                parentId: seriesParentId, includeTypes: "Series"
+            ))
+        }
+        return chips
     }
 
     private let libraryClient: any JellyfinLibraryProviding
@@ -121,6 +153,9 @@ final class LibraryModel {
             )
             moviesParent = views.first(where: { $0.collectionType == "movies" })?.id
             seriesParent = views.first(where: { $0.collectionType == "tvshows" })?.id
+            // Expose for the Home category chips + "Ver todo" targets.
+            moviesParentId = moviesParent
+            seriesParentId = seriesParent
         } catch {
             // Only the two folder-backed rows are lost; the rest still load.
             noteFetchFailure(error, context: "fetchViews", surfaceMessage: true)

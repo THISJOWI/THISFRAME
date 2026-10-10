@@ -78,7 +78,7 @@ public struct ThisJellyFixRootView: View {
                         HomeView(
                             libraryModel: libModel,
                             serverURL: server.baseURL,
-                            token: KeychainStore().read(key: KeychainKey.accessToken) ?? "",
+                            token: authModel.token ?? "",
                             userId: authModel.currentUser?.id ?? "",
                             userName: authModel.currentUser?.name ?? "",
                             onLogout: {
@@ -335,7 +335,7 @@ public struct ThisJellyFixRootView: View {
     #if os(iOS)
     @ViewBuilder
     private func mainContent(libModel: LibraryModel, server: JellyfinServer) -> some View {
-        let token = KeychainStore().read(key: KeychainKey.accessToken) ?? ""
+        let token = authModel.token ?? ""
         let userId = authModel.currentUser?.id ?? ""
         let userName = authModel.currentUser?.name ?? ""
 
@@ -412,8 +412,7 @@ public struct ThisJellyFixRootView: View {
         guard let server = model.server,
               let user = authModel.currentUser else { return }
 
-        let keychain = KeychainStore()
-        guard let token = keychain.read(key: KeychainKey.accessToken) else { return }
+        guard let token = authModel.token else { return }
 
         isLoadingLibrary = true
         defer { isLoadingLibrary = false }

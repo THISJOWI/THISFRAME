@@ -270,6 +270,40 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         applySubtitleSelectionNow()
     }
 
+    /// Continuous enforcement of the single-renderer invariant.
+    ///
+    /// AVPlayer can re-preselect a legible option AFTER our explicit select
+    /// (its own "apply criteria"/default-selection pass lands late — the
+    /// duplicated-subs race, plan §3 H1). Point re-asserts at .ready and at
+    /// loadTracks leave that window open for the rest of playback. This is
+    /// the cheap periodic check: compare the CURRENT native selection with
+    /// the VM's intent and re-apply only on drift. No-op (one media-selection
+    /// query, no state change) when nothing moved.
+    public func reconcileSubtitleSelection() {
+        guard let group = withStateLock({ legibleGroup }) else { return }
+        let desired = withStateLock { desiredSubtitleIndex }
+        let current = player.currentItem?.currentMediaSelection
+            .selectedMediaOption(in: group)
+
+        switch desired {
+        case .none, .some(-1):
+            // Off/external-overlay is the intent: any native selection is drift.
+            if current != nil {
+                TJFLog("subtitles: DRIFT detected (native=\(current?.displayName ?? "?") desired=off) — re-clearing")
+                applySubtitleSelectionNow()
+            }
+        case .some(let index):
+            let options = withStateLock { _subtitleOptions }
+            guard index >= 0, index < options.count else { return }
+            // AVMediaSelectionOption equality is object identity within the
+            // group — the same option instances back both queries.
+            if current != options[index] {
+                TJFLog("subtitles: DRIFT detected (native=\(current?.displayName ?? "off") desired=\(options[index].displayName)) — re-asserting")
+                applySubtitleSelectionNow()
+            }
+        }
+    }
+
     /// Apply `desiredSubtitleIndex` to the CURRENT item. `nil` desired with a
     /// legible group present → force off: nothing may render until the VM
     /// explicitly picks a track (kills the item-default flash).

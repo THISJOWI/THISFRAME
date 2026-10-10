@@ -273,23 +273,29 @@ struct PlayerView: View {
                                 nsWindow.toggleFullScreen(nil)
                             }
                             #endif
-                        },
-                        onAirPlayPresenting: { presenting in
-                            isRouteSheetPresenting = presenting
-                            if presenting {
-                                // System route sheet up: freeze auto-hide so
-                                // this overlay (the picker's host view) can't
-                                // unmount mid-presentation — that left the
-                                // AVRoutePickerView dead: later taps no-op.
-                                controlsTimer?.invalidate()
-                                viewModel.showControls = true
-                            } else if viewModel.showControls {
-                                resetControlsTimer()
-                            }
                         }
                     )
                     .transition(.opacity)
                 }
+            }
+
+            // AirPlay route picker — MOUNTED FOR THE PLAYER'S LIFETIME.
+            // It used to live inside ControlsOverlay, so every controls
+            // auto-hide destroyed the AVRoutePickerView; remounting it
+            // mid-presentation (or right after) leaves the system route
+            // sheet dead: later taps do nothing and the receiver list
+            // re-prompts for its password. Hiding = opacity + no hit
+            // testing; the UIViewRepresentable stays alive.
+            .overlay(alignment: .topTrailing) {
+                #if os(iOS) || os(macOS)
+                AirPlayRoutePicker(onPresentingChanged: onAirPlayPresenting)
+                    .frame(width: 44, height: 44)
+                    .background(.black.opacity(viewModel.showControls ? 0.5 : 0), in: Circle())
+                    .padding(.trailing, 16)
+                    .padding(.top, 8)
+                    .opacity(viewModel.showControls ? 1 : 0)
+                    .allowsHitTesting(viewModel.showControls)
+                #endif
             }
 
             // Seek HUD
@@ -600,6 +606,20 @@ struct PlayerView: View {
         }
     }
 
+    /// AirPlay route sheet presentation state — the picker is mounted for
+    /// the player's whole lifetime now, so this no longer guards against
+    /// unmounting; it still freezes the controls auto-hide while the
+    /// system sheet is up and re-arms it when the sheet closes.
+    private func onAirPlayPresenting(_ presenting: Bool) {
+        isRouteSheetPresenting = presenting
+        if presenting {
+            controlsTimer?.invalidate()
+            viewModel.showControls = true
+        } else if viewModel.showControls {
+            resetControlsTimer()
+        }
+    }
+
     #if os(iOS)
     private func forceLandscape() {
         // Lock to landscape FIRST — supportedInterfaceOrientationsFor returns this,
@@ -842,9 +862,6 @@ private struct ControlsOverlay: View {
     let viewModel: PlayerViewModel
     let onDismiss: () -> Void
     let onToggleFullscreen: () -> Void
-    /// AirPlay route sheet presentation state — the caller freezes the
-    /// controls auto-hide while it's up.
-    let onAirPlayPresenting: (Bool) -> Void
 
     var body: some View {
         VStack {
@@ -902,11 +919,11 @@ private struct ControlsOverlay: View {
                 }
                 #endif
                 #if os(iOS) || os(macOS)
-                // AirPlay route picker — sends video/audio to Apple TV and
-                // other receivers (previously no UI entry point at all).
-                AirPlayRoutePicker(onPresentingChanged: onAirPlayPresenting)
+                // AirPlay route picker lives in a PERSISTENT overlay (see
+                // below); this keeps its slot in the top bar so the rest of
+                // the controls don't shift under it.
+                Color.clear
                     .frame(width: 44, height: 44)
-                    .background(.black.opacity(0.5), in: Circle())
                 #endif
             }
             .padding(.horizontal, 16)

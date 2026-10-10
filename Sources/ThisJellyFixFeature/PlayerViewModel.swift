@@ -572,6 +572,11 @@ final class PlayerViewModel {
                     // Seek targets are held by performSeek — refresh there.
                     guard let self, !self.isSeeking else { return }
                     self.updateSubtitleText()
+                    // External overlay path: the native layer must stay
+                    // cleared, or both renderers show text at once. Runs
+                    // here (not only on the 0.5 s tick) so an external-sub
+                    // drift is corrected within one cue interval.
+                    self.engine.reconcileSubtitleSelection()
                 }
             }
         } else {
@@ -599,6 +604,11 @@ final class PlayerViewModel {
                     self.duration = self.engine.duration
                     self.isPlaying = self.engine.isPlaying
                     self.updateSubtitleText()
+                    // Continuous legible-enforcement: AVPlayer can
+                    // re-preselect a native subtitle after our select (the
+                    // duplicated-subs race). Cheap drift check; re-asserts
+                    // only when the native selection stopped matching.
+                    self.engine.reconcileSubtitleSelection()
                 }
 
                 // Lock screen: elapsed/duration/rate refresh.
