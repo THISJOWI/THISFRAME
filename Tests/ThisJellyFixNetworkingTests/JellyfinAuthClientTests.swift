@@ -94,6 +94,65 @@ final class JellyfinAuthClientTests: XCTestCase {
         XCTAssertTrue(authHeader.contains("thisjellyfix"))
         XCTAssertTrue(authHeader.contains("dev-123"))
     }
+    func testValidateTokenReturnsUser() async throws {
+        let mockSession = MockNetworkSession(
+            data: """
+            {"Id": "u1", "Name": "Joel"}
+            """.data(using: .utf8)!,
+            statusCode: 200
+        )
+
+        let client = JellyfinAuthClient(session: mockSession)
+        let user = try await client.validateToken(
+            userId: "u1",
+            serverURL: URL(string: "http://localhost:8096")!,
+            token: "token-abc",
+            deviceId: "dev-123"
+        )
+
+        XCTAssertEqual(user, JellyfinUser(id: "u1", name: "Joel"))
+        let request = mockSession.capturedRequest
+        XCTAssertEqual(request?.httpMethod, "GET")
+        XCTAssertTrue(request?.url?.path.contains("/Users/u1") == true)
+        let authHeader = request?.value(forHTTPHeaderField: "Authorization") ?? ""
+        XCTAssertTrue(authHeader.contains("token-abc"))
+    }
+
+    func testValidateTokenInvalidTokenThrows() async {
+        let mockSession = MockNetworkSession(data: Data(), statusCode: 401)
+
+        let client = JellyfinAuthClient(session: mockSession)
+
+        do {
+            _ = try await client.validateToken(
+                userId: "u1",
+                serverURL: URL(string: "http://localhost:8096")!,
+                token: "expired",
+                deviceId: "dev-123"
+            )
+            XCTFail("Expected invalidCredentials error")
+        } catch {
+            XCTAssertEqual(error as? AuthError, .invalidCredentials)
+        }
+    }
+
+    func testValidateTokenServerErrorThrows() async {
+        let mockSession = MockNetworkSession(data: Data(), statusCode: 500)
+
+        let client = JellyfinAuthClient(session: mockSession)
+
+        do {
+            _ = try await client.validateToken(
+                userId: "u1",
+                serverURL: URL(string: "http://localhost:8096")!,
+                token: "token-abc",
+                deviceId: "dev-123"
+            )
+            XCTFail("Expected serverError")
+        } catch {
+            XCTAssertEqual(error as? AuthError, .serverError(500))
+        }
+    }
 }
 
 // MARK: - Mock Network Session

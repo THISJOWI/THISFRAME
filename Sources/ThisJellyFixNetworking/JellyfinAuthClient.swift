@@ -54,6 +54,15 @@ public protocol JellyfinAuthenticating: Sendable {
         serverURL: URL,
         deviceId: String
     ) async throws -> AuthenticationResult
+
+    /// Validates a stored token against `GET /Users/{id}` and returns the
+    /// fresh user the server reports. 401 means the token is gone.
+    func validateToken(
+        userId: String,
+        serverURL: URL,
+        token: String,
+        deviceId: String
+    ) async throws -> JellyfinUser
 }
 
 // MARK: - Implementation
@@ -113,10 +122,58 @@ public struct JellyfinAuthClient: JellyfinAuthenticating {
         }
     }
 
+    public func validateToken(
+        userId: String,
+        serverURL: URL,
+        token: String,
+        deviceId: String
+    ) async throws -> JellyfinUser {
+        let endpoint = serverURL.appendingPathComponent("Users/\(userId)")
+
+        var request = URLRequest(url: endpoint)
+        request.timeoutInterval = 15
+        request.setValue(
+            authorizationHeader(deviceId: deviceId, token: token),
+            forHTTPHeaderField: "Authorization"
+        )
+
+        let data: Data
+        let response: URLResponse
+
+        do {
+            (data, response) = try await session.data(for: request)
+        } catch {
+            throw AuthError.networkError(error.localizedDescription)
+        }
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AuthError.invalidResponse
+        }
+
+        switch httpResponse.statusCode {
+        case 200:
+            break
+        case 401:
+            throw AuthError.invalidCredentials
+        default:
+            throw AuthError.serverError(httpResponse.statusCode)
+        }
+
+        do {
+            return try JSONDecoder().decode(JellyfinUser.self, from: data)
+        } catch {
+            throw AuthError.invalidResponse
+        }
+    }
+
     // MARK: - Private
 
     private func authorizationHeader(deviceId: String) -> String {
         "MediaBrowser Client=\"thisjellyfix\", Device=\"\(deviceOS)\", DeviceId=\"\(deviceId)\", Version=\"0.1\""
+    }
+
+    private func authorizationHeader(deviceId: String, token: String) -> String {
+        "MediaBrowser Client=\"thisjellyfix\", Device=\"\(deviceOS)\", DeviceId=\"\(deviceId)\", Version=\"0.1\", Token=\"\(token)\""
     }
 
     private var deviceOS: String {
