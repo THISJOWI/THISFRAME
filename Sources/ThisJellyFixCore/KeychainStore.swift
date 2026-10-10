@@ -41,12 +41,63 @@ private enum KeychainConstants {
 
 public struct KeychainStore: KeychainStoring {
     private let service: String
+    /// false → operate on a process-local dictionary instead of SecItem.
+    /// The login keychain's ACL is per code signature, so xctest re-prompts
+    /// for the app's REAL items on every rebuild ("allow always" never
+    /// sticks) — one dialog per key, forever. Tests must never see those
+    /// dialogs: `swift test`/`xcodebuild test` run fully keychain-free.
+    private let systemKeychain: Bool
 
-    public init(service: String = "com.thisjellyfix.auth") {
+    public init(service: String = "com.thisjellyfix.auth", systemKeychain: Bool? = nil) {
         self.service = service
+        // Test runners (XCTest loaded or its config env) get the memory
+        // backend unless TJF_REAL_KEYCHAIN=1 explicitly opts in
+        // (e.g. TJF_REAL_KEYCHAIN=1 swift test --filter KeychainStoreTests).
+        // `!isTestRunner` keeps the shipped app on the real keychain.
+        let isTestRunner = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+            || NSClassFromString("XCTestCase") != nil
+        self.systemKeychain = systemKeychain
+            ?? (ProcessInfo.processInfo.environment["TJF_REAL_KEYCHAIN"] != nil || !isTestRunner)
         // One-shot upgrade of items written before iCloud sync: once a
         // synchronizable copy exists the legacy query stops matching.
-        migrateIfNeeded()
+        // Reads the REAL keychain — never allowed under a test runner.
+        if self.systemKeychain { migrateIfNeeded() }
+    }
+
+    // MARK: - Test backend (never prompts)
+
+    private static let memory = MemoryKeychain()
+
+    /// Process-local keychain stand-in: `service\u{0}key` → value.
+    /// `@unchecked Sendable` behind an NSLock — static shared across the
+    /// whole test process (matches how one login keychain behaves).
+    private final class MemoryKeychain: @unchecked Sendable {
+        private var items: [String: String] = [:]
+        private let lock = NSLock()
+
+        private func mapKey(_ service: String, _ key: String) -> String {
+            "\(service)\u{0}\(key)"
+        }
+
+        func read(service: String, key: String) -> String? {
+            lock.lock(); defer { lock.unlock() }
+            return items[mapKey(service, key)]
+        }
+
+        func save(service: String, key: String, value: String) {
+            lock.lock(); defer { lock.unlock() }
+            items[mapKey(service, key)] = value
+        }
+
+        func delete(service: String, key: String) {
+            lock.lock(); defer { lock.unlock() }
+            items.removeValue(forKey: mapKey(service, key))
+        }
+
+        func deleteAll(service: String) {
+            lock.lock(); defer { lock.unlock() }
+            items = items.filter { !$0.key.hasPrefix("\(service)\u{0}") }
+        }
     }
 
     // MARK: - KeychainStoring
@@ -62,6 +113,10 @@ public struct KeychainStore: KeychainStoring {
     }
 
     public func save(key: String, value: String) throws {
+        guard systemKeychain else {
+            Self.memory.save(service: service, key: key, value: value)
+            return
+        }
         deleteIfExists(key: key)
 
         guard let data = value.data(using: .utf8) else { return }
@@ -92,6 +147,9 @@ public struct KeychainStore: KeychainStoring {
     }
 
     public func read(key: String) -> String? {
+        guard systemKeychain else {
+            return Self.memory.read(service: service, key: key)
+        }
         var query = Self.baseQuery(service: service, key: key)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -110,6 +168,10 @@ public struct KeychainStore: KeychainStoring {
     }
 
     public func delete(key: String) throws {
+        guard systemKeychain else {
+            Self.memory.delete(service: service, key: key)
+            return
+        }
         let query = Self.baseQuery(service: service, key: key)
 
         let status = SecItemDelete(query as CFDictionary)
@@ -119,6 +181,10 @@ public struct KeychainStore: KeychainStoring {
     }
 
     public func deleteAll() throws {
+        guard systemKeychain else {
+            Self.memory.deleteAll(service: service)
+            return
+        }
         // Fetch all accounts for this service, then delete each individually.
         // SecItemDelete with class+service alone is unreliable on some macOS versions.
         var query: [String: Any] = [
