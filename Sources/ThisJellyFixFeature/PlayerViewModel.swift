@@ -950,12 +950,22 @@ final class PlayerViewModel {
         guard reportingConfigured, let itemId, let serverURL, let token else { return }
         externalSubsLoaded = true
 
-        let extStreams = serverMediaStreams.filter { $0.type == "Subtitle" && $0.isExternal == true }
-        guard !extStreams.isEmpty else {
+        // Overlay candidates: every external stream, PLUS embedded ASS/SSA.
+        // ASS/SSA are declared External in the device profile (server serves
+        // the file, no burn-in) but AVPlayer cannot render them natively —
+        // the overlay is their only renderer. Other embedded text formats
+        // (mov_text, webvtt) stay native and must NOT be duplicated here.
+        let overlayCodecs: Set<String> = ["ass", "ssa"]
+        let candidates = serverMediaStreams.filter { stream in
+            guard stream.type == "Subtitle" else { return false }
+            if stream.isExternal == true { return true }
+            return overlayCodecs.contains((stream.codec ?? "").lowercased())
+        }
+        guard !candidates.isEmpty else {
             TJFLog("extSubs: server declares none")
             return
         }
-        for stream in extStreams {
+        for stream in candidates {
             guard let idx = stream.index else { continue }
             // Always ask for SRT: the server converts ASS/SSA/VTT on the fly
             // and SRTParser only speaks SRT.

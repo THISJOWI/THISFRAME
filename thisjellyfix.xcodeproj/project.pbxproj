@@ -72,6 +72,7 @@
 		290A473FEB1FBF80864EDD62 /* TMDBMetadataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3A0A16B843E324C3DA2694 /* TMDBMetadataProvider.swift */; };
 		2953C9D92A38C49FF64E2A19 /* DiscoveryRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8397746BC556FCF6C9C6410E /* DiscoveryRowView.swift */; };
 		298EB607B3A5A78C14013F23 /* JellyfinItemDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EE3D2B8C7BBD9638113273F /* JellyfinItemDetail.swift */; };
+		2A732C59D007F6F37CCE4239 /* FloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */; };
 		2B03C1CF10515A614B60E75A /* DiscoveryLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F06FFF2FAACA654B124DF81D /* DiscoveryLoader.swift */; };
 		2B1556518F54F76E4C71477D /* SegmentDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79376088B951694B385D36F4 /* SegmentDetector.swift */; };
 		2BAD57C0200ECF2549C3FB0F /* DownloadCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF10F8D4613F087EAA9548D6 /* DownloadCoordinator.swift */; };
@@ -123,6 +124,7 @@
 		4518653DBFBBFAF9B7AD2C74 /* Networking-iOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A23B93170F6FEA62AF418B4E /* Networking-iOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		46C9F70178271197D9788E25 /* HandoffActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CCF05E90E5A2BF897FAF75 /* HandoffActivity.swift */; };
 		4725B816A0874ABF0C9AC5D8 /* Module.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF59BC8BDF010EEDBC56472C /* Module.swift */; };
+		472FF1140F38488A12E58149 /* FloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */; };
 		47364B651D586F18F0BA8BF9 /* Core-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7D37A490B1735CF546E5317 /* Core-iOS.framework */; };
 		47792CF140A29953212C2CF9 /* NowPlaying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B946E14A88221A04728B581 /* NowPlaying.swift */; };
 		490B93060111A96F06815BD2 /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0A35B0D698DCB78411E69B /* DownloadsView.swift */; };
@@ -198,6 +200,7 @@
 		7006DBAD90EC2FD7B7A16FCD /* Playback-visionOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28669C5F3B409CC65EA7F335 /* Playback-visionOS.framework */; };
 		70FC03B69466CB87EF283E08 /* Discovery-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4CED8DE05CD1EF647589637 /* Discovery-iOS.framework */; };
 		711FC020AF8A4343BC004893 /* DownloadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010E594C024E41161B0DBF4 /* DownloadQueue.swift */; };
+		7134A1331677D0F8D548C0D8 /* FloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */; };
 		71F7318AD602868AC4D236B4 /* JellyfinMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C641EF70183F4B189E8FF9C2 /* JellyfinMediaItem.swift */; };
 		721016E345DA5EDAC8BE0F05 /* JellyfinPlaybackClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708CC6C4AD140C5FD530E54A /* JellyfinPlaybackClient.swift */; };
 		72BAB446A26FC1F71774DECB /* JellyfinUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1299D0FC3ECE91B5827C8AAD /* JellyfinUser.swift */; };
@@ -216,6 +219,7 @@
 		78250F80AE1251013989C23E /* LibraryGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F87CDCAE9FC0160557A33C /* LibraryGridView.swift */; };
 		7831790D6624D6403B60BF94 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0BADE0FA8B44D927BA6700 /* ProfileView.swift */; };
 		78E72C717C386A25431AF5C1 /* PlaybackDeviceProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00193F5C845E2D76D677171B /* PlaybackDeviceProfile.swift */; };
+		7993FFE58140E59EB5FC5162 /* FloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */; };
 		7A00A9694731C13B9D807874 /* Playback-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 043C1E8AA788346A3AA0558A /* Playback-iOS.framework */; };
 		7AAB8AD15AF87B0D941AA224 /* Networking-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A23B93170F6FEA62AF418B4E /* Networking-iOS.framework */; };
 		7B8484CA12166F51025E11F3 /* LibraryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81B3D72ECAE6007FFBAAB00 /* LibraryModel.swift */; };
@@ -913,6 +917,7 @@
 		AAB7034B466503BCE33E95A1 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		AD74C3F99EEB6FB09C612704 /* ThisJellyFixVisionOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThisJellyFixVisionOSApp.swift; sourceTree = "<group>"; };
 		AD8966043EC34B37438FF4A0 /* ChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChipView.swift; sourceTree = "<group>"; };
+		AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingTabBar.swift; sourceTree = "<group>"; };
 		AF59BC8BDF010EEDBC56472C /* Module.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Module.swift; sourceTree = "<group>"; };
 		B1567A763D694C414C37FAC4 /* AVPlayerCapability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVPlayerCapability.swift; sourceTree = "<group>"; };
 		B60780887A822E72106060F1 /* CardBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardBadge.swift; sourceTree = "<group>"; };
@@ -1152,6 +1157,7 @@
 				76772C32B1E56C8EF7597A68 /* BadgeView.swift */,
 				B60780887A822E72106060F1 /* CardBadge.swift */,
 				AD8966043EC34B37438FF4A0 /* ChipView.swift */,
+				AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */,
 				CFA5579F4E96505FDE65BD28 /* HeroCardView.swift */,
 				05829AA22DEA8728FC257895 /* MareaTheme.swift */,
 				38D9C6E2078ECBAFC3312333 /* RowSection.swift */,
@@ -2078,6 +2084,7 @@
 				FF38982FE69FF7A788D218B5 /* DownloadsButton.swift in Sources */,
 				490B93060111A96F06815BD2 /* DownloadsView.swift in Sources */,
 				66C8F3B1C9E3F924254CAB33 /* FavoritesView.swift in Sources */,
+				472FF1140F38488A12E58149 /* FloatingTabBar.swift in Sources */,
 				54EE2C3A87C8091618232B27 /* HeroCardView.swift in Sources */,
 				6ADFEDADB6206B335A7A7DC7 /* HomeView.swift in Sources */,
 				C4C56DBDF9B8A9994D04A612 /* ImageView.swift in Sources */,
@@ -2218,6 +2225,7 @@
 				A26C0F37AE4DC7D1A187EDCA /* DownloadsButton.swift in Sources */,
 				5FF077FC331885471BDD9F88 /* DownloadsView.swift in Sources */,
 				EF1EB2256E1FC837538136A7 /* FavoritesView.swift in Sources */,
+				7134A1331677D0F8D548C0D8 /* FloatingTabBar.swift in Sources */,
 				D7347820E59B031B42E3AAA6 /* HeroCardView.swift in Sources */,
 				8ED42876B2BBF33403BE7C85 /* HomeView.swift in Sources */,
 				05A6141D001B905D26129D8B /* ImageView.swift in Sources */,
@@ -2279,6 +2287,7 @@
 				60AB5493DD48C3A95AF5F9A8 /* DownloadsButton.swift in Sources */,
 				BB6E2C4C4A6415BFA6D845D1 /* DownloadsView.swift in Sources */,
 				BBC8783AF68A55EE2F87CDEE /* FavoritesView.swift in Sources */,
+				2A732C59D007F6F37CCE4239 /* FloatingTabBar.swift in Sources */,
 				1F7742B4B59DDCBD4BF6015E /* HeroCardView.swift in Sources */,
 				34DB2688B85445F043B37964 /* HomeView.swift in Sources */,
 				C20874ED8C85EB2DBC34EB99 /* ImageView.swift in Sources */,
@@ -2485,6 +2494,7 @@
 				B68B8196A2A54102D550F6F5 /* DownloadsButton.swift in Sources */,
 				D67A9163974970FC4A51CBF8 /* DownloadsView.swift in Sources */,
 				87A080E17BB282C20C06C3B5 /* FavoritesView.swift in Sources */,
+				7993FFE58140E59EB5FC5162 /* FloatingTabBar.swift in Sources */,
 				1F7251F72647C8C8AC97A420 /* HeroCardView.swift in Sources */,
 				58D32FE225B92CEF7C5E82F7 /* HomeView.swift in Sources */,
 				AE7346F33667CF4216217CB2 /* ImageView.swift in Sources */,

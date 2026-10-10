@@ -152,11 +152,16 @@ public struct PlaybackDeviceProfile: Codable, Sendable, Equatable {
             SubtitleProfile(format: "srt", deliveryMethod: "External"),
             SubtitleProfile(format: "subrip", deliveryMethod: "External"),
             SubtitleProfile(format: "webvtt", deliveryMethod: "External"),
-            // ASS/SSA can't be rendered client-side by AVPlayer → server burns.
-            SubtitleProfile(format: "ass", deliveryMethod: "Encode"),
-            SubtitleProfile(format: "ssa", deliveryMethod: "Encode"),
+            // ASS/SSA are text: the server can serve them as separate files
+            // (`/Subtitles/{i}/Stream.srt` converts on the fly) and the app
+            // renders them in the SwiftUI overlay. `Encode` burned them INTO
+            // the transcoded video — unremovable, and duplicated by the
+            // overlay whenever an external SRT of the same movie existed.
+            SubtitleProfile(format: "ass", deliveryMethod: "External"),
+            SubtitleProfile(format: "ssa", deliveryMethod: "External"),
             SubtitleProfile(format: "mov_text", deliveryMethod: "Embed"),
             SubtitleProfile(format: "tx3g", deliveryMethod: "Embed"),
+            // Bitmap: only Encode is possible (no text to convert).
             SubtitleProfile(format: "pgssub", deliveryMethod: "Encode"),
             SubtitleProfile(format: "dvdsub", deliveryMethod: "Encode"),
             SubtitleProfile(format: "dvb_subtitle", deliveryMethod: "Encode")

@@ -47,7 +47,7 @@ final class PlaybackDeviceProfileTests: XCTestCase {
             subs.first { $0["Format"] as? String == format }?["DeliveryMethod"] as? String
         }
         XCTAssertEqual(delivery("srt"), "External")
-        XCTAssertEqual(delivery("ass"), "Encode", "ASS can't be rendered by AVPlayer → burn-in")
+        XCTAssertEqual(delivery("ass"), "External", "ASS is text: serve as file + overlay; burning duplicated subs")
         XCTAssertEqual(delivery("mov_text"), "Embed")
         XCTAssertEqual(delivery("pgssub"), "Encode", "bitmap subs get burned in by the server")
     }

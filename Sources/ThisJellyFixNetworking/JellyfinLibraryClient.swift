@@ -87,6 +87,14 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
             URLQueryItem(name: "OrderBy", value: orderBy),
             URLQueryItem(name: "Descending", value: "true"),
             URLQueryItem(name: "Limit", value: String(limit)),
+            // Jellyfin 10.11 groups movies into collections server-side: a
+            // query without this param HIDES every movie that belongs to a
+            // BoxSet behind the collection card ("no aparecen algunas pelis
+            // porque están en una colección"). False = show the movies.
+            URLQueryItem(name: "collapseBoxSetItems", value: "false"),
+            // Descend into subfolders of the view (collections, genre
+            // folders) — without it movies inside a subfolder vanish too.
+            URLQueryItem(name: "Recursive", value: "true"),
         ]
 
         if let parentId {

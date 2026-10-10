@@ -48,7 +48,7 @@ public struct KeychainStore: KeychainStoring {
     /// dialogs: `swift test`/`xcodebuild test` run fully keychain-free.
     private let systemKeychain: Bool
 
-    public init(service: String = "com.thisjellyfix.auth", systemKeychain: Bool? = nil) {
+    public init(service: String = "com.thisjellyfix.auth.v2", systemKeychain: Bool? = nil) {
         self.service = service
         // Test runners (XCTest loaded or its config env) get the memory
         // backend unless TJF_REAL_KEYCHAIN=1 explicitly opts in
@@ -62,7 +62,34 @@ public struct KeychainStore: KeychainStoring {
         // once PER PROCESS per service (was: once per KeychainStore init, and
         // the init runs per network request via DeviceIdentifier — the key
         // source of the keychain prompt storm).
-        if self.systemKeychain { migrateIfNeeded() }
+        if self.systemKeychain {
+            migrateIfNeeded()
+            adoptFromLegacyServiceIfNeeded()
+        }
+    }
+
+    /// One-shot adoption of items written under the pre-rotation service
+    /// name (`com.thisjellyfix.auth`). That service's items were poisoned by
+    /// a test runner (ACL pinned to a retired xctest cdhash — "Allow" never
+    /// survives a rebuild, so the prompt came back every launch). Items the
+    /// APP can still read fail-fast are copied over; poisoned ones are left
+    /// behind untouched (their owner is a dead binary — only Keychain
+    /// Access could ever delete them) and the user simply logs in again
+    /// once. Runs at most once per process.
+    private func adoptFromLegacyServiceIfNeeded() {
+        guard service == "com.thisjellyfix.auth.v2",
+              Self.session.markMigrated("legacy-adopt:\(service)") else { return }
+        let legacy = KeychainStore(service: "com.thisjellyfix.auth", systemKeychain: true)
+        for key in [KeychainKey.accessToken, KeychainKey.userId,
+                    KeychainKey.userName, KeychainKey.serverURL, KeychainKey.deviceId] {
+            // Fail-fast lookup: a poisoned legacy item returns nil here
+            // WITHOUT ever raising a dialog.
+            if let value = legacy.lookup(key: key, interactive: false).value,
+               Self.session.value(legacy.cacheKey(key)) == nil {
+                try? save(key: key, value: value)
+                TJFLog("keychain: adopted \(key) from legacy service")
+            }
+        }
     }
 
     // MARK: - Test backend (never prompts)
@@ -323,6 +350,11 @@ public struct KeychainStore: KeychainStoring {
         /// user dialog (`kSecUseAuthenticationUIFail` refused the UI).
         case authRequired
         case failed(OSStatus)
+
+        var value: String? {
+            if case .found(let s) = self { return s }
+            return nil
+        }
     }
 
     private func lookup(key: String, interactive: Bool) -> Lookup {

@@ -1,4 +1,4 @@
-#if canImport(CoreSpotlight)
+#if canImport(CoreSpotlight) && !os(tvOS)
 import CoreSpotlight
 #endif
 import Foundation
@@ -25,7 +25,7 @@ public final class SpotlightIndexer: Sendable {
     /// Items that are already indexed are updated in place (CoreSpotlight
     /// deduplicates by `uniqueIdentifier`).
     public func index(_ items: [JellyfinMediaItem], serverURL: URL) {
-        #if canImport(CoreSpotlight)
+        #if canImport(CoreSpotlight) && !os(tvOS)
         // Filter to movies and series only — no episodes, no generic.
         let indexable = items.filter { $0.type == "Movie" || $0.type == "Series" }
         guard !indexable.isEmpty else { return }
@@ -75,7 +75,7 @@ public final class SpotlightIndexer: Sendable {
 
     /// Removes all previously indexed THISJELLYFIX items (e.g. on logout).
     public func deleteAll() {
-        #if canImport(CoreSpotlight)
+        #if canImport(CoreSpotlight) && !os(tvOS)
         CSSearchableIndex.default().deleteSearchableItems(withDomainIdentifiers: [Self.domainIdentifier]) { _ in }
         #endif
     }

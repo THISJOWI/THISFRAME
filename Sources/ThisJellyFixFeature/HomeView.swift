@@ -421,15 +421,21 @@ struct HomeView: View {
         }
     }
 
+    #endif
+
     /// "Ver todo" target for a row backed by a server view. Rows without a
-    /// matching category (resume, recently-watched) get no link.
+    /// matching category (resume, recently-watched) get no link. tvOS and
+    /// visionOS have no LibraryGridView — always nil there.
     private func seeAllAction(for rowTitle: String) -> (() -> Void)? {
+        #if os(iOS) || os(macOS)
         guard let chip = libraryModel.categoryChips.first(where: { $0.id == rowTitle }) else {
             return nil
         }
         return { navigationPath.append(chip) }
+        #else
+        return nil
+        #endif
     }
-    #endif
 
     /// Big featured carousel on top of Home — up to 5 hero cards, swipable,
     /// with a "Reproducir" CTA that resumes playback directly.

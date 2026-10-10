@@ -17,8 +17,10 @@ public struct ThisJellyFixRootView: View {
     /// Discovery + downloads state. Rebuilt whenever the library model
     /// changes so its library snapshot points at the live model.
     @State private var discoveryModel: DiscoveryModel?
-    #if os(iOS)
+    #if os(iOS) || os(tvOS)
     @State private var selectedTab: MareaTab = .home
+    #endif
+    #if os(iOS)
     @Environment(\.scenePhase) private var scenePhase
     /// Floating PiP whose fullscreen player was already dismissed: the root
     /// view is the only owner that survives the player, so it re-presents it
@@ -70,6 +72,11 @@ public struct ThisJellyFixRootView: View {
                         // interactive while the row requests are still flying.
                         #if os(iOS)
                         mainContent(libModel: libModel, server: server)
+                            .environment(discoveryModel)
+                        #elseif os(tvOS)
+                        // Native tvOS TabView: top tab bar with system focus
+                        // and tvOS styling — Home used to be the only screen.
+                        tvOSTabContent(libModel: libModel, server: server)
                             .environment(discoveryModel)
                         #else
                         HomeView(
@@ -336,10 +343,11 @@ public struct ThisJellyFixRootView: View {
         let userId = authModel.currentUser?.id ?? ""
         let userName = authModel.currentUser?.name ?? ""
 
-        if #available(iOS 18, *) {
-            // Native TabView with Tab items — iOS 26 automatically applies Liquid Glass.
-            // Same pattern used by Apple Music, App Store, WhatsApp, etc.
-            let tabView = TabView(selection: $selectedTab) {
+        if #available(iOS 26, *) {
+            // Native TabView with Tab items — iOS 26 Liquid Glass already
+            // renders the floating pill + minimizes on scroll, so the custom
+            // bar would only regress system behavior here.
+            TabView(selection: $selectedTab) {
                 Tab("Inicio", systemImage: "house.fill", value: MareaTab.home) {
                     HomeView(
                         libraryModel: libModel,
@@ -365,42 +373,85 @@ public struct ThisJellyFixRootView: View {
                     )
                 }
             }
-
-            if #available(iOS 26, *) {
-                tabView.tint(.red).tabBarMinimizeBehavior(.onScrollDown)
-            } else {
-                tabView.tint(.red)
-            }
+            .tint(MareaTheme.Colors.accent)
+            .tabBarMinimizeBehavior(.onScrollDown)
         } else {
-            // Legacy TabView for iOS 17
-            TabView(selection: $selectedTab) {
-                HomeView(
-                    libraryModel: libModel,
-                    serverURL: server.baseURL,
-                    token: token,
-                    userId: userId,
-                    userName: userName,
-                    onLogout: { authModel.logout(); libraryModel = nil }
-                )
-                .tabItem { Label("Inicio", systemImage: "house.fill") }
-                .tag(MareaTab.home)
+            // iOS 17–25: hide the native bar and float our glass pill instead
+            // (Netflix-style). Tab selection and swipe still work — only the
+            // system bar chrome is suppressed.
+            ZStack(alignment: .bottom) {
+                TabView(selection: $selectedTab) {
+                    HomeView(
+                        libraryModel: libModel,
+                        serverURL: server.baseURL,
+                        token: token,
+                        userId: userId,
+                        userName: userName,
+                        onLogout: { authModel.logout(); libraryModel = nil }
+                    )
+                    .toolbar(.hidden, for: .tabBar)
+                    .tag(MareaTab.home)
 
-                SearchView(serverURL: server.baseURL, token: token, userId: userId)
-                    .tabItem { Label("Buscar", systemImage: "magnifyingglass") }
-                    .tag(MareaTab.search)
+                    SearchView(serverURL: server.baseURL, token: token, userId: userId)
+                        .toolbar(.hidden, for: .tabBar)
+                        .tag(MareaTab.search)
 
-                ProfileView(
-                    userName: userName,
-                    onLogout: { authModel.logout(); libraryModel = nil },
-                    serverURL: server.baseURL,
-                    token: token,
-                    userId: userId
-                )
-                    .tabItem { Label("Perfil", systemImage: "person.fill") }
+                    ProfileView(
+                        userName: userName,
+                        onLogout: { authModel.logout(); libraryModel = nil },
+                        serverURL: server.baseURL,
+                        token: token,
+                        userId: userId
+                    )
+                    .toolbar(.hidden, for: .tabBar)
                     .tag(MareaTab.profile)
+                }
+                .tint(MareaTheme.Colors.accent)
+
+                FloatingTabBar(selection: $selectedTab)
+                    .padding(.bottom, MareaTheme.Spacing.sm)
             }
-            .tint(.red)
         }
+    }
+    #endif
+
+    #if os(tvOS)
+    /// tvOS tabs: the system TabView renders the top bar with native focus
+    /// engine support and tvOS styling — no custom pill (tvOS convention is
+    /// the top tab bar, as in the TV app / Netflix).
+    @ViewBuilder
+    private func tvOSTabContent(libModel: LibraryModel, server: JellyfinServer) -> some View {
+        let token = authModel.token ?? ""
+        let userId = authModel.currentUser?.id ?? ""
+        let userName = authModel.currentUser?.name ?? ""
+
+        TabView(selection: $selectedTab) {
+            HomeView(
+                libraryModel: libModel,
+                serverURL: server.baseURL,
+                token: token,
+                userId: userId,
+                userName: userName,
+                onLogout: { authModel.logout(); libraryModel = nil }
+            )
+            .tabItem { Label("Inicio", systemImage: "house.fill") }
+            .tag(MareaTab.home)
+
+            SearchView(serverURL: server.baseURL, token: token, userId: userId)
+                .tabItem { Label("Buscar", systemImage: "magnifyingglass") }
+                .tag(MareaTab.search)
+
+            ProfileView(
+                userName: userName,
+                onLogout: { authModel.logout(); libraryModel = nil },
+                serverURL: server.baseURL,
+                token: token,
+                userId: userId
+            )
+            .tabItem { Label("Perfil", systemImage: "person.fill") }
+            .tag(MareaTab.profile)
+        }
+        .tint(MareaTheme.Colors.accent)
     }
     #endif
 
