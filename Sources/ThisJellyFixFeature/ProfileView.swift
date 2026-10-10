@@ -92,12 +92,15 @@ private struct DiagnosticsSection: View {
                 .font(.headline)
 
             if let logURL {
+                #if !os(tvOS)
+                // ShareLink is unavailable on tvOS — the export row is hidden there.
                 ShareLink(item: logURL) {
                     Label("Compartir registro de reproducción", systemImage: "doc.text.magnifyingglass")
                         .frame(maxWidth: .infinity)
                         .padding(14)
                         .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
                 }
+                #endif
                 Text("Últimos eventos de reproducción y PiP, sin contraseñas.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

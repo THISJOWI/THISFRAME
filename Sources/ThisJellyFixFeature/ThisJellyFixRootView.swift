@@ -224,8 +224,10 @@ public struct ThisJellyFixRootView: View {
             selectedTab = .home
             #endif
         }
-        #if canImport(CoreSpotlight)
+        #if canImport(CoreSpotlight) && !os(tvOS)
         // Spotlight Search result tapped by the user in system search.
+        // CoreSpotlight imports on tvOS, but CSSearchableItemActionType is
+        // marked unavailable there — guard it out or the tvOS target won't build.
         .onContinueUserActivity(CSSearchableItemActionType) { activity in
             guard let identifier = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String else { return }
             let prefix = "tjf://item/"
