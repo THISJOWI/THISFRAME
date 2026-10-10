@@ -32,6 +32,10 @@ let package = Package(
         .testTarget(
             name: "ThisJellyFixDiscoveryTests",
             dependencies: ["ThisJellyFixDiscovery", "ThisJellyFixNetworking", "ThisJellyFixCore"]
+        ),
+        .testTarget(
+            name: "ThisJellyFixFeatureTests",
+            dependencies: ["ThisJellyFixFeature", "ThisJellyFixCore", "ThisJellyFixNetworking"]
         )
     ]
 )

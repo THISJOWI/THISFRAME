@@ -83,11 +83,23 @@ final class AuthModel {
             return false
         }
 
-        // Token exists — trust stored credentials for now
-        // TODO: Phase 2 validates via /Users/Me
-        currentUser = JellyfinUser(id: userId, name: userName)
-        isAuthenticated = true
-        return true
+        // Validate the stored token against the server: a stale/revoked token
+        // used to be trusted until the first 401, stranding the user on a
+        // broken Home. Invalid session → clean slate (login screen).
+        do {
+            let user = try await authClient.validateToken(
+                userId: userId, serverURL: serverURL, token: token, deviceId: deviceId
+            )
+            currentUser = user.name.isEmpty
+                ? JellyfinUser(id: user.id, name: userName, primaryImageTag: user.primaryImageTag)
+                : user
+            isAuthenticated = true
+            return true
+        } catch {
+            TJFLog("restoreSession: token validation failed — \(error.localizedDescription)")
+            logout()
+            return false
+        }
     }
 
     // MARK: - Logout
