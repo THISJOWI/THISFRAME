@@ -13,7 +13,7 @@ import UIKit
 /// URLs live in UserDefaults (`@AppStorage`-compatible keys); API keys go
 /// straight to the Keychain through `IntegrationConfig`.
 struct IntegrationsSection: View {
-    @EnvironmentObject private var discovery: DiscoveryModel
+    @Environment(DiscoveryModel.self) private var discovery: DiscoveryModel
     @AppStorage(IntegrationConfig.DefaultsKey.radarrURL) private var radarrURL = ""
     @AppStorage(IntegrationConfig.DefaultsKey.sonarrURL) private var sonarrURL = ""
 
