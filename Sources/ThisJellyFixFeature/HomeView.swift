@@ -130,7 +130,7 @@ struct HomeView: View {
                                 selectedTab = tab
                             } label: {
                                 Label(tab.label, systemImage: tab.icon)
-                                    .foregroundStyle(selectedTab == tab ? .cyan : .primary)
+                                    .foregroundStyle(selectedTab == tab ? MareaTheme.Colors.accent : .primary)
                             }
                             .buttonStyle(.plain)
                         }
@@ -282,7 +282,7 @@ struct HomeView: View {
                         Spacer()
                         Button("Cerrar sesión", action: onLogout)
                             .buttonStyle(.bordered)
-                            .tint(.cyan)
+                            .tint(MareaTheme.Colors.accent)
                     }
                     .padding(.horizontal, MareaTheme.Spacing.xl)
                 }
@@ -306,11 +306,11 @@ struct HomeView: View {
                         if libraryModel.sessionExpired {
                             Button("Cerrar sesión", action: onLogout)
                                 .buttonStyle(.borderedProminent)
-                                .tint(.cyan)
+                                .tint(MareaTheme.Colors.accent)
                         } else {
                             Button("Reintentar") { Task { await libraryModel.load() } }
                                 .buttonStyle(.borderedProminent)
-                                .tint(.cyan)
+                                .tint(MareaTheme.Colors.accent)
                         }
                     }
                     .frame(maxWidth: .infinity)
