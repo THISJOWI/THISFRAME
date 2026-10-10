@@ -49,6 +49,23 @@ final class LibraryModel {
     /// cold-launch "Dock → app → nothing" bug.
     var hasLoaded = false
 
+    /// Hero carousel items: up to 3 resume items first (in-progress content
+    /// is the most personal), then filled with the newest library items,
+    /// deduplicated. Pure over loaded rows — no extra fetch.
+    var heroItems: [JellyfinMediaItem] {
+        let resume = rows.first(where: { $0.title == "Estás viendo" })?.items ?? []
+        let latest = rows.first(where: { $0.title == "Últimos agregados" })?.items ?? []
+        var seen = Set<String>()
+        var heroes: [JellyfinMediaItem] = []
+        for item in resume.prefix(3) + latest {
+            guard heroes.count < 5 else { break }
+            if seen.insert(item.id).inserted {
+                heroes.append(item)
+            }
+        }
+        return heroes
+    }
+
     private let libraryClient: any JellyfinLibraryProviding
     private let serverURL: URL
     private let userId: String
