@@ -6,9 +6,22 @@
 **Alcance acordado:**
 - Premium primero: UI/UX y pulido. Funciones de catálogo grandes (offline, música, Live TV, perfiles) solo como mención de roadmap (bloque 8).
 - Las 4 plataformas son primera clase (tvOS, macOS, iOS/iPadOS, visionOS).
-- Dirección visual: estilo Apple (fondo casi negro, acento sutil, tipografía del sistema con contraste fuerte, tarjetas con bordes de luz, heroes a pantalla completa con degradado).
+- Dirección visual: **negro puro tipo Netflix + refinamiento Apple** — fondo `#000`, tarjetas oscuras con bordes de luz, tipografía del sistema con contraste fuerte, héroes a pantalla completa con degradado, superficies de cristal (tab bar flotante, paneles glass). La página de inicio sigue las capturas de referencia (Netflix + Apple Music + cliente tipo "seguir viendo"): chips de categoría, hero carrusel con panel de info, badges rojas en tarjetas, filas con "Ver todo", mini-player flotante.
 - Localización ES + EN mediante String Catalogs incluida en el plan.
 - Orden de ejecución = orden de los bloques (por impacto).
+
+## Referencia visual de la página de inicio (capturas aportadas)
+
+| Elemento | Descripción |
+|---|---|
+| **Header** | Título grande "Inicio" (largeTitle bold) a la izquierda; a la derecha iconos en pill (AirPlay, descargas, campana con badge numérico) o avatar. |
+| **Chips de categoría** | Fila horizontal de pills grises translúcidas redondeadas (Series, Películas, Novedades más vistas…) bajo el header; scroll horizontal con peek. |
+| **Hero destacado** | Card grande (≈4:5 o 16:10) redondeada ~24pt con backdrop, degradado inferior, badge pill "▶ SEGUIR VIENDO" arriba-izquierda, panel glass inferior con póster pequeño + título + sinopsis corta + chips de metadatos (⭐rating, año, clasificación, duración) + barra de progreso; **dots de paginación** si es carrusel. Variante Netflix: metadata línea "Serie • Gore • Sombría" + botón blanco pill "▶ Reproducir" + botón gris "✓ Mi lista". |
+| **Filas** | Título de sección bold a la izquierda + "Ver todo ›" a la derecha; tarjetas verticales (2:3) con peek de la siguiente; badge en tarjeta: roja "Nueva temporada" / blanca "Siguiente episodio + día". |
+| **Filas personalizadas** | "Porque te ha gustado X" (recomendaciones), "Novedades", "Estás viendo" (16:9 con barra de progreso + punto de estado). |
+| **Tab bar flotante** | Pill de cristal translúcido (blur) flotando sobre el fondo, iconos + labels, activo teñido; separada del borde inferior. |
+| **Mini-player** | Pill glass flotante encima de la tab bar: arte pequeño + título/artista + controles ▶ ⏭ (estilo Apple Music). |
+| **Fondo** | Negro puro en toda la home; sin grises de fondo, el contenido aporta el color. |
 
 ---
 
@@ -33,23 +46,28 @@ Base de todo lo demás. Hoy no existe: colores inline (`.cyan` ×25, `.red`, `.m
 
 ### Tokens
 
-| Token | Valor de partida (estilo Apple) |
+| Token | Valor de partida (negro puro + glass, según capturas) |
 |---|---|
-| `Color.background` | Casi negro azulado — hoy `Color(red:0.05, green:0.08, blue:0.15)` en `ThisJellyFixRootView.swift:71` → oficializar |
-| `Color.surface` / `surfaceElevated` | Hoy card `Color(red:0.12,0.14,0.22)` en `ImageView.swift:177` → oficializar + variante elevada |
+| `Color.background` | **Negro puro `#000`** — sustituye el azulado `Color(red:0.05, green:0.08, blue:0.15)` de `ThisJellyFixRootView.swift:71`. Todo fondo de home = negro; el contenido aporta el color |
+| `Color.surface` / `surfaceElevated` | Hoy card `Color(red:0.12,0.14,0.22)` en `ImageView.swift:177` → grises neutros sobre negro + variante elevada |
+| `Color.glass` | Superficie cristal: blanco al 8-12% + `.ultraThinMaterial` para chips, paneles de info del hero, tab bar y mini-player flotantes |
+| `Color.badgeRed` | Rojo de badge tipo Netflix ("Nueva temporada", notificaciones con contador) — reemplaza el `.red` disperso de tabs |
 | `Color.accent` | **Un** acento coherente (reemplaza los 25 `.cyan`, `.mint`, `.red` sueltos). Decidir: cian contenido (actual) o blanco puro como acento tipo Apple TV |
 | `Color.borderGlow` | Borde sutil 1pt tipo luz en tarjetas enfocadas/hover |
 | `Spacing` (`xs…xxl`) | Sustituye 32/24/16 hardcodeados en `HomeView`, `DetailView`, `ProfileView` |
-| `Radius` | Radio de tarjeta, sheet, pill unificados (hoy dispersos) |
+| `Radius` | `card` (16), `hero` (24), `pill` (cápsula completa), `sheet` — unificados (hoy dispersos) |
 | `Typography` | Escala del sistema (largeTitle…caption2) con pesos semibold/bold consistentes; eliminar `.font(.system(size: 36))` / `size: 72` del player (`PlayerView.swift:860,869`) — ver bloque 7 Dynamic Type |
 | `Shadow` | Sombra estándar de tarjeta + sombra de degradado sobre heroes |
 
 ### Componentes a consolidar
 
-- **`MediaCardView`** — poster/16:9 + barra de progreso (`MediaCardView.swift`): aplicar tokens, borde de luz, estado de foco/hover tvOS-macOS.
-- **`HeroCardView`** (nuevo) — para el billboard del bloque 2.
-- **`ActionPill`** — ya existe (`DetailView.swift:826`), llevar a tokens.
-- **`RowSection`** (nuevo) — cabecera con título + "Ver todo" + ScrollView de tarjetas con peek; reemplaza el `ScrollView(.horizontal)+LazyHStack` ad-hoc de `HomeView.swift:349`.
+- **`MediaCardView`** — poster 2:3 / 16:9 + barra de progreso (`MediaCardView.swift`): aplicar tokens, borde de luz, estado de foco/hover tvOS-macOS, **badge overlay** (roja "Nueva temporada" / blanca "Siguiente episodio · Día" anclada abajo, estilo Netflix).
+- **`HeroCardView`** (nuevo) — hero grande del bloque 2 con backdrop + degradado + badge pill "▶ SEGUIR VIENDO" + panel glass inferior (póster, título, sinopsis, chips de metadatos, barra de progreso).
+- **`ChipView`** (nuevo) — pill gris translúcido de categoría/filtro (Series, Películas…) y de metadatos (⭐7.9, 2023, NR, 1h 13m).
+- **`BadgeView`** (nuevo) — badge de texto sobre tarjeta: variante roja sólida y variante blanca con subtítulo.
+- **`ActionPill`** — ya existe (`DetailView.swift:826`): llevar a tokens + variante **blanca relleno** ("▶ Reproducir", CTA principal tipo Netflix) y **gris glass** ("✓ Mi lista").
+- **`RowSection`** (nuevo) — cabecera con título bold + "Ver todo ›" + ScrollView de tarjetas con peek; reemplaza el `ScrollView(.horizontal)+LazyHStack` ad-hoc de `HomeView.swift:349`.
+- **`FloatingTabBar`** (nuevo) — píldora de cristal flotante con iconos + labels, activo teñido, separada del borde inferior (referencias 1 y 3-4). Envuelve el `TabView` actual.
 - **`SkeletonView`** (nuevo) — shimmer placeholder; reemplaza `ProgressView("Cargando…")`.
 - **`MareaImageView`** — mantener lógica de caché; añadir blur-up suave y downsampling (ver bloque 6).
 
@@ -60,22 +78,46 @@ Base de todo lo demás. Hoy no existe: colores inline (`.cyan` ×25, `.red`, `.m
 
 ---
 
-## Bloque 2 — Home estilo streaming
+## Bloque 2 — Home estilo streaming (según capturas de referencia)
 
-Hoy: 5 filas hardcodeadas × 20 ítems, sin paginación, sin hero, sin "Ver todo", carga = `ProgressView`.
+Hoy: 5 filas hardcodeadas × 20 ítems, sin paginación, sin hero, sin "Ver todo", sin chips, carga = `ProgressView`. Fondo azulado. Objetivo: la home de las capturas.
+
+### Estructura de la pantalla (de arriba abajo)
+
+1. **Header** — "Inicio" en largeTitle bold a la izquierda; a la derecha pill con iconos (AirPlay, descargas con contenido, campana con badge rojo numérico) o avatar de usuario. Collapsa a título inline al hacer scroll (comportamiento NavigationStack).
+2. **Chips de categoría** — fila horizontal scrollable de pills glass: "Series", "Películas", "Novedades más vistas", "Todas"… Filtran/recorren la home. Con peek a la derecha.
+3. **Hero destacado (carrusel)** — card grande redondeada (radius hero) a ancho casi completo con:
+   - Backdrop del ítem + degradado inferior.
+   - Badge pill "▶ SEGUIR VIENDO" arriba-izquierda (solo si hay resume) o "NOVEDAD".
+   - Panel glass inferior: póster pequeño + título + sinopsis corta (2 líneas) + chips de metadatos (⭐rating, año, clasificación, duración) + barra de progreso fina.
+   - **Dots de paginación** si hay varios destacados; autoavance lento, pausa al tocar.
+   - Variante CTA: botón blanco pill "▶ Reproducir" + botón gris glass "✓ Mi lista" bajo el panel (referencia 2).
+   - Datos: `/Items/Resume` primero, luego primeros "Últimos agregados"; TMDB rating si hay key (ya soportado).
+4. **Filas de contenido** — `RowSection` con título bold + **"Ver todo ›"** a la derecha:
+   - "Seguir viendo" (16:9, barra de progreso, punto morado de estado).
+   - "Novedades" / "Últimos agregados".
+   - "Películas", "Series".
+   - **"Porque te ha gustado X"** cuando haya favoritos/vistos (recomendación simple con ítems similares del servidor).
+   - Tarjetas 2:3 con peek de la siguiente; badge overlay (roja/blanca) donde apllica.
+
+### Entregables
 
 | Entregable | Detalle |
 |---|---|
-| **Hero billboard "Continuar viendo"** | Primer elemento del Home: backdrop 16:9 a ancho completo con degradado inferior, título grande, barra de progreso fina, CTA "Reanudar" (play pill). Datos del endpoint `/Items/Resume` ya consumido (`LibraryModel.refreshResume`). |
-| **Filas con peek/snap** | `RowSection` con `scrollTargetBehavior(.viewAligned)` + `scrollTargetLayout` (iOS 17+/tvOS): la siguiente tarjeta asoma un margen. Aplicar en iOS, iPadOS, tvOS. |
-| **"Ver todo" → pantalla de biblioteca** | Hoy no existe navegación de biblioteca (solo dos folder IDs para las filas). Grid paginado (`LazyVGrid`, carga al final de la lista), cabecera con título. Usa `fetchViews`/`/Users/{id}/Items` ya existentes con parámetros de página. |
-| **Secciones dinámicas** | Sustituir las 5 filas fijas por lo que el dashboard real devuelve (respetando orden del servidor), manteniendo fallback a las actuales. |
+| **Header con pills** | Título + acciones (AirPlay ya existe en player, campana placeholder con badge, avatar). Colapsado/expandido según scroll. |
+| **Chips de categoría** | `ChipView` horizontal con selección; persisten en `LibraryModel`. |
+| **`HeroCardView` + carrusel** | Ver estructura arriba; reutiliza `MareaImageView` backdrop, radius hero, panel glass, dots. |
+| **Filas con peek/snap** | `RowSection` con `scrollTargetBehavior(.viewAligned)` + `scrollTargetLayout` (iOS 17+/tvOS): la siguiente tarjeta asoma. Aplicar en iOS, iPadOS, tvOS. |
+| **Badges en tarjetas** | `BadgeView` roja/blanca sobre `MediaCardView`; datos: nueva temporada (comparar season count), siguiente episodio (resume/NextUp cuando exista). |
+| **"Ver todo" → pantalla de biblioteca** | Hoy no existe navegación de biblioteca (solo dos folder IDs para las filas). Grid paginado (`LazyVGrid`, carga al final), cabecera con título + chips de orden. Usa `fetchViews`/`/Users/{id}/Items` existentes con parámetros de página. |
+| **Secciones dinámicas** | Sustituir las 5 filas fijas por lo que el dashboard real devuelve (respetando orden del servidor), fallback a las actuales. |
 | **Skeleton shimmer** | `SkeletonView` en filas mientras carga; desaparecer con la animación stagger existente (`HomeView.swift:382-388`). |
 | **Pull-to-refresh** | Ya parcial; unificar con `refreshResume` cooldown. |
+| **Fondo negro puro** | `Color.background` = `#000` en toda la home. |
 
-**Ficheros:** `HomeView.swift`, `LibraryModel.swift`, `DesignSystem/Components/RowSection.swift`, nuevo `LibraryGridView.swift`.
+**Ficheros:** `HomeView.swift`, `LibraryModel.swift`, `DesignSystem/Components/{RowSection, HeroCardView, ChipView, BadgeView}.swift`, nuevo `LibraryGridView.swift`.
 
-**Criterio "se nota premium":** abrir la app = pantalla de arranque tipo Apple TV (hero + filas con peek), cero `ProgressView` de texto.
+**Criterio "se nota premium":** abrir la app = home de las capturas (header con pills, chips, hero con panel glass y dots, filas con "Ver todo" y badges), fondo negro puro, cero `ProgressView` de texto.
 
 ---
 
@@ -106,7 +148,7 @@ El player es la zona más madura; aquí se sube de "muy bueno" a "premium".
 | Entregable | Detalle |
 |---|---|
 | **Selector de calidad real** | `showQualityPicker` declarado sin usar (`PlayerViewModel.swift:61`). UI de hoja con opciones Auto/1080p/720p/480p → construir URL con `MaxStreamingBitrate` (escalera de `AVPlayerCapability.chooseURL` ya existe). |
-| **Mini-player persistente** | Al cerrar el fullscreen hoy se pierde el acceso (solo Handoff/PiP restore). Barra mini-player al pie (sobre el tab bar) con tap → reabrir, swipe → descartar. Reutilizar instancia `AVPlayer` compartida (`AVPlaybackEngine` singleton por sesión). |
+| **Mini-player persistente** | Al cerrar el fullscreen hoy se pierde el acceso (solo Handoff/PiP restore). **Pill glass flotante encima de la tab bar** (estilo Apple Music, referencia 3): arte pequeño + título + controles ▶/⏸ ⏭; tap → reabrir fullscreen, swipe → descartar. Reutilizar instancia `AVPlayer` compartida (`AVPlaybackEngine` singleton por sesión). |
 | **Tarjeta "Siguiente episodio" anticipada** | Panel con miniatura + cuenta atrás aparece ~30 s antes del fin (datos de fin de crédits ya detectados por `SegmentDetector`), no solo el overlay al final (`PlayerView.swift:1048-1102`). |
 | **Gestos de seek** | Doble-tap izquierda/derecha ±10 s (hoy solo alterna fit/fill). Mantener swipe horizontal ±15 s actual. |
 | **Brillo / volumen vertical** | Swipe vertical izquierda = brillo, derecha = volumen (`UIScreen.brightness` / `AVAudioSession` volume), estándar de apps de vídeo. tvOS: excluido (foco). |
@@ -136,13 +178,13 @@ El player es la zona más madura; aquí se sube de "muy bueno" a "premium".
 
 ### iOS / iPadOS
 - **iPad:** `NavigationSplitView` o columnas cuando el ancho lo permita; soporte multitasking (Stage Manager) — verificar sin layout roto; puntero con foco visual en tarjetas.
-- **Tab bar:** mantener `tabBarMinimizeBehavior` (iOS 26); dar espacio al mini-player del bloque 4.
+- **Tab bar flotante de cristal:** sustituir el `TabView` nativo por `FloatingTabBar` (píldora glass con iconos + labels, activo teñido, separada del borde — referencias 1, 3 y 4). Guardar espacio para el mini-player del bloque 4 (pill apilada encima). Mantener `tabBarMinimizeBehavior` si se conserva el `TabView` subyacente.
 - **Gestos de navegación:** swipe-back ya nativo; asegurar que no choque con gestos del player.
 
 ### visionOS (hoy: 9 líneas de `@main`)
 - Layout base funcional con fondo compatible (`ornament`/volumen simple) para que no quede como app iOS pegada; nada ambicioso en esta fase.
 
-**Ficheros:** `ThisJellyFixRootView.swift`, `HomeView.swift`, `Apps/tvOS/*` (Top Shelf), `Apps/macOS/*`.
+**Ficheros:** `ThisJellyFixRootView.swift`, `HomeView.swift`, `DesignSystem/Components/FloatingTabBar.swift`, `Apps/tvOS/*` (Top Shelf), `Apps/macOS/*`.
 
 **Criterio "se nota premium":** en Apple TV se navega todo con el mando con foco claro; en Mac se usa sin ratón innecesario (teclado); en iPad se ve como app diseñada, no redimensionada.
 
