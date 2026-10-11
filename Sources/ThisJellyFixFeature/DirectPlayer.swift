@@ -82,7 +82,7 @@ struct DirectPlayer: View {
                     HStack(spacing: 12) {
                         Button("Reintentar") { attempt += 1 }
                             .buttonStyle(.borderedProminent)
-                            .tint(.cyan)
+                            .tint(MareaTheme.Colors.accent)
                         Button("Cerrar") { close() }
                             .buttonStyle(.bordered)
                             .foregroundStyle(.white)

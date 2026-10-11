@@ -447,7 +447,7 @@ struct PlayerView: View {
                         Text(error)
                         Button("Cerrar") { dismissPlayer() }
                             .buttonStyle(.borderedProminent)
-                            .tint(.cyan)
+                            .tint(MareaTheme.Colors.accent)
                     }
                 }
             }
@@ -1405,7 +1405,7 @@ private struct AudioPickerSheet: View {
                         }
                         Spacer()
                         if track.id == selected {
-                            Image(systemName: "checkmark").foregroundStyle(.cyan)
+                            Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
                         }
                     }
                 }
@@ -1440,7 +1440,7 @@ private struct SubtitlePickerSheet: View {
                         Text("Desactivados")
                         Spacer()
                         if selected == nil {
-                            Image(systemName: "checkmark").foregroundStyle(.cyan)
+                            Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
                         }
                     }
                 }
@@ -1459,7 +1459,7 @@ private struct SubtitlePickerSheet: View {
                             }
                             Spacer()
                             if track.id == selected {
-                                Image(systemName: "checkmark").foregroundStyle(.cyan)
+                                Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
                             }
                         }
                     }
@@ -1503,7 +1503,7 @@ private struct SpeedPickerSheet: View {
                         Text(speed.label)
                         Spacer()
                         if speed.rate == currentRate {
-                            Image(systemName: "checkmark").foregroundStyle(.cyan)
+                            Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
                         }
                     }
                 }

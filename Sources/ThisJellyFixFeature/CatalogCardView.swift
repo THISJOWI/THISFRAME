@@ -57,7 +57,7 @@ struct CatalogCardView: View {
         case .submitting: Badge(text: "Enviando", icon: "paperplane.fill", color: .gray)
         case .queued: Badge(text: "En cola", icon: "clock.fill", color: .orange)
         case .downloading(let progress):
-            Badge(text: "\(Int(progress))%", icon: "arrow.down.circle.fill", color: .cyan)
+            Badge(text: "\(Int(progress))%", icon: "arrow.down.circle.fill", color: MareaTheme.Colors.accent)
         case .paused: Badge(text: "Pausado", icon: "pause.fill", color: .gray)
         case .completed: Badge(text: "Listo", icon: "checkmark.circle.fill", color: .green)
         case .available: Badge(text: "Disponible", icon: "play.circle.fill", color: .green)

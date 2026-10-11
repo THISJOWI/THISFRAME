@@ -15,11 +15,11 @@ struct ProfileView: View {
                     // Avatar
                     ZStack {
                         Circle()
-                            .fill(.cyan.opacity(0.2))
+                            .fill(MareaTheme.Colors.accent.opacity(0.2))
                             .frame(width: 100, height: 100)
                         Image(systemName: "person.fill")
                             .font(.system(size: 44))
-                            .foregroundStyle(.cyan)
+                            .foregroundStyle(MareaTheme.Colors.accent)
                     }
                     .padding(.top, 24)
 

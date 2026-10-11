@@ -20,7 +20,7 @@ struct LoginView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(.cyan)
+                .foregroundStyle(MareaTheme.Colors.accent)
                 Spacer()
             }
             .frame(maxWidth: 380)
@@ -32,7 +32,7 @@ struct LoginView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 64, height: 64)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
-                    .shadow(color: .cyan.opacity(0.3), radius: 10)
+                    .shadow(color: MareaTheme.Colors.accent.opacity(0.3), radius: 10)
 
                 Text("Iniciar sesión")
                     .font(.title.bold())
@@ -84,7 +84,7 @@ struct LoginView: View {
                 }
             }
             .buttonStyle(.borderedProminent)
-            .tint(.cyan)
+            .tint(MareaTheme.Colors.accent)
             .disabled(
                 authModel.username.trimmingCharacters(in: .whitespaces).isEmpty
                     || authModel.isAuthenticating

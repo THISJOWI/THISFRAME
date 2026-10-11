@@ -91,7 +91,7 @@ struct IntegrationsSection: View {
                     if tmdbTesting { ProgressView().scaleEffect(0.8) } else { Text("Probar") }
                 }
                 .buttonStyle(.bordered)
-                .tint(.cyan)
+                .tint(MareaTheme.Colors.accent)
                 .disabled(tmdbKey.isEmpty || tmdbTesting)
 
                 if let ok = tmdbResult {
@@ -160,7 +160,7 @@ struct IntegrationsSection: View {
                     }
                 }
                 .buttonStyle(.bordered)
-                .tint(.cyan)
+                .tint(MareaTheme.Colors.accent)
                 .disabled(!isFilled || testing != nil)
 
                 if let ok = testResult[service] {
@@ -190,7 +190,7 @@ struct IntegrationsSection: View {
                     }
                     .font(.caption)
                     .buttonStyle(.bordered)
-                    .tint(.cyan)
+                    .tint(MareaTheme.Colors.accent)
 
                     Button("Abrir ajustes del sistema") {
                         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }

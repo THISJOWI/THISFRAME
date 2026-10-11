@@ -64,7 +64,7 @@ struct DownloadsView: View {
         VStack(spacing: 12) {
             Image(systemName: "arrow.down.circle")
                 .font(.system(size: 46))
-                .foregroundStyle(.cyan.opacity(0.6))
+                .foregroundStyle(MareaTheme.Colors.accent.opacity(0.6))
             Text("Sin descargas")
                 .font(.headline)
             Text("Las órdenes que envíes a Radarr/Sonarr aparecerán aquí.")
@@ -107,7 +107,7 @@ struct DownloadsView: View {
             switch entry.state {
             case .downloading(let progress):
                 ProgressView(value: progress, total: 100)
-                    .tint(.cyan)
+                    .tint(MareaTheme.Colors.accent)
             case .submitting, .queued, .paused, .completed, .available, .failed:
                 EmptyView()
             }
@@ -142,7 +142,7 @@ struct DownloadsView: View {
         let (text, icon, color): (String, String, Color) = switch state {
         case .submitting: ("Enviando", "paperplane.fill", .gray)
         case .queued: ("En cola", "clock.fill", .orange)
-        case .downloading(let p): ("\(Int(p))%", "arrow.down.circle.fill", .cyan)
+        case .downloading(let p): ("\(Int(p))%", "arrow.down.circle.fill", MareaTheme.Colors.accent)
         case .paused: ("Pausado", "pause.fill", .gray)
         case .completed: ("Listo", "checkmark.circle.fill", .green)
         case .available: ("Disponible", "play.circle.fill", .green)

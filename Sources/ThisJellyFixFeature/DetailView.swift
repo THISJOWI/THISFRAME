@@ -256,7 +256,7 @@ struct DetailView: View {
                         Text(error)
                         Button("Reintentar") { Task { await loadDetail() } }
                             .buttonStyle(.borderedProminent)
-                            .tint(.cyan)
+                            .tint(MareaTheme.Colors.accent)
                     }
                     .frame(maxWidth: .infinity, minHeight: 400)
                 }
@@ -400,7 +400,7 @@ struct DetailView: View {
         } else {
             // No backdrop — poster centred on the app's dark card colour.
             ZStack {
-                Color(red: 0.08, green: 0.1, blue: 0.18)
+                MareaTheme.Colors.heroFallback
                 if detail.hasPoster {
                     MareaImageView(url: posterURL(for: detail), width: 160, height: 240)
                         .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -490,7 +490,7 @@ struct DetailView: View {
             }
         }
         .buttonStyle(.borderedProminent)
-        .tint(.cyan)
+        .tint(MareaTheme.Colors.accent)
         .controlSize(.large)
         .disabled(isPreparingPlayback)
     }
@@ -559,8 +559,8 @@ struct DetailView: View {
                         .font(.caption)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(.cyan.opacity(0.2), in: Capsule())
-                        .foregroundStyle(.cyan)
+                        .background(MareaTheme.Colors.accent.opacity(0.2), in: Capsule())
+                        .foregroundStyle(MareaTheme.Colors.accent)
                 }
             }
         }
@@ -595,7 +595,7 @@ struct DetailView: View {
                                     .padding(.vertical, 6)
                                     .background(
                                         index == selectedSeasonIndex
-                                            ? Color.cyan
+                                            ? MareaTheme.Colors.accent
                                             : Color.white.opacity(0.1),
                                         in: Capsule()
                                     )
@@ -1042,7 +1042,7 @@ private struct EpisodeRow: View {
                     .clipShape(RoundedRectangle(cornerRadius: 6))
             } else {
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(Color(red: 0.15, green: 0.17, blue: 0.25))
+                    .fill(MareaTheme.Colors.surfaceElevated)
                     .frame(width: 120, height: 68)
                     .overlay {
                         Image(systemName: "film")
@@ -1057,7 +1057,7 @@ private struct EpisodeRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(episode.episodeLabel)
                     .font(.caption)
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(MareaTheme.Colors.accent)
 
                 Text(episode.name)
                     .font(.subheadline.weight(.medium))
@@ -1079,7 +1079,7 @@ private struct EpisodeRow: View {
             Button(action: onPlay) {
                 Image(systemName: "play.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(MareaTheme.Colors.accent)
             }
             .buttonStyle(.plain)
         }

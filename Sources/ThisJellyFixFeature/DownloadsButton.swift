@@ -20,7 +20,7 @@ struct DownloadsButton: View {
             ZStack(alignment: .topTrailing) {
                 Image(systemName: "arrow.down.circle")
                     .font(.title2)
-                    .foregroundStyle(.cyan)
+                    .foregroundStyle(MareaTheme.Colors.accent)
                 if activeCount > 0 {
                     Text("\(activeCount)")
                         .font(.caption2.bold())

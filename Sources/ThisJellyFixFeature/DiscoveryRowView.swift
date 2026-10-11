@@ -17,7 +17,7 @@ struct DiscoveryRowView: View {
                 if row.id == "forYou" {
                     Image(systemName: "sparkles")
                         .font(.caption)
-                        .foregroundStyle(.cyan)
+                        .foregroundStyle(MareaTheme.Colors.accent)
                 }
                 Spacer()
             }

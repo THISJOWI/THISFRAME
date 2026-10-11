@@ -83,7 +83,7 @@ struct CatalogDetailView: View {
                     systemImage: item.kind == .movie ? "film.fill" : "tv.fill"
                 )
                 .font(.caption)
-                .foregroundStyle(.cyan)
+                .foregroundStyle(MareaTheme.Colors.accent)
                 if item.isInLibrary {
                     Label("Ya en tu biblioteca", systemImage: "checkmark.seal.fill")
                         .font(.caption)
@@ -116,7 +116,7 @@ struct CatalogDetailView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.cyan)
+                .tint(MareaTheme.Colors.accent)
                 .disabled(isSubmitting)
 
                 Button {
@@ -125,7 +125,7 @@ struct CatalogDetailView: View {
                     Label("Opciones", systemImage: "slider.horizontal.3")
                 }
                 .buttonStyle(.bordered)
-                .tint(.cyan)
+                .tint(MareaTheme.Colors.accent)
                 .disabled(isSubmitting)
             }
         }
@@ -141,9 +141,9 @@ struct CatalogDetailView: View {
                 label("En cola de descarga", "clock.fill", .orange)
             case .downloading(let progress):
                 VStack(alignment: .leading, spacing: 6) {
-                    label("Descargando · \(Int(progress))%", "arrow.down.circle.fill", .cyan)
+                    label("Descargando · \(Int(progress))%", "arrow.down.circle.fill", MareaTheme.Colors.accent)
                     ProgressView(value: progress, total: 100)
-                        .tint(.cyan)
+                        .tint(MareaTheme.Colors.accent)
                 }
             case .paused(let progress):
                 label("Pausada · \(Int(progress))%", "pause.fill", .gray)
@@ -158,13 +158,13 @@ struct CatalogDetailView: View {
             if state == .available || state == .completed {
                 Button("Hecho") { dismiss() }
                     .buttonStyle(.borderedProminent)
-                    .tint(.cyan)
+                    .tint(MareaTheme.Colors.accent)
             } else if case .failed = state {
                 Button("Reintentar") {
                     Task { await submit(options: nil) }
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.cyan)
+                .tint(MareaTheme.Colors.accent)
             } else {
                 Button("Quitar de la cola", role: .destructive) {
                     confirmingRemove = true

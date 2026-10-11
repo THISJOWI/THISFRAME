@@ -37,7 +37,7 @@ struct FavoritesView: View {
                         VStack(spacing: 12) {
                             Image(systemName: "heart.slash")
                                 .font(.system(size: 48))
-                                .foregroundStyle(.cyan.opacity(0.6))
+                                .foregroundStyle(MareaTheme.Colors.accent.opacity(0.6))
                             Text("Sin favoritos aún")
                                 .font(.headline)
                                 .foregroundStyle(.secondary)

@@ -177,7 +177,7 @@ struct MareaImageView: View {
             MareaTheme.Colors.surface
             Text(placeholder)
                 .font(.title2.bold())
-                .foregroundStyle(.cyan.opacity(0.6))
+                .foregroundStyle(MareaTheme.Colors.accent.opacity(0.6))
         }
         .mareaImageSizing(width: width, height: height)
     }

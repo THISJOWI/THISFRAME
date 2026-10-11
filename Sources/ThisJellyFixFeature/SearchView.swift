@@ -116,7 +116,7 @@ struct SearchView: View {
                         VStack(spacing: 12) {
                             Image(systemName: "sparkle.magnifyingglass")
                                 .font(.system(size: 48))
-                                .foregroundStyle(.cyan.opacity(0.6))
+                                .foregroundStyle(MareaTheme.Colors.accent.opacity(0.6))
                             Text("Busca tu contenido favorito")
                                 .font(.headline)
                                 .foregroundStyle(.secondary)
