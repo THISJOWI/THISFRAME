@@ -460,12 +460,17 @@ struct HomeView: View {
                                 onPlay: { directItem = item }
                             )
                             .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: MareaTheme.Spacing.md)
+                            .transition(.opacity)
                         }
                     }
                     .scrollTargetLayout()
                     .padding(.horizontal, MareaTheme.Spacing.md)
                 }
                 .scrollTargetBehavior(.viewAligned)
+                .animation(.easeInOut(duration: 0.35), value: libraryModel.heroItems)
+            } else if libraryModel.hasLoaded {
+                // Coherent empty state instead of a silent gap.
+                HeroEmptyStateView()
             }
         }
     }

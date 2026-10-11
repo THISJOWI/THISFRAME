@@ -63,10 +63,6 @@ final class LibraryModel {
     /// only show the badge for ids in this set — never for unwatched series.
     private(set) var verifiedNewSeasonIDs: Set<String> = []
 
-    /// Episode ids incorporated today (current calendar day, server-verified
-    /// via DateCreated). Backs the "Nuevos episodios" row and hero priority.
-    private(set) var newEpisodeIDs: Set<String> = []
-
     /// Hero carousel items, prioritised: episodes added today (their series),
     /// verified new seasons, items added within the novelty window, then the
     /// remaining recent items. Up to 5, deduplicated.
@@ -88,7 +84,7 @@ final class LibraryModel {
             // resume items come first in the candidate list and the stable
             // sort keeps that tiebreak.
             if item.resumePositionSeconds ?? 0 > 0 { return 0 }
-            if item.type == "Episode", newEpisodeIDs.contains(item.id) { return 0 }
+            if classifier.novelty(for: item) == .newEpisodeToday { return 0 }
             if item.type == "Series", verifiedNewSeasonIDs.contains(item.id) { return 1 }
             if classifier.novelty(for: item) == .recentlyAdded { return 2 }
             return 3
@@ -254,7 +250,6 @@ final class LibraryModel {
             let todays = episodes.filter {
                 classifier.novelty(for: $0) == .newEpisodeToday
             }
-            newEpisodeIDs = Set(todays.map(\.id))
             TJFLog("load: Nuevos episodios total=\(episodes.count) today=\(todays.count)")
             publish(ContentRow(title: "Nuevos episodios", items: todays))
         } catch {

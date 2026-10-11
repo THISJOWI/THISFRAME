@@ -99,4 +99,30 @@ final class LibraryModelHeroTests: XCTestCase {
 
         XCTAssertTrue(model.heroItems.isEmpty)
     }
+
+    func testHeroItemsPutNewEpisodesBeforePlainLatest() async {
+        // A today-episode and a plain (undated) latest item compete: the
+        // new episode must lead the carousel.
+        let stub = StubLibraryClient()
+        let plain = makeItem(id: "l1", name: "Latest")
+        stub.latestItems = [plain]
+        stub.resumeItems = []
+        let model = LibraryModel(
+            libraryClient: stub, serverURL: serverURL, userId: "u1", token: "tok"
+        )
+        await model.load()
+
+        let today = Date()
+        let formatter = ISO8601DateFormatter()
+        let episode = JellyfinMediaItem(
+            id: "e1", name: "Premiere", type: "Episode",
+            seriesName: "Show",
+            dateCreated: formatter.string(from: today)
+        )
+        // Simulate the row landing after load (as the network would).
+        model.rows.insert(ContentRow(title: "Nuevos episodios", items: [episode]), at: 0)
+
+        let heroes = model.heroItems
+        XCTAssertEqual(heroes.first?.id, "e1")
+    }
 }
