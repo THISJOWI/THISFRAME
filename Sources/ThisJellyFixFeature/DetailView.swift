@@ -228,7 +228,7 @@ struct DetailView: View {
                         }
                         .padding(.horizontal, 24)
                         .padding(.top, 16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(maxWidth: contentMaxWidth, alignment: .leading)
 
                         // Spacer ensures scroll area extends beyond content
                         Spacer(minLength: 80)
@@ -892,6 +892,17 @@ struct DetailView: View {
         UIScreen.main.bounds.height
         #else
         480
+        #endif
+    }
+
+    /// Desktop windows get very wide: prose at full width is unreadable and
+    /// episode rows stretch to absurd sizes. Cap the content column while
+    /// letting the hero bleed edge-to-edge.
+    private var contentMaxWidth: CGFloat {
+        #if os(macOS)
+        1100
+        #else
+        .infinity
         #endif
     }
 

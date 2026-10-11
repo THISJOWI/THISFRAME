@@ -118,10 +118,20 @@ struct MediaCardView: View {
     }
 
     private var cardWidth: CGFloat {
+        #if os(macOS)
+        // Desktop wrap grid: posters read at arm's length, so they scale up
+        // from the phone size instead of staying phone-small in a big window.
+        isWide ? 320 : 170
+        #else
         isWide ? 240 : 150
+        #endif
     }
 
     private var cardHeight: CGFloat {
+        #if os(macOS)
+        isWide ? 180 : 255  // 16:9 for episodes/resume, 2:3 poster otherwise
+        #else
         isWide ? 135 : 220  // 16:9 for episodes/resume, portrait for movies/series
+        #endif
     }
 }

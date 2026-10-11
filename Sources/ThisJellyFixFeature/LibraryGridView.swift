@@ -43,9 +43,14 @@ struct LibraryGridView: View {
         ))
     }
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 120, maximum: 180), spacing: MareaTheme.Spacing.md),
-    ]
+    private var columns: [GridItem] {
+        #if os(macOS)
+        // Desktop: larger posters so the grid fills the window sensibly.
+        [GridItem(.adaptive(minimum: 170, maximum: 230), spacing: MareaTheme.Spacing.md)]
+        #else
+        [GridItem(.adaptive(minimum: 120, maximum: 180), spacing: MareaTheme.Spacing.md)]
+        #endif
+    }
 
     var body: some View {
         ScrollView {

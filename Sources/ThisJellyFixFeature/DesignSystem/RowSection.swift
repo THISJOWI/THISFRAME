@@ -42,18 +42,7 @@ struct RowSection: View {
             }
             .padding(.horizontal, MareaTheme.Spacing.xl)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                // viewAligned gives Netflix-style peek: cards snap to the
-                // leading edge and the next one stays visible at the trailing.
-                LazyHStack(alignment: .top, spacing: 14) {
-                    ForEach(items) { item in
-                        card(for: item)
-                    }
-                }
-                .padding(.horizontal, MareaTheme.Spacing.xl)
-                .scrollTargetLayout()
-            }
-            .scrollTargetBehavior(.viewAligned)
+            content
         }
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 20)
@@ -63,6 +52,48 @@ struct RowSection: View {
             }
         }
     }
+
+    /// iPhone/tvOS/visionOS: horizontal peek scrolling (Netflix feel).
+    /// macOS: wrapping grid — wide windows fill up instead of one small
+    /// strip of posters beside empty space.
+    @ViewBuilder
+    private var content: some View {
+        #if os(macOS)
+        if wide {
+            horizontalRows
+        } else {
+            FlowLayoutRows
+        }
+        #else
+        horizontalRows
+        #endif
+    }
+
+    private var horizontalRows: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            // viewAligned gives Netflix-style peek: cards snap to the
+            // leading edge and the next one stays visible at the trailing.
+            LazyHStack(alignment: .top, spacing: 14) {
+                ForEach(items) { item in
+                    card(for: item)
+                }
+            }
+            .padding(.horizontal, MareaTheme.Spacing.xl)
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.viewAligned)
+    }
+
+    #if os(macOS)
+    private var FlowLayoutRows: some View {
+        WrapLayout(spacing: MareaTheme.Spacing.md) {
+            ForEach(items) { item in
+                card(for: item)
+            }
+        }
+        .padding(.horizontal, MareaTheme.Spacing.xl)
+    }
+    #endif
 
     @ViewBuilder
     private func card(for item: JellyfinMediaItem) -> some View {
