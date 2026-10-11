@@ -70,6 +70,13 @@ final class PlayerViewModel {
     var onPlayNextEpisode: (() -> Void)?
     /// true when a next-episode action is wired (credits shows both buttons).
     var hasNextEpisode = false
+    /// Provided by the view: plays the PREVIOUS episode (nil when unavailable).
+    var onPlayPreviousEpisode: (() -> Void)?
+    /// true when a previous-episode action is wired (transport ⏮).
+    var hasPreviousEpisode = false
+    /// Output volume (0...1), mirrored from the engine so the slider observes
+    /// it; write via `setVolume(_:)` which applies it to the shared AVPlayer.
+    var volume: Double = 1.0
     /// true while a next-episode swap is loading — the view covers the loading
     /// gap with an in-player indicator instead of dropping back out.
     var isSwitchingEpisode = false
@@ -757,6 +764,43 @@ final class PlayerViewModel {
     func playNextEpisode() {
         guard activeSegment?.type == .credits else { return }
         onPlayNextEpisode?()
+    }
+
+    /// Transport ⏮ — jump to the previous episode when one is wired.
+    func playPreviousEpisode() {
+        guard hasPreviousEpisode else { return }
+        onPlayPreviousEpisode?()
+    }
+
+    /// Transport ⏭ — jump to the next episode right away. Unlike
+    /// `playNextEpisode` (credits auto-offer) an explicit tap is deliberate,
+    /// so no credits-segment guard.
+    func playNextNow() {
+        guard hasNextEpisode else { return }
+        onPlayNextEpisode?()
+    }
+
+    /// Applies the slider's volume to the shared AVPlayer (0...1 clamped).
+    func setVolume(_ value: Double) {
+        let clamped = min(1, max(0, value))
+        volume = clamped
+        engine.player.volume = Float(clamped)
+    }
+
+    /// Segment start positions as 0...1 fractions of the duration — the seek
+    /// bar draws chapter ticks at these spots (nil-safe, skips zero duration).
+    var segmentTicks: [Double] {
+        Self.tickFractions(markers: segmentMarkers, duration: duration)
+    }
+
+    /// Pure tick math: marker starts normalized to the duration, dropping
+    /// markers at t=0 (the bar's left edge already marks the start) and any
+    /// that would fall past the end.
+    static func tickFractions(markers: [SegmentMarker], duration: Double) -> [Double] {
+        guard duration > 0 else { return [] }
+        return markers
+            .filter { $0.start > 0 && $0.start < duration }
+            .map { $0.start / duration }
     }
 
     private func performSkip(_ marker: SegmentMarker) async {

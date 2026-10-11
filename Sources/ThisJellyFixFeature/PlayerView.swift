@@ -51,6 +51,11 @@ struct PlayerView: View {
     // Next episode wiring — when provided, the credits overlay offers it
     var nextEpisode: JellyfinEpisode? = nil
     var onPlayNextEpisode: ((JellyfinEpisode) -> Void)? = nil
+    // Previous episode wiring — when provided, transport ⏮ offers it
+    var previousEpisode: JellyfinEpisode? = nil
+    var onPlayPreviousEpisode: ((JellyfinEpisode) -> Void)? = nil
+    /// Series name shown under the episode/movie title in the controls.
+    var subtitle: String? = nil
     #if os(iOS)
     /// The floating PiP session's live view model: restore hands it back so
     /// playback continues uninterrupted (same AVPlayer — no re-prepare, no
@@ -71,6 +76,13 @@ struct PlayerView: View {
     /// no UI. Cancelled in `onDisappear`.
     @State private var playbackTask: Task<Void, Never>?
     @State private var episodeSwapTask: Task<Void, Never>?
+    #if os(iOS)
+    /// Screen brightness while the player runs. `originalBrightness` is the
+    /// pre-player value captured on first slider touch, restored on exit so
+    /// the player never leaves the system dimmed.
+    @State private var screenBrightness: Double = UIScreen.main.brightness
+    @State private var originalBrightness: Double?
+    #endif
 
     // MARK: - Fit / fill pinch
     @State private var isPinching = false
@@ -98,6 +110,9 @@ struct PlayerView: View {
         mediaStreams: [MediaStream] = [],
         nextEpisode: JellyfinEpisode? = nil,
         onPlayNextEpisode: ((JellyfinEpisode) -> Void)? = nil,
+        previousEpisode: JellyfinEpisode? = nil,
+        onPlayPreviousEpisode: ((JellyfinEpisode) -> Void)? = nil,
+        subtitle: String? = nil,
         restoredViewModel: PlayerViewModel? = nil
     ) {
         self.streamURL = streamURL
@@ -114,6 +129,9 @@ struct PlayerView: View {
         self.mediaStreams = mediaStreams
         self.nextEpisode = nextEpisode
         self.onPlayNextEpisode = onPlayNextEpisode
+        self.previousEpisode = previousEpisode
+        self.onPlayPreviousEpisode = onPlayPreviousEpisode
+        self.subtitle = subtitle
         #if os(iOS)
         self.restoredViewModel = restoredViewModel
         _viewModel = State(initialValue: restoredViewModel ?? PlayerViewModel())
@@ -149,7 +167,7 @@ struct PlayerView: View {
     }
 
     /// Credits overlay action for the CURRENT next episode (re-run whenever
-    /// `nextEpisode` changes, including after a swap).
+    /// `nextEpisode` changes, including after a swap). Wires ⏮ the same way.
     private func wireNextEpisode() {
         if let nextEpisode, let onPlayNextEpisode {
             viewModel.hasNextEpisode = true
@@ -158,7 +176,57 @@ struct PlayerView: View {
             viewModel.hasNextEpisode = false
             viewModel.onPlayNextEpisode = nil
         }
+        if let previousEpisode, let onPlayPreviousEpisode {
+            viewModel.hasPreviousEpisode = true
+            viewModel.onPlayPreviousEpisode = { onPlayPreviousEpisode(previousEpisode) }
+        } else {
+            viewModel.hasPreviousEpisode = false
+            viewModel.onPlayPreviousEpisode = nil
+        }
     }
+
+    /// Fills the Handoff activity for an active playback session. Kept out of
+    /// `body`'s closure: the whole expression made the type-checker blow its
+    /// per-expression budget once the controls overlay grew.
+    private func configurePlayingActivity(_ activity: NSUserActivity) {
+        guard let itemId, let serverURL, let userId else { return }
+        let handoffItem = HandoffMediaItem(id: itemId, name: title, type: mediaType)
+        let built: NSUserActivity = HandoffActivity.playingActivity(
+            item: handoffItem,
+            serverURL: serverURL,
+            userId: userId,
+            position: viewModel.currentTime
+        )
+        activity.title              = built.title
+        activity.isEligibleForHandoff = true
+        activity.isEligibleForSearch  = false
+        activity.userInfo           = built.userInfo
+        // M3: the closure configures a DIFFERENT activity instance than
+        // `built` — these two must be copied too, or the continuation
+        // never routes to the right scene / gets its userInfo stripped.
+        activity.requiredUserInfoKeys  = built.requiredUserInfoKeys
+        activity.targetContentIdentifier = built.targetContentIdentifier
+    }
+
+    /// iOS brightness binding consumed by the overlay's edge slider; the
+    /// pre-player value is captured on first touch so it can be restored.
+    #if os(iOS)
+    private var brightnessBinding: Binding<Double> {
+        Binding(
+            get: { screenBrightness },
+            set: { newValue in
+                if originalBrightness == nil {
+                    originalBrightness = screenBrightness
+                }
+                let clamped = min(1, max(0, newValue))
+                screenBrightness = clamped
+                UIScreen.main.brightness = clamped
+            }
+        )
+    }
+    #else
+    private var brightnessBinding: Binding<Double>? { nil }
+    #endif
 
     /// Open the media and start playback for the first mount.
     private func startPlayback() {
@@ -174,6 +242,51 @@ struct PlayerView: View {
                 await viewModel.seek(to: start)
             }
             guard !Task.isCancelled else { return }
+        }
+    }
+
+    /// In-player cover for the black loading gap while an episode swap runs.
+    @ViewBuilder
+    private var episodeSwapCover: some View {
+        if viewModel.isSwitchingEpisode {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                VStack(spacing: 10) {
+                    ProgressView()
+                        .tint(.white)
+                    Text(title.isEmpty ? "Cargando…" : title)
+                        .font(.headline)
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                    Text("Siguiente episodio")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+            }
+            .allowsHitTesting(false)
+            .transition(.opacity)
+        }
+    }
+
+    /// Full controls overlay, mounted only while shown.
+    @ViewBuilder
+    private var controlsOverlay: some View {
+        if viewModel.showControls {
+            ControlsOverlay(
+                title: title,
+                subtitle: subtitle,
+                viewModel: viewModel,
+                onDismiss: { dismissPlayer() },
+                onToggleFullscreen: {
+                    #if os(macOS)
+                    if let nsWindow = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isKeyWindow }) {
+                        nsWindow.toggleFullScreen(nil)
+                    }
+                    #endif
+                },
+                brightness: brightnessBinding
+            )
+            .transition(.opacity)
         }
     }
 
@@ -193,26 +306,7 @@ struct PlayerView: View {
             // NOTE: an active PiP session's AVPlayerLayer is hosted by
             // ThisJellyFixRootView (always alive) — hosting it here would rip
             // the layer out of the hierarchy the moment this cover closes.
-            .overlay {
-                if viewModel.isSwitchingEpisode {
-                    ZStack {
-                        Color.black.ignoresSafeArea()
-                        VStack(spacing: 10) {
-                            ProgressView()
-                                .tint(.white)
-                            Text(title.isEmpty ? "Cargando…" : title)
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                            Text("Siguiente episodio")
-                                .font(.subheadline)
-                                .foregroundStyle(.white.opacity(0.7))
-                        }
-                    }
-                    .allowsHitTesting(false)
-                    .transition(.opacity)
-                }
-            }
+            .overlay { episodeSwapCover }
 
             // Tap catcher — below controls, above video
             .overlay {
@@ -261,23 +355,7 @@ struct PlayerView: View {
             }
 
             // Controls overlay — always the topmost hosting view
-            .overlay {
-                if viewModel.showControls {
-                    ControlsOverlay(
-                        title: title,
-                        viewModel: viewModel,
-                        onDismiss: { dismissPlayer() },
-                        onToggleFullscreen: {
-                            #if os(macOS)
-                            if let nsWindow = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isKeyWindow }) {
-                                nsWindow.toggleFullScreen(nil)
-                            }
-                            #endif
-                        }
-                    )
-                    .transition(.opacity)
-                }
-            }
+            .overlay { controlsOverlay }
 
             // AirPlay route picker — MOUNTED FOR THE PLAYER'S LIFETIME.
             // It used to live inside ControlsOverlay, so every controls
@@ -463,6 +541,12 @@ struct PlayerView: View {
             #if os(iOS)
             // Restore auto-rotation when leaving player
             restoreOrientation()
+            // Leave the system brightness where the user had it before the
+            // player's edge slider moved it.
+            if let originalBrightness {
+                UIScreen.main.brightness = originalBrightness
+            }
+            originalBrightness = nil
             // This mount's PiP observers are dead weight now — the root view
             // keeps its own permanent pair for restore/close.
             viewModel.detachPipHandlers()
@@ -488,8 +572,7 @@ struct PlayerView: View {
                 viewModel.handleViewExit(handoffAllowed: !PlayerTeardown.consumeErrorFlag())
             }
         }
-        .onChange(of: viewModel.isPlaying) { _, playing in
-            // Show controls when playback pauses/stops unexpectedly (buffering, error)
+        .onChange(of: viewModel.isPlaying) { _, playing in            // Show controls when playback pauses/stops unexpectedly (buffering, error)
             if wasPlaying && !playing {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     viewModel.showControls = true
@@ -510,23 +593,7 @@ struct PlayerView: View {
                 // detail/browsing AND playing simultaneously.
                 && HandoffCenter.shared.isPlaybackActive
         ) { activity in
-            guard let itemId, let serverURL, let userId else { return }
-            let handoffItem = HandoffMediaItem(id: itemId, name: title, type: mediaType)
-            let built = HandoffActivity.playingActivity(
-                item: handoffItem,
-                serverURL: serverURL,
-                userId: userId,
-                position: viewModel.currentTime
-            )
-            activity.title              = built.title
-            activity.isEligibleForHandoff = true
-            activity.isEligibleForSearch  = false
-            activity.userInfo           = built.userInfo
-            // M3: the closure configures a DIFFERENT activity instance than
-            // `built` — these two must be copied too, or the continuation
-            // never routes to the right scene / gets its userInfo stripped.
-            activity.requiredUserInfoKeys  = built.requiredUserInfoKeys
-            activity.targetContentIdentifier = built.targetContentIdentifier
+            configurePlayingActivity(activity)
         }
         // m5: while this view is gone (PiP float window) NO player advertises
         // `playing` — with the center still holding Handoff, zero activities
@@ -857,162 +924,257 @@ private struct AirPlayRoutePicker: NSViewRepresentable {
 }
 #endif
 
+/// Full-screen controls, laid out like the reference player:
+/// top-left close + title/subtitle, top-right icon cluster, centered
+/// transport with previous/next episode, edge sliders for brightness and
+/// volume, and a full-width scrubber with segment ticks plus a
+/// "Termina a las HH:mm" estimate.
 private struct ControlsOverlay: View {
     let title: String
+    var subtitle: String? = nil
     let viewModel: PlayerViewModel
     let onDismiss: () -> Void
     let onToggleFullscreen: () -> Void
+    /// iOS brightness slider — PlayerView owns the value so hiding these
+    /// controls never resets the screen (nil on other platforms).
+    var brightness: Binding<Double>? = nil
+    private var volume: Binding<Double> {
+        Binding(
+            get: { viewModel.volume },
+            set: { viewModel.setVolume($0) }
+        )
+    }
 
     var body: some View {
-        VStack {
-            HStack {
-                #if !os(macOS)
-                Button(action: onDismiss) {
-                    Image(systemName: "xmark")
-                        .font(.title2)
-                        .foregroundStyle(.white)
-                        .padding(12)
-                        .background(.black.opacity(0.5), in: Circle())
-                }
-                #endif
-                Spacer()
+        VStack(spacing: 0) {
+            topBar
+
+            Spacer()
+
+            transportRow
+
+            Spacer()
+
+            bottomBar
+        }
+        // Edge sliders, vertically centered (reference: brightness left,
+        // volume right). Hidden on tvOS — the remote has no drag input.
+        #if !os(tvOS)
+        .overlay(alignment: .leading) {
+            if let brightness {
+                VerticalSlider(icon: "sun.max.fill", value: brightness)
+                    .padding(.leading, 16)
+            }
+        }
+        .overlay(alignment: .trailing) {
+            VerticalSlider(icon: "speaker.wave.2.fill", value: volume)
+                .padding(.trailing, 16)
+        }
+        #endif
+    }
+
+    // MARK: Top bar
+
+    private var topBar: some View {
+        HStack(alignment: .center, spacing: 12) {
+            #if !os(macOS)
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 36, height: 36)
+                    .background(.black.opacity(0.4), in: Circle())
+            }
+            #endif
+
+            VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(.white)
                     .lineLimit(1)
-                Spacer()
-                #if os(macOS)
-                Button(action: onToggleFullscreen) {
-                    Image(systemName: "arrow.up.left.and.arrow.down.right")
-                        .font(.title3)
-                        .foregroundStyle(.white)
-                        .padding(10)
-                        .background(.black.opacity(0.5), in: Circle())
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.65))
+                        .lineLimit(1)
                 }
+            }
+
+            Spacer(minLength: 8)
+
+            // Right cluster — every button drives a real action; the last
+            // slot stays clear so the persistent AirPlay picker (mounted in
+            // PlayerView's topTrailing overlay) lands on it without overlap.
+            HStack(spacing: 6) {
+                #if os(macOS)
+                clusterButton("arrow.up.left.and.arrow.down.right", action: onToggleFullscreen)
                 #endif
                 #if os(iOS)
                 if viewModel.isPipWindowActive {
                     // Floating already — pull playback back into fullscreen.
-                    Button {
+                    clusterButton("pip.exit") {
                         Task { await viewModel.resumeFromPictureInPicture() }
-                    } label: {
-                        Image(systemName: "pip.exit")
-                            .font(.title3)
-                            .foregroundStyle(.white)
-                            .padding(10)
-                            .background(.black.opacity(0.5), in: Circle())
                     }
                 } else {
                     // Native PiP: no playlist resolve — startPictureInPicture is
                     // a thin call over the shared AVPlayerLayer, so the control
                     // never needs a warm-up state.
-                    Button {
+                    clusterButton("pip") {
                         Task { await viewModel.startPictureInPicture() }
-                    } label: {
-                        Image(systemName: "pip")
-                            .font(.title3)
-                            .foregroundStyle(.white)
-                            .frame(width: 34, height: 34)
-                            .background(.black.opacity(0.5), in: Circle())
                     }
                     .disabled(!viewModel.isPlaying && viewModel.currentTime <= 0)
                 }
                 #endif
+                clusterButton("speedometer", disabled: false) {
+                    viewModel.showSpeedPicker = true
+                }
+                clusterButton(
+                    "waveform",
+                    disabled: viewModel.availableAudioTracks.isEmpty
+                ) {
+                    viewModel.showAudioPicker = true
+                }
+                clusterButton(
+                    "captions.bubble",
+                    disabled: viewModel.availableSubtitleTracks.isEmpty
+                ) {
+                    viewModel.showSubtitlePicker = true
+                }
                 #if os(iOS) || os(macOS)
-                // AirPlay route picker lives in a PERSISTENT overlay (see
-                // below); this keeps its slot in the top bar so the rest of
-                // the controls don't shift under it.
                 Color.clear
                     .frame(width: 44, height: 44)
                 #endif
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
-
-            Spacer()
-
-            HStack(spacing: 50) {
-                Button(action: {
-                    let target = max(0, viewModel.currentTime - 15)
-                    Task { await viewModel.seek(to: target) }
-                }) {
-                    Image(systemName: "gobackward.15")
-                        .font(.system(size: 36))
-                        .foregroundStyle(.white)
-                        .padding(14)
-                        .background(.black.opacity(0.3), in: Circle())
-                }
-
-                Button(action: { Task { await viewModel.togglePlayPause() } }) {
-                    Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.system(size: 72))
-                        .foregroundStyle(.white)
-                        .shadow(radius: 4)
-                }
-
-                Button(action: {
-                    let target = min(viewModel.duration, viewModel.currentTime + 15)
-                    Task { await viewModel.seek(to: target) }
-                }) {
-                    Image(systemName: "goforward.15")
-                        .font(.system(size: 36))
-                        .foregroundStyle(.white)
-                        .padding(14)
-                        .background(.black.opacity(0.3), in: Circle())
-                }
-            }
-
-            Spacer()
-
-            VStack(spacing: 8) {
-                SeekBar(
-                    currentTime: viewModel.currentTime,
-                    duration: viewModel.duration
-                ) { newTime in
-                    Task { await viewModel.seek(to: newTime) }
-                }
-
-                HStack {
-                    Text(formatTime(viewModel.currentTime))
-                    Spacer()
-                    Text(formatTime(viewModel.duration))
-                }
-                .font(.caption)
-                .foregroundStyle(.white)
-
-                HStack(spacing: 24) {
-                    ActionButton(
-                        icon: "speaker.wave.2",
-                        label: "Audio",
-                        disabled: viewModel.availableAudioTracks.isEmpty
-                    ) {
-                        viewModel.showAudioPicker = true
-                    }
-                    ActionButton(
-                        icon: "captions.bubble",
-                        label: "Subtítulos",
-                        disabled: viewModel.availableSubtitleTracks.isEmpty
-                    ) {
-                        viewModel.showSubtitlePicker = true
-                    }
-                    ActionButton(icon: "speedometer", label: String(format: "%.1fx", viewModel.playbackRate)) {
-                        viewModel.showSpeedPicker = true
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 8)
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 12)
-            .background(
-                LinearGradient(
-                    colors: [.clear, .black.opacity(0.7)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+    }
+
+    private func clusterButton(
+        _ icon: String,
+        disabled: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(.white)
+                .frame(width: 40, height: 40)
+                .background(.black.opacity(0.4), in: Circle())
+                .opacity(disabled ? 0.35 : 1)
+        }
+        .disabled(disabled)
+    }
+
+    // MARK: Transport
+
+    private var transportRow: some View {
+        HStack(spacing: 36) {
+            // ⏮ previous episode — only when DetailView/DirectPlayer wired one.
+            transportButton(
+                icon: "backward.end.fill",
+                size: 26,
+                disabled: !viewModel.hasPreviousEpisode
+            ) {
+                viewModel.playPreviousEpisode()
+            }
+
+            transportButton(icon: "gobackward.15", size: 34, disabled: false) {
+                let target = max(0, viewModel.currentTime - 15)
+                Task { await viewModel.seek(to: target) }
+            }
+
+            Button(action: { Task { await viewModel.togglePlayPause() } }) {
+                Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 54, weight: .medium))
+                    .foregroundStyle(.white)
+                    .frame(width: 84, height: 84)
+                    .shadow(radius: 4)
+            }
+
+            transportButton(icon: "goforward.30", size: 34, disabled: false) {
+                let target = min(viewModel.duration, viewModel.currentTime + 30)
+                Task { await viewModel.seek(to: target) }
+            }
+
+            // ⏭ next episode — jumps right away (an explicit tap is deliberate).
+            transportButton(
+                icon: "forward.end.fill",
+                size: 26,
+                disabled: !viewModel.hasNextEpisode
+            ) {
+                viewModel.playNextNow()
+            }
+        }
+    }
+
+    private func transportButton(
+        icon: String,
+        size: CGFloat,
+        disabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: size))
+                .foregroundStyle(.white)
+                .padding(14)
+                .background(.black.opacity(0.3), in: Circle())
+                .opacity(disabled ? 0.3 : 1)
+        }
+        .disabled(disabled)
+    }
+
+    // MARK: Bottom bar
+
+    private var bottomBar: some View {
+        VStack(spacing: 8) {
+            SeekBar(
+                currentTime: viewModel.currentTime,
+                duration: viewModel.duration,
+                ticks: viewModel.segmentTicks
+            ) { newTime in
+                Task { await viewModel.seek(to: newTime) }
+            }
+
+            HStack {
+                Text(formatTime(viewModel.currentTime))
+                Spacer()
+                Text("-" + formatTime(remaining))
+            }
+            .font(.caption)
+            .foregroundStyle(.white)
+
+            if let endsAt {
+                Text("Termina a las \(endsAt)")
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.6))
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 12)
+        .background(
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.7)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+    }
+
+    private var remaining: Double {
+        max(0, viewModel.duration - viewModel.currentTime)
+    }
+
+    /// Clock time when playback ends — derived from the live remaining
+    /// time so it stays accurate while the player runs.
+    private var endsAt: String? {
+        guard viewModel.duration > 0, remaining > 0 else { return nil }
+        let endsAtDate = Date().addingTimeInterval(remaining)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: endsAtDate)
     }
 
     private func formatTime(_ seconds: Double) -> String {
@@ -1028,11 +1190,65 @@ private struct ControlsOverlay: View {
     }
 }
 
+// MARK: - Vertical edge slider (brightness / volume)
+
+#if !os(tvOS)
+/// Vertical slider matching the reference's edge controls: thin track with a
+/// filled portion, thumb, and an icon at the base. Drag anywhere on the track
+/// to set the value. tvOS omits it — the remote has no drag input.
+private struct VerticalSlider: View {
+    let icon: String
+    @Binding var value: Double
+
+    var body: some View {
+        VStack(spacing: 8) {
+            GeometryReader { geo in
+                let trackHeight = geo.size.height
+                ZStack(alignment: .bottom) {
+                    Capsule()
+                        .fill(.white.opacity(0.3))
+                        .frame(width: 4)
+
+                    Capsule()
+                        .fill(.white)
+                        .frame(width: 4, height: max(6, trackHeight * clamped))
+
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 12, height: 12)
+                        .offset(y: -(trackHeight * clamped) + 6)
+                }
+                .frame(width: 44)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { v in
+                            let fraction = 1 - (v.location.y / max(1, trackHeight))
+                            value = min(1, max(0, fraction))
+                        }
+                )
+            }
+            .frame(width: 44)
+
+            Image(systemName: icon)
+                .font(.caption)
+                .foregroundStyle(.white.opacity(0.85))
+        }
+        .frame(height: 180)
+    }
+
+    private var clamped: Double { min(1, max(0, value)) }
+}
+#endif
+
 // MARK: - Seek Bar
 
 private struct SeekBar: View {
     let currentTime: Double
     let duration: Double
+    /// 0...1 positions of segment markers drawn as ticks on the bar.
+    var ticks: [Double] = []
     let onSeek: (Double) -> Void
 
     @State private var scrubTime: Double?
@@ -1045,8 +1261,17 @@ private struct SeekBar: View {
                     .frame(height: 6)
 
                 RoundedRectangle(cornerRadius: 3)
-                    .fill(.cyan)
+                    .fill(.white)
                     .frame(width: progressWidth(total: geo.size.width), height: 6)
+
+                // Segment/chapter ticks (intro, recap, credits) drawn as
+                // notches over the played track, like the reference bar.
+                ForEach(Array(ticks.enumerated()), id: \.offset) { _, fraction in
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(.black.opacity(0.55))
+                        .frame(width: 2, height: 10)
+                        .offset(x: geo.size.width * CGFloat(fraction) - 1)
+                }
 
                 Circle()
                     .fill(.white)
@@ -1078,28 +1303,6 @@ private struct SeekBar: View {
         let time = scrubTime ?? currentTime
         guard duration > 0 else { return 0 }
         return total * CGFloat(time / duration)
-    }
-}
-
-// MARK: - Action Button
-
-private struct ActionButton: View {
-    let icon: String
-    let label: String
-    var disabled: Bool = false
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.title3)
-                Text(label)
-                    .font(.caption2)
-            }
-            .foregroundStyle(disabled ? .gray : .white)
-        }
-        .disabled(disabled)
     }
 }
 
@@ -1138,7 +1341,7 @@ private struct SkipSegmentOverlay: View {
                 if hasNextEpisode {
                     skipButton(label: "Siguiente episodio", icon: "forward.end.fill", action: onPlayNext)
                 }
-                skipButton(label: "Saltar ending", icon: "arrow.right.to.line", action: onSkip)
+                skipButton(label: "Saltar créditos", icon: "arrow.right.to.line", action: onSkip)
             } else {
                 skipButton(label: label, icon: "fastforward", action: onSkip)
             }
@@ -1155,10 +1358,12 @@ private struct SkipSegmentOverlay: View {
         switch segment.type {
         case .intro: "Saltar intro"
         case .recap: "Saltar resumen"
-        case .credits: "Saltar ending"
+        case .credits: "Saltar créditos"
         }
     }
 
+    /// Capsule pill matching the reference's bottom-right skip control:
+    /// translucent gray fill, no hard border, white label.
     private func skipButton(label: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
@@ -1169,11 +1374,7 @@ private struct SkipSegmentOverlay: View {
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 12)
-            .background(.black.opacity(0.7), in: RoundedRectangle(cornerRadius: 8))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(.white.opacity(0.35), lineWidth: 1)
-            )
+            .background(.gray.opacity(0.55), in: Capsule())
             .foregroundStyle(.white)
         }
         .buttonStyle(.plain)

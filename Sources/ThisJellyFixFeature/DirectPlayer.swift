@@ -24,6 +24,7 @@ struct DirectPlayer: View {
     @State private var errorMessage: String?
     @State private var attempt = 0
     @State private var nextEpisode: JellyfinEpisode?
+    @State private var previousEpisode: JellyfinEpisode?
     @State private var seasonEpisodes: [JellyfinEpisode] = []
 
     init(
@@ -63,7 +64,12 @@ struct DirectPlayer: View {
                     nextEpisode: nextEpisode,
                     onPlayNextEpisode: { episode in
                         Task { await play(episode) }
-                    }
+                    },
+                    previousEpisode: previousEpisode,
+                    onPlayPreviousEpisode: { episode in
+                        Task { await play(episode) }
+                    },
+                    subtitle: playerSubtitle
                 )
                 .ignoresSafeArea()
             } else if let errorMessage {
@@ -160,14 +166,20 @@ struct DirectPlayer: View {
         currentTitle = episode.name
         currentStartPosition = episode.resumePositionSeconds
 
-        if let index = seasonEpisodes.firstIndex(where: { $0.id == episode.id }),
-           index + 1 < seasonEpisodes.count {
-            nextEpisode = seasonEpisodes[index + 1]
+        if let index = seasonEpisodes.firstIndex(where: { $0.id == episode.id }) {
+            nextEpisode = index + 1 < seasonEpisodes.count ? seasonEpisodes[index + 1] : nil
+            previousEpisode = index > 0 ? seasonEpisodes[index - 1] : nil
         } else {
             nextEpisode = nil
+            previousEpisode = nil
         }
 
         await prepare()
+    }
+
+    /// Series name shown under the episode title in the player's controls.
+    private var playerSubtitle: String? {
+        item.type == "Episode" ? item.seriesName : nil
     }
 
     /// Best-effort: locate the next episode of the item's season so the credits
@@ -195,9 +207,9 @@ struct DirectPlayer: View {
         ) else { return }
 
         seasonEpisodes = episodes
-        if let index = episodes.firstIndex(where: { $0.id == currentItemId }),
-           index + 1 < episodes.count {
-            nextEpisode = episodes[index + 1]
+        if let index = episodes.firstIndex(where: { $0.id == currentItemId }) {
+            nextEpisode = index + 1 < episodes.count ? episodes[index + 1] : nil
+            previousEpisode = index > 0 ? episodes[index - 1] : nil
         }
     }
 

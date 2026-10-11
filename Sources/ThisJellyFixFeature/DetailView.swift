@@ -30,6 +30,7 @@ struct DetailView: View {
     @State private var isPreparingPlayback = false
     @State private var playbackError: String?
     @State private var nextEpisode: JellyfinEpisode?
+    @State private var previousEpisode: JellyfinEpisode?
     /// Handoff autoplay fires at most once per DetailView instance — a SwiftUI
     /// rebuild must not restart playback over the user's head.
     @State private var handoffAutoplayStarted = false
@@ -124,7 +125,12 @@ struct DetailView: View {
                     nextEpisode: nextEpisode,
                     onPlayNextEpisode: { episode in
                         Task { await playNextEpisode(episode) }
-                    }
+                    },
+                    previousEpisode: previousEpisode,
+                    onPlayPreviousEpisode: { episode in
+                        Task { await playEpisode(episode) }
+                    },
+                    subtitle: playerSubtitle
                 )
                 .ignoresSafeArea()
             }
@@ -155,7 +161,12 @@ struct DetailView: View {
                         nextEpisode: nextEpisode,
                         onPlayNextEpisode: { episode in
                             Task { await playNextEpisode(episode) }
-                        }
+                        },
+                        previousEpisode: previousEpisode,
+                        onPlayPreviousEpisode: { episode in
+                            Task { await playEpisode(episode) }
+                        },
+                        subtitle: playerSubtitle
                     )
                     .ignoresSafeArea()
                 }
@@ -643,6 +654,10 @@ struct DetailView: View {
 
     private func playMovie(_ detail: JellyfinItemDetail) async {
         streamTitle = detail.name
+        // Movies have no episode chain — drop any stale wiring from a
+        // previous episode play.
+        nextEpisode = nil
+        previousEpisode = nil
         await preparePlayback(itemId: item.id, startPosition: resumeSeconds(detail))
     }
 
@@ -718,6 +733,7 @@ struct DetailView: View {
     private func playEpisode(_ episode: JellyfinEpisode) async {
         streamTitle = episode.name
         nextEpisode = nextEpisodeAfter(episode)
+        previousEpisode = previousEpisodeBefore(episode)
         await preparePlayback(itemId: episode.id, startPosition: episode.resumePositionSeconds)
     }
 
@@ -726,6 +742,20 @@ struct DetailView: View {
         guard let index = episodes.firstIndex(where: { $0.id == episode.id }),
               index + 1 < episodes.count else { return nil }
         return episodes[index + 1]
+    }
+
+    /// Previous episode in the currently listed season order, if any — the
+    /// transport's ⏮ control jumps straight to it.
+    private func previousEpisodeBefore(_ episode: JellyfinEpisode) -> JellyfinEpisode? {
+        guard let index = episodes.firstIndex(where: { $0.id == episode.id }),
+              index > 0 else { return nil }
+        return episodes[index - 1]
+    }
+
+    /// Series name shown under the episode title in the player's controls;
+    /// movies and trailers have no second line.
+    private var playerSubtitle: String? {
+        playingMediaType == "Episode" ? item.name : nil
     }
 
     /// Credits overlay → start the next episode IN PLACE. The cover stays
