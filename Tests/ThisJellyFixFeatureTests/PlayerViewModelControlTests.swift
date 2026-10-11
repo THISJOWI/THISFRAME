@@ -89,4 +89,20 @@ final class PlayerViewModelControlTests: XCTestCase {
         vm.playNextNow()
         XCTAssertTrue(fired)
     }
+
+    // MARK: - Subtitles single-renderer invariant
+
+    func testSelectSubtitleTrackRoutesExclusivelyToOverlay() async {
+        let vm = PlayerViewModel()
+        let track = SubtitleTrack(id: 0, name: "Español", language: "spa", languageName: "Español", isExternal: true)
+        await vm.selectSubtitleTrack(track)
+        XCTAssertEqual(vm.selectedSubtitleTrackIndex, 0)
+        XCTAssertTrue(vm.subtitleSelectionLocked)
+
+        await vm.selectSubtitleTrack(nil)
+        XCTAssertNil(vm.selectedSubtitleTrackIndex)
+        XCTAssertNil(vm.subtitleText)
+        XCTAssertTrue(vm.subtitleSelectionLocked)
+    }
 }
+

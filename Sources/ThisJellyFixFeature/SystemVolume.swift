@@ -40,6 +40,20 @@ final class SystemVolumeController {
             }
     }
 
+    /// Re-read `outputVolume` and notify if it moved.
+    ///
+    /// KVO on `outputVolume` is unreliable in practice (it can go silent while
+    /// the audio session is mid-activation or after route changes), which left
+    /// the slider frozen while hardware buttons actually changed the level.
+    /// The player's 0.5 s tick calls this as a safety net: worst case the
+    /// slider follows a real button press half a second late.
+    func refresh() {
+        let current = Double(AVAudioSession.sharedInstance().outputVolume)
+        guard abs(current - value) > 0.001 else { return }
+        value = current
+        onChange?(current)
+    }
+
     /// Write the system volume (0...1 clamped) through the hidden slider.
     /// The KVO observer above delivers the confirmed value back.
     func set(_ newValue: Double) {

@@ -40,15 +40,12 @@ final class PlayerViewModel {
     /// True once the user manually picked a subtitle track (or turned them
     /// off): preference auto-selection must not override that choice later.
     var subtitleSelectionLocked = false
-    /// Number of embedded (AVMediaSelection) subtitle tracks — ids from
-    /// `embeddedSubtitleCount` up are external client-composed tracks.
-    private var embeddedSubtitleCount = 0
-    /// External SRT tracks appended after the embedded ones, with their cues.
+    /// Subtitle tracks loaded as SRT from the server, with their cues.
+    /// All subtitles are rendered exclusively by the SwiftUI client overlay (black background).
     private var externalSubs: [(track: SubtitleTrack, cues: [SubtitleCue])] = []
-    /// Index into `externalSubs` when an external track is selected.
+    /// Index into `externalSubs` when a subtitle track is selected.
     private var selectedExternalSubIndex: Int?
-    /// Text for the SwiftUI subtitle overlay — only for EXTERNAL tracks.
-    /// Embedded subs are rendered natively by AVPlayerLayer.
+    /// Text for the SwiftUI subtitle overlay (black background).
     var subtitleText: String?
 
     // MARK: - UI State
@@ -420,7 +417,6 @@ final class PlayerViewModel {
         selectedAudioTrackIndex = nil
         selectedSubtitleTrackIndex = nil
         subtitleSelectionLocked = false
-        embeddedSubtitleCount = 0
         externalSubs = []
         selectedExternalSubIndex = nil
         subtitleText = nil
@@ -537,8 +533,7 @@ final class PlayerViewModel {
         await applySubtitleSelection(track)
     }
 
-    /// Select an embedded (AVMediaSelection) or external (client-composed)
-    /// subtitle track. nil = off.
+    /// Select a subtitle track rendered exclusively in the black-background overlay. nil = off.
     private func applySubtitleSelection(_ track: SubtitleTrack?) async {
         guard let track else {
             await engine.selectSubtitleTrack(index: -1)
@@ -547,20 +542,14 @@ final class PlayerViewModel {
             subtitleText = nil
             return
         }
-        if track.id >= embeddedSubtitleCount {
-            // External: turn embedded OFF and show cues in our overlay.
-            await engine.selectSubtitleTrack(index: -1)
-            selectedExternalSubIndex = track.id - embeddedSubtitleCount
-            selectedSubtitleTrackIndex = track.id
-        } else {
-            // Embedded: AVPlayer renders it natively inside the layer.
-            await engine.selectSubtitleTrack(index: track.id)
-            selectedExternalSubIndex = nil
-            selectedSubtitleTrackIndex = track.id
-        }
+        // Subtitles are rendered exclusively by the client overlay with black background.
+        // AVPlayer native legible rendering is kept permanently disabled (-1).
+        await engine.selectSubtitleTrack(index: -1)
+        selectedExternalSubIndex = track.id
+        selectedSubtitleTrackIndex = track.id
         updateSubtitleText()
         refreshSubtitleTimer()
-        TJFLog("subtitles select id=\(track.id) external=\(track.isExternal)")
+        TJFLog("subtitles select id=\(track.id) name=\(track.name)")
     }
 
     /// Cue lookup for the overlay — runs on the fast subtitle timer.
@@ -655,6 +644,10 @@ final class PlayerViewModel {
                 // Keep the system auto-start gate in sync with the policy:
                 // a user-paused player must not float away on background.
                 PipCoordinator.shared.setAutoStartEnabled(self.canAutoHandoffToPiP)
+                // Volume buttons: KVO can miss events, so the tick re-reads the
+                // real output level — the slider follows hardware presses even
+                // when the observer stays silent.
+                SystemVolumeController.shared.refresh()
                 #endif
 
                 // Determine if playback is active — time advancement as fallback.
@@ -844,19 +837,17 @@ final class PlayerViewModel {
     // MARK: - Private
 
     private func loadTracks() async {
-        let embedded = await engine.availableSubtitleTracks
         availableAudioTracks = displayAudio(await engine.availableAudioTracks)
-        embeddedSubtitleCount = embedded.count
-        availableSubtitleTracks = displaySubtitles(embedded) + displayExternalSubs()
 
-        TJFLog("loadTracks audio=\(availableAudioTracks.count) subs=\(availableSubtitleTracks.count) embedded=\(embedded.count) ext=\(externalSubs.count) attempt=\(trackLoadAttempts)")
+        TJFLog("loadTracks audio=\(availableAudioTracks.count) subs=\(availableSubtitleTracks.count) ext=\(externalSubs.count) attempt=\(trackLoadAttempts)")
 
-        if !availableAudioTracks.isEmpty || !embedded.isEmpty {
+        if !availableAudioTracks.isEmpty || !externalSubs.isEmpty {
             tracksLoaded = true
         }
 
         await addExternalSubtitlesIfNeeded()
-        await applyLanguagePreferences()
+        // Ensure native legible subtitles in AVPlayer are permanently kept off
+        await engine.selectSubtitleTrack(index: -1)
     }
 
     // MARK: - Track display names
@@ -885,43 +876,9 @@ final class PlayerViewModel {
         }
     }
 
-    /// Enrich embedded subtitle tracks with server metadata.
-    private func displaySubtitles(_ tracks: [SubtitleTrack]) -> [SubtitleTrack] {
-        let matched = pairServerStreams(
-            to: tracks,
-            server: serverStreams(type: "Subtitle").filter { $0.isExternal != true }
-        ) { $0.language }
-
-        return tracks.enumerated().map { i, track in
-            let stream = matched[i]
-            let display = TrackNaming.display(
-                rawName: track.name,
-                languageCode: stream?.language ?? track.language,
-                serverTitle: stream?.displayTitle ?? stream?.title,
-                index: i
-            )
-            return SubtitleTrack(
-                id: track.id,
-                name: display.title,
-                language: track.language ?? stream?.language,
-                languageName: display.caption,
-                isExternal: false
-            )
-        }
-    }
-
-    /// External tracks get sequential ids after the embedded ones (the id
-    /// space is what the selection mapping splits on).
+    /// All subtitles (both embedded and external) are served by the overlay list with 0-based IDs.
     private func displayExternalSubs() -> [SubtitleTrack] {
-        externalSubs.enumerated().map { i, entry in
-            SubtitleTrack(
-                id: embeddedSubtitleCount + i,
-                name: entry.track.name,
-                language: entry.track.language,
-                languageName: entry.track.languageName,
-                isExternal: true
-            )
-        }
+        externalSubs.map { $0.track }
     }
 
     /// Server streams of one type in embedding order: embedded tracks
@@ -1029,7 +986,7 @@ final class PlayerViewModel {
             TJFLog("extSubs: server declares none")
             return
         }
-        for stream in candidates {
+        for (i, stream) in candidates.enumerated() {
             guard let idx = stream.index else { continue }
             // Always ask for SRT: the server converts ASS/SSA/VTT on the fly
             // and SRTParser only speaks SRT.
@@ -1050,11 +1007,17 @@ final class PlayerViewModel {
                     TJFLog("extSubs idx=\(idx) parsed 0 cues — skipped")
                     continue
                 }
+                let display = TrackNaming.display(
+                    rawName: stream.displayTitle ?? stream.title ?? "Subtítulo \(i + 1)",
+                    languageCode: stream.language,
+                    serverTitle: stream.displayTitle ?? stream.title,
+                    index: i
+                )
                 let track = SubtitleTrack(
-                    id: -1, // assigned by displayExternalSubs()
-                    name: stream.title ?? stream.displayTitle ?? "Subtítulo \(idx)",
+                    id: externalSubs.count,
+                    name: display.title,
                     language: stream.language,
-                    languageName: nil,
+                    languageName: display.caption,
                     isExternal: true
                 )
                 externalSubs.append((track: track, cues: cues))
@@ -1063,18 +1026,7 @@ final class PlayerViewModel {
                 TJFLog("extSubs idx=\(idx) failed: \(error)")
             }
         }
-        // Rebuild the picker: when the overlay has tracks, ONLY those are
-        // offered — the embedded (native, background-less) entries would be
-        // the same languages rendered a second time. If every SRT fetch
-        // failed, keep the embedded list so subtitles still work.
         if !externalSubs.isEmpty {
-            // Auto-selection may already have picked an embedded (native)
-            // track before the SRTs landed — re-point it at the overlay list
-            // or the user keeps a native, background-less subtitle active.
-            if !subtitleSelectionLocked, let picked = selectedSubtitleTrackIndex,
-               picked < embeddedSubtitleCount {
-                selectedSubtitleTrackIndex = nil
-            }
             availableSubtitleTracks = displayExternalSubs()
             await applyLanguagePreferences()
         }

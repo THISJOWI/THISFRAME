@@ -336,8 +336,8 @@ struct PlayerView: View {
                     }
             }
 
-            // External subtitles (SRT composed client-side) — embedded ones are
-            // painted by AVPlayerLayer itself via the legible media selection.
+            // Subtitles with dark background (single renderer).
+            // Native AVPlayer legible rendering is permanently disabled to eliminate duplicate un-backgrounded text.
             .overlay(alignment: .bottom) {
                 if let text = viewModel.subtitleText {
                     Text(text)
@@ -1118,8 +1118,13 @@ private struct ControlsOverlay: View {
             Image(systemName: icon)
                 .font(.system(size: size))
                 .foregroundStyle(.white)
+                // No dark circle behind transport controls: the shadow already
+                // separates them from bright video, and the empty disc read as
+                // a bulky chrome the reference player doesn't have. Padding
+                // keeps the tap target at 56×56.
                 .padding(14)
-                .background(.black.opacity(0.3), in: Circle())
+                .contentShape(Circle())
+                .shadow(radius: 2)
                 .opacity(disabled ? 0.3 : 1)
         }
         .disabled(disabled)

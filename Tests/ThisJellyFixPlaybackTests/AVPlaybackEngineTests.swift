@@ -89,4 +89,13 @@ final class AVPlaybackEngineTests: XCTestCase {
         engine.setVideoFill(true)
         XCTAssertEqual(engine.renderingLayer === (engine as? AVPlaybackEngine)?.playerLayer, true)
     }
+
+    @MainActor
+    func testNativeLegibleSubtitlesDisabledByDefault() {
+        let engine = AVPlaybackEngine()
+        XCTAssertFalse(engine.player.appliesMediaSelectionCriteriaAutomatically)
+        let criteria = engine.player.mediaSelectionCriteria(forMediaCharacteristic: .legible)
+        XCTAssertNotNil(criteria)
+        XCTAssertEqual(criteria?.preferredLanguages, [])
+    }
 }

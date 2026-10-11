@@ -72,6 +72,8 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         // right after our deselect — which is what drew native subs alongside
         // the external-SRT overlay (the "duplicated subtitles" bug).
         player.appliesMediaSelectionCriteriaAutomatically = false
+        let emptyCriteria = AVPlayerMediaSelectionCriteria(preferredLanguages: [], preferredMediaCharacteristics: nil)
+        player.setMediaSelectionCriteria(emptyCriteria, forMediaCharacteristic: .legible)
         #if !os(visionOS)
         // AirPlay: video routing to Apple TV / AirPlay receivers. Default is
         // true, set explicitly so nobody "optimizes" it away.
@@ -117,9 +119,9 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         let prepareStartedAt = Date()
 
         clearItemObservations()
-        // New item → the previous legible choice doesn't apply (option indices
-        // belong to the old asset). VM re-selects after loadTracks.
-        withStateLock { desiredSubtitleIndex = nil }
+        // Native legible subtitles are disabled (-1) so AVPlayer never renders
+        // duplicate background-less subtitles alongside the black-box overlay.
+        withStateLock { desiredSubtitleIndex = -1 }
         notify(.loading)
 
         // AirPlay diagnostics: what container is being offered to the system —
@@ -145,13 +147,12 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         player.replaceCurrentItem(with: item)
         TJFLog("prepare: item attached in \(Int(Date().timeIntervalSince(prepareStartedAt) * 1000)) ms")
 
-        // The track groups load over the NETWORK (AVURLAsset on an http URL:
-        // two metadata round-trips). Awaiting them here delayed play() until
-        // they landed — a big slice of "las pelis tardan mucho en cargar".
+        // The track groups load over the NETWORK (metadata round-trips).
+        // Must use item.asset directly so loaded AVMediaSelectionGroups match item.
         // Generation-guarded + locked, so it runs detached; the VM re-selects
         // when the groups land (stale generations drop themselves).
         Task { [weak self] in
-            await self?.loadTracks(asset: AVURLAsset(url: request.streamURL), generation: gen)
+            await self?.loadTracks(asset: item.asset, generation: gen)
         }
     }
 
@@ -556,7 +557,7 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     /// Load media selection groups (embedded audio/subtitle tracks) for the
     /// fresh item. Runs inside `prepare` — by the time the VM asks, the lists
     /// are there (no VLC-style 10-60s lazy track discovery).
-    private func loadTracks(asset: AVURLAsset, generation gen: Int) async {
+    private func loadTracks(asset: AVAsset, generation gen: Int) async {
         do {
             let audible = try await asset.loadMediaSelectionGroup(for: .audible)
             let legible = try await asset.loadMediaSelectionGroup(for: .legible)
