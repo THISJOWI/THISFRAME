@@ -19,12 +19,28 @@ public struct JellyfinPlaybackClient: JellyfinPlaybackProviding {
     /// Same as `fetchPlaybackInfo` but sends a Jellyfin DeviceProfile so the
     /// server answers with a specific playback plan (e.g. an HLS-only profile
     /// yields a `TranscodingUrl` usable by AVPlayer picture-in-picture).
+    ///
+    /// `maxStreamingBitrate` caps the answer in bits/s (quality picker): the
+    /// server then returns a transcoded HLS variant limited to that ceiling
+    /// instead of the original file. nil = no cap.
+    ///
+    /// `subtitleStreamIndex` defaults to -1: the server selects/burns NO
+    /// subtitle stream into the video. The client overlay is the single
+    /// subtitle renderer (black background box); without this the server
+    /// applies the user's profile default and the transcoded video carries a
+    /// second, background-less copy of the same lines.
+    /// `alwaysBurnInSubtitleWhenTranscoding` defaults to false for the same
+    /// reason: nothing may be pixel-burned into the frames. nil opts out of
+    /// a key entirely (lets the server decide).
     public func fetchPlaybackInfo(
         userId: String,
         serverURL: URL,
         token: String,
         itemId: String,
-        deviceProfile: PlaybackDeviceProfile?
+        deviceProfile: PlaybackDeviceProfile?,
+        maxStreamingBitrate: Int? = nil,
+        subtitleStreamIndex: Int? = -1,
+        alwaysBurnInSubtitleWhenTranscoding: Bool? = false
     ) async throws -> PlaybackInfo {
         let url = serverURL.appendingPathComponent("Items/\(itemId)/PlaybackInfo")
 
@@ -42,9 +58,19 @@ public struct JellyfinPlaybackClient: JellyfinPlaybackProviding {
             "DeviceId": DeviceIdentifier().current(),
             "MediaSourceId": itemId,
         ]
+        if let subtitleStreamIndex {
+            // -1 explicitly tells Jellyfin not to select/burn any subtitle stream into the video
+            body["SubtitleStreamIndex"] = subtitleStreamIndex
+        }
+        if let alwaysBurnInSubtitleWhenTranscoding {
+            body["AlwaysBurnInSubtitleWhenTranscoding"] = alwaysBurnInSubtitleWhenTranscoding
+        }
         if let deviceProfile {
             let profileData = try JSONEncoder().encode(deviceProfile)
             body["DeviceProfile"] = try JSONSerialization.jsonObject(with: profileData)
+        }
+        if let maxStreamingBitrate {
+            body["MaxStreamingBitrate"] = maxStreamingBitrate
         }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 

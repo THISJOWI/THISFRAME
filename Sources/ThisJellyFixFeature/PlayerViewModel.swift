@@ -56,6 +56,10 @@ final class PlayerViewModel {
     var showSubtitlePicker = false
     var showSpeedPicker = false
     var showQualityPicker = false
+    /// Selected quality cap; persisted so the next player opens with it.
+    var selectedQuality: StreamQuality {
+        didSet { UserDefaults.standard.set(selectedQuality.rawValue, forKey: Self.qualityDefaultsKey) }
+    }
     var errorMessage: String?
 
     // MARK: - Skip Segments (intro / recap / credits)
@@ -136,6 +140,9 @@ final class PlayerViewModel {
     ) {
         self.engine = engine
         self.segmentClient = segmentClient
+        selectedQuality = StreamQuality(
+            rawValue: UserDefaults.standard.integer(forKey: Self.qualityDefaultsKey)
+        ) ?? .auto
         #if os(iOS)
         // Slider starts at the REAL output level, and hardware volume
         // buttons move it too (observer → `volume` → the edge slider).
@@ -390,6 +397,69 @@ final class PlayerViewModel {
         startUpdating()
         if let startPosition, startPosition > 0 {
             await seek(to: startPosition)
+        }
+    }
+
+    // MARK: - Quality
+
+    private static let qualityDefaultsKey = "player.selectedQuality"
+
+    /// Re-resolves the stream under a different bitrate ceiling and hot-swaps
+    /// it in place, keeping position, play/pause state and playback rate.
+    ///
+    /// `.auto` drops the cap and asks the server for its original plan again
+    /// (direct play / remux when the network allows it).
+    func switchQuality(_ quality: StreamQuality) async {
+        guard !engineStopped, !Task.isCancelled,
+              let userId, let serverURL, let token, let itemId else { return }
+        selectedQuality = quality
+        let position = currentTime
+        let wasPlaying = isPlaying
+        let rate = playbackRate
+
+        do {
+            let info = try await JellyfinPlaybackClient().fetchPlaybackInfo(
+                userId: userId,
+                serverURL: serverURL,
+                token: token,
+                itemId: itemId,
+                deviceProfile: .avPlayer,
+                maxStreamingBitrate: quality.maxBitrate
+            )
+            guard let source = info.mediaSources.first else {
+                TJFLog("switchQuality: no media source for \(quality.label)")
+                return
+            }
+            guard let url = StreamURLResolver.playbackURL(
+                source: source,
+                serverURL: serverURL,
+                itemId: itemId,
+                token: token
+            ) else {
+                TJFLog("switchQuality: unresolved stream URL for \(quality.label)")
+                return
+            }
+            TJFLog("switchQuality: \(quality.label) cap=\(quality.maxBitrate.map(String.init) ?? "nil") url=\(url.absoluteString.prefix(120))")
+
+            await switchToEpisode(
+                url: url,
+                startPosition: position,
+                itemId: itemId,
+                serverURL: serverURL,
+                token: token,
+                userId: userId,
+                playSessionId: info.playSessionId,
+                mediaStreams: source.mediaStreams
+            )
+            // switchToEpisode always plays: restore what the user had.
+            if rate != 1.0 { await setPlaybackRate(rate) }
+            if !wasPlaying {
+                engine.pause()
+                isPlaying = false
+                userPaused = true
+            }
+        } catch {
+            TJFLog("switchQuality failed: \(error)")
         }
     }
 

@@ -284,7 +284,7 @@ struct PlayerView: View {
                     }
                     #endif
                 },
-                brightness: brightnessBinding
+                onAirPlayPresenting: onAirPlayPresenting
             )
             .transition(.opacity)
         }
@@ -354,27 +354,11 @@ struct PlayerView: View {
                 }
             }
 
-            // Controls overlay — always the topmost hosting view
+            // Controls overlay — always the topmost hosting view. AirPlay's
+            // route picker lives INSIDE it (top-right cluster slot), mounted
+            // for the cluster's lifetime; while the system sheet is up,
+            // `onAirPlayPresenting` keeps the controls from hiding.
             .overlay { controlsOverlay }
-
-            // AirPlay route picker — MOUNTED FOR THE PLAYER'S LIFETIME.
-            // It used to live inside ControlsOverlay, so every controls
-            // auto-hide destroyed the AVRoutePickerView; remounting it
-            // mid-presentation (or right after) leaves the system route
-            // sheet dead: later taps do nothing and the receiver list
-            // re-prompts for its password. Hiding = opacity + no hit
-            // testing; the UIViewRepresentable stays alive.
-            .overlay(alignment: .topTrailing) {
-                #if os(iOS) || os(macOS)
-                AirPlayRoutePicker(onPresentingChanged: onAirPlayPresenting)
-                    .frame(width: 44, height: 44)
-                    .background(.black.opacity(viewModel.showControls ? 0.5 : 0), in: Circle())
-                    .padding(.trailing, 16)
-                    .padding(.top, 8)
-                    .opacity(viewModel.showControls ? 1 : 0)
-                    .allowsHitTesting(viewModel.showControls)
-                #endif
-            }
 
             // Seek HUD
             .overlay {
@@ -623,6 +607,13 @@ struct PlayerView: View {
                 currentRate: viewModel.playbackRate
             ) { rate in
                 Task { await viewModel.setPlaybackRate(rate) }
+            }
+        }
+        .sheet(isPresented: $viewModel.showQualityPicker) {
+            QualityPickerSheet(
+                current: viewModel.selectedQuality
+            ) { quality in
+                Task { await viewModel.switchQuality(quality) }
             }
         }
     }
@@ -925,9 +916,9 @@ private struct AirPlayRoutePicker: NSViewRepresentable {
 #endif
 
 /// Full-screen controls, laid out like the reference player:
-/// top-left close + title/subtitle, top-right icon cluster, centered
-/// transport with previous/next episode, edge sliders for brightness and
-/// volume, and a full-width scrubber with segment ticks plus a
+/// top-left close + title/subtitle, top-right icon cluster (including the
+/// persistent AirPlay picker), centered transport with previous/next
+/// episode, and a full-width scrubber with segment ticks plus a
 /// "Termina a las HH:mm" estimate.
 private struct ControlsOverlay: View {
     let title: String
@@ -935,15 +926,9 @@ private struct ControlsOverlay: View {
     let viewModel: PlayerViewModel
     let onDismiss: () -> Void
     let onToggleFullscreen: () -> Void
-    /// iOS brightness slider — PlayerView owns the value so hiding these
-    /// controls never resets the screen (nil on other platforms).
-    var brightness: Binding<Double>? = nil
-    private var volume: Binding<Double> {
-        Binding(
-            get: { viewModel.volume },
-            set: { viewModel.setVolume($0) }
-        )
-    }
+    /// System route-sheet presentation state, bubbled up so the host can
+    /// freeze the controls auto-hide while the sheet is on screen.
+    var onAirPlayPresenting: (Bool) -> Void = { _ in }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -957,20 +942,6 @@ private struct ControlsOverlay: View {
 
             bottomBar
         }
-        // Edge sliders, vertically centered (reference: brightness left,
-        // volume right). Hidden on tvOS — the remote has no drag input.
-        #if !os(tvOS)
-        .overlay(alignment: .leading) {
-            if let brightness {
-                VerticalSlider(icon: "sun.max.fill", value: brightness)
-                    .padding(.leading, 16)
-            }
-        }
-        .overlay(alignment: .trailing) {
-            VerticalSlider(icon: "speaker.wave.2.fill", value: volume)
-                .padding(.trailing, 16)
-        }
-        #endif
     }
 
     // MARK: Top bar
@@ -1002,9 +973,11 @@ private struct ControlsOverlay: View {
 
             Spacer(minLength: 8)
 
-            // Right cluster — every button drives a real action; the last
-            // slot stays clear so the persistent AirPlay picker (mounted in
-            // PlayerView's topTrailing overlay) lands on it without overlap.
+            // Right cluster — every button drives a real action. AirPlay is a
+            // system AVRoutePickerView (no public "present" API): it lives HERE,
+            // mounted for the player's whole lifetime, so its glyph sits exactly
+            // on the cluster baseline and the controls auto-hide never unmounts
+            // it (remounting mid-presentation leaves the route sheet dead).
             HStack(spacing: 6) {
                 #if os(macOS)
                 clusterButton("arrow.up.left.and.arrow.down.right", action: onToggleFullscreen)
@@ -1025,6 +998,9 @@ private struct ControlsOverlay: View {
                     .disabled(!viewModel.isPlaying && viewModel.currentTime <= 0)
                 }
                 #endif
+                clusterButton("4k.tv", disabled: false) {
+                    viewModel.showQualityPicker = true
+                }
                 clusterButton("gauge", disabled: false) {
                     viewModel.showSpeedPicker = true
                 }
@@ -1041,8 +1017,9 @@ private struct ControlsOverlay: View {
                     viewModel.showSubtitlePicker = true
                 }
                 #if os(iOS) || os(macOS)
-                Color.clear
-                    .frame(width: 44, height: 44)
+                AirPlayRoutePicker(onPresentingChanged: onAirPlayPresenting)
+                    .frame(width: 40, height: 40)
+                    .background(.black.opacity(0.4), in: Circle())
                 #endif
             }
         }
@@ -1514,6 +1491,40 @@ private struct SpeedPickerSheet: View {
                 }
             }
             .navigationTitle("Velocidad")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancelar") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+private struct QualityPickerSheet: View {
+    let current: StreamQuality
+    let onSelect: (StreamQuality) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List(StreamQuality.allCases) { quality in
+                Button {
+                    onSelect(quality)
+                    dismiss()
+                } label: {
+                    HStack {
+                        Text(quality.label)
+                        Spacer()
+                        if quality == current {
+                            Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Calidad")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
