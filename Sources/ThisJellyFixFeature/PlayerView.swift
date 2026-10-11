@@ -979,7 +979,7 @@ private struct ControlsOverlay: View {
         HStack(alignment: .center, spacing: 12) {
             #if !os(macOS)
             Button(action: onDismiss) {
-                Image(systemName: "xmark")
+                Image(systemName: "chevron.down")
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(.white)
                     .frame(width: 36, height: 36)
@@ -1025,17 +1025,17 @@ private struct ControlsOverlay: View {
                     .disabled(!viewModel.isPlaying && viewModel.currentTime <= 0)
                 }
                 #endif
-                clusterButton("speedometer", disabled: false) {
+                clusterButton("gauge", disabled: false) {
                     viewModel.showSpeedPicker = true
                 }
                 clusterButton(
-                    "waveform",
+                    "speaker.wave.2",
                     disabled: viewModel.availableAudioTracks.isEmpty
                 ) {
                     viewModel.showAudioPicker = true
                 }
                 clusterButton(
-                    "captions.bubble",
+                    "text.bubble",
                     disabled: viewModel.availableSubtitleTracks.isEmpty
                 ) {
                     viewModel.showSubtitlePicker = true
@@ -1072,7 +1072,7 @@ private struct ControlsOverlay: View {
         HStack(spacing: 36) {
             // ⏮ previous episode — only when DetailView/DirectPlayer wired one.
             transportButton(
-                icon: "backward.end.fill",
+                icon: "backward.end.alt.fill",
                 size: 26,
                 disabled: !viewModel.hasPreviousEpisode
             ) {
@@ -1099,7 +1099,7 @@ private struct ControlsOverlay: View {
 
             // ⏭ next episode — jumps right away (an explicit tap is deliberate).
             transportButton(
-                icon: "forward.end.fill",
+                icon: "forward.end.alt.fill",
                 size: 26,
                 disabled: !viewModel.hasNextEpisode
             ) {

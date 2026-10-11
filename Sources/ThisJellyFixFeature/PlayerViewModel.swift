@@ -139,6 +139,14 @@ final class PlayerViewModel {
     ) {
         self.engine = engine
         self.segmentClient = segmentClient
+        #if os(iOS)
+        // Slider starts at the REAL output level, and hardware volume
+        // buttons move it too (observer → `volume` → the edge slider).
+        volume = SystemVolumeController.shared.value
+        SystemVolumeController.shared.onChange = { [weak self] next in
+            self?.volume = next
+        }
+        #endif
         // Real state machine: .failed surfaces a message, .ended is the true
         // end-of-media signal (the `duration - 1.5` guess is gone).
         engine.onStateChanged = { [weak self] state in
@@ -780,11 +788,22 @@ final class PlayerViewModel {
         onPlayNextEpisode?()
     }
 
-    /// Applies the slider's volume to the shared AVPlayer (0...1 clamped).
+    /// Applies the slider's volume.
+    ///
+    /// iOS moves the REAL device output (volume buttons / Control Center stay
+    /// in sync via the `outputVolume` observer) — `AVPlayer.volume` is only
+    /// the app-private gain and made the slider lie about what you hear.
+    /// macOS/tvOS/visionOS have no public system-volume surface, so the
+    /// player-local gain is the honest value there.
     func setVolume(_ value: Double) {
         let clamped = min(1, max(0, value))
         volume = clamped
+        #if os(iOS)
+        SystemVolumeController.shared.set(clamped)
+        engine.player.volume = 1.0
+        #else
         engine.player.volume = Float(clamped)
+        #endif
     }
 
     /// Segment start positions as 0...1 fractions of the duration — the seek
@@ -994,16 +1013,17 @@ final class PlayerViewModel {
         guard reportingConfigured, let itemId, let serverURL, let token else { return }
         externalSubsLoaded = true
 
-        // Overlay candidates: every external stream, PLUS embedded ASS/SSA.
-        // ASS/SSA are declared External in the device profile (server serves
-        // the file, no burn-in) but AVPlayer cannot render them natively —
-        // the overlay is their only renderer. Other embedded text formats
-        // (mov_text, webvtt) stay native and must NOT be duplicated here.
-        let overlayCodecs: Set<String> = ["ass", "ssa"]
+        // Single-renderer subtitles: EVERY text subtitle stream (embedded or
+        // external) is fetched as SRT and painted by the SwiftUI overlay, the
+        // only renderer with a background box. The native AVPlayer legible
+        // render — plain text, no background — is dropped from the picker
+        // whenever the overlay has tracks, so both can never show at once.
+        // Bitmap formats (PGS/VobSub/DVB) can't convert to SRT; they stay on
+        // the native path as the last-resort renderer.
+        let bitmapCodecs: Set<String> = ["pgssub", "hdmv_pgs_subtitle", "dvdsub", "vobsub", "dvb_subtitle", "xsub"]
         let candidates = serverMediaStreams.filter { stream in
             guard stream.type == "Subtitle" else { return false }
-            if stream.isExternal == true { return true }
-            return overlayCodecs.contains((stream.codec ?? "").lowercased())
+            return !bitmapCodecs.contains((stream.codec ?? "").lowercased())
         }
         guard !candidates.isEmpty else {
             TJFLog("extSubs: server declares none")
@@ -1043,10 +1063,19 @@ final class PlayerViewModel {
                 TJFLog("extSubs idx=\(idx) failed: \(error)")
             }
         }
-        // Rebuild the combined list (ids shift for external tracks) and let
-        // preference auto-selection see them.
+        // Rebuild the picker: when the overlay has tracks, ONLY those are
+        // offered — the embedded (native, background-less) entries would be
+        // the same languages rendered a second time. If every SRT fetch
+        // failed, keep the embedded list so subtitles still work.
         if !externalSubs.isEmpty {
-            availableSubtitleTracks = displaySubtitles(Array(availableSubtitleTracks.prefix(embeddedSubtitleCount))) + displayExternalSubs()
+            // Auto-selection may already have picked an embedded (native)
+            // track before the SRTs landed — re-point it at the overlay list
+            // or the user keeps a native, background-less subtitle active.
+            if !subtitleSelectionLocked, let picked = selectedSubtitleTrackIndex,
+               picked < embeddedSubtitleCount {
+                selectedSubtitleTrackIndex = nil
+            }
+            availableSubtitleTracks = displayExternalSubs()
             await applyLanguagePreferences()
         }
     }
