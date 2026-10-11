@@ -63,38 +63,6 @@ final class LibraryModel {
     /// only show the badge for ids in this set — never for unwatched series.
     private(set) var verifiedNewSeasonIDs: Set<String> = []
 
-    /// Hero carousel items, prioritised: episodes added today (their series),
-    /// verified new seasons, items added within the novelty window, then the
-    /// remaining recent items. Up to 5, deduplicated.
-    var heroItems: [JellyfinMediaItem] {
-        let resume = rows.first(where: { $0.title == "Estás viendo" })?.items ?? []
-        let newEpisodes = rows.first(where: { $0.title == "Nuevos episodios" })?.items ?? []
-        let latest = rows.first(where: { $0.title == "Últimos agregados" })?.items ?? []
-        var seen = Set<String>()
-        var candidates: [JellyfinMediaItem] = []
-        for item in resume.prefix(3) + newEpisodes + latest {
-            if seen.insert(item.id).inserted {
-                candidates.append(item)
-            }
-        }
-
-        let classifier = NoveltyClassifier()
-        func priority(_ item: JellyfinMediaItem) -> Int {
-            // Resume (in-progress) and today's episodes are both "top shelf":
-            // resume items come first in the candidate list and the stable
-            // sort keeps that tiebreak.
-            if item.resumePositionSeconds ?? 0 > 0 { return 0 }
-            if classifier.novelty(for: item) == .newEpisodeToday { return 0 }
-            if item.type == "Series", verifiedNewSeasonIDs.contains(item.id) { return 1 }
-            if classifier.novelty(for: item) == .recentlyAdded { return 2 }
-            return 3
-        }
-        // `sorted` is stable, so equal-priority items keep resume-then-latest
-        // order and the carousel doesn't reshuffle between renders.
-        let ordered = candidates.sorted { priority($0) < priority($1) }
-        return Array(ordered.prefix(5))
-    }
-
     /// Folder ids of the server views found during `load()`.
     private(set) var moviesParentId: String?
     private(set) var seriesParentId: String?

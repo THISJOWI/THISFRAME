@@ -323,8 +323,6 @@ struct HomeView: View {
                     }
                     #endif
 
-                    heroCarousel()
-
                     ForEach(Array(libraryModel.rows.enumerated()), id: \.element.id) { index, row in
                         RowSection(
                             title: row.title,
@@ -445,36 +443,6 @@ struct HomeView: View {
 
     /// Big featured carousel on top of Home — up to 5 hero cards, swipable,
     /// with a "Reproducir" CTA that resumes playback directly.
-    private func heroCarousel() -> some View {
-        Group {
-            if !libraryModel.heroItems.isEmpty {
-                // viewAligned pages: one hero fills the width, the next one
-                // peeks at the trailing edge (Netflix billboard feel).
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: MareaTheme.Spacing.md) {
-                        ForEach(libraryModel.heroItems) { item in
-                            HeroCardView(
-                                item: item,
-                                backdropURL: libraryModel.imageURL(for: item, wide: true),
-                                posterURL: libraryModel.imageURL(for: item, wide: false),
-                                onPlay: { directItem = item }
-                            )
-                            .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: MareaTheme.Spacing.md)
-                            .transition(.opacity)
-                        }
-                    }
-                    .scrollTargetLayout()
-                    .padding(.horizontal, MareaTheme.Spacing.md)
-                }
-                .scrollTargetBehavior(.viewAligned)
-                .animation(.easeInOut(duration: 0.35), value: libraryModel.heroItems)
-            } else if libraryModel.hasLoaded {
-                // Coherent empty state instead of a silent gap.
-                HeroEmptyStateView()
-            }
-        }
-    }
-
     /// Player dismissed: back to this screen, then refresh progress rows
     /// once the reportStopped request has had time to land.
     private func closeDirectPlayer() {

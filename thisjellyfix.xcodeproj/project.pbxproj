@@ -57,8 +57,6 @@
 		1E9A4BC0274DB8CE139E0BC6 /* JellyfinDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF3A4DC6E40C71A45C0AEE7 /* JellyfinDate.swift */; };
 		1ED4A5B65CF03E5BE3A23483 /* SegmentDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79376088B951694B385D36F4 /* SegmentDetector.swift */; };
 		1EFBE2CD0398A093315196F9 /* Tracks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97E9EEA43F53F2987FA00763 /* Tracks.swift */; };
-		1F7251F72647C8C8AC97A420 /* HeroCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFA5579F4E96505FDE65BD28 /* HeroCardView.swift */; };
-		1F7742B4B59DDCBD4BF6015E /* HeroCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFA5579F4E96505FDE65BD28 /* HeroCardView.swift */; };
 		20C9E09EE44CE259898D9AE9 /* NowPlaying.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B946E14A88221A04728B581 /* NowPlaying.swift */; };
 		20FCAB03C1044F7846DF217F /* MareaTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05829AA22DEA8728FC257895 /* MareaTheme.swift */; };
 		218B4335F4114B0DDF01D08F /* CatalogDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A81F9A0889A259BD616996FE /* CatalogDetailView.swift */; };
@@ -149,7 +147,6 @@
 		53D6E6D7298A6C1FF9E4F10D /* AVPlayerCapability.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1567A763D694C414C37FAC4 /* AVPlayerCapability.swift */; };
 		541BA8C031513C6B263296B4 /* DeviceIdentifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = C764363B3037D95ED713033C /* DeviceIdentifier.swift */; };
 		5459491D21936B06837A0ADF /* RowSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D9C6E2078ECBAFC3312333 /* RowSection.swift */; };
-		54EE2C3A87C8091618232B27 /* HeroCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFA5579F4E96505FDE65BD28 /* HeroCardView.swift */; };
 		565B846F82A4A862DC8AC20B /* JellyfinLibraryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF84CCF843B7012ACFEC948 /* JellyfinLibraryClient.swift */; };
 		57BE36F006B7A5621EB895EF /* SegmentMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73DDE86CE7705FE952478E82 /* SegmentMarker.swift */; };
 		58067049F30384B6B4CA2662 /* MareaTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53823A8CBDE617D4E9EAADE9 /* MareaTabBar.swift */; };
@@ -363,7 +360,6 @@
 		D3BA980A2B956F716043F00D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9DA2D836A9A324A150CEED71 /* Assets.xcassets */; };
 		D4ABB923E6F471977DE2D87E /* JellyfinUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1299D0FC3ECE91B5827C8AAD /* JellyfinUser.swift */; };
 		D67A9163974970FC4A51CBF8 /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0A35B0D698DCB78411E69B /* DownloadsView.swift */; };
-		D7347820E59B031B42E3AAA6 /* HeroCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFA5579F4E96505FDE65BD28 /* HeroCardView.swift */; };
 		D7515041509C7FE20840D31E /* Feature-visionOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E1730F8F94BE102A9E8DE78C /* Feature-visionOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D76FE6D9D2D73085DE055F72 /* LocalNetworkAuthorizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379AFC1970CB1DF9D980EF87 /* LocalNetworkAuthorizer.swift */; };
 		D9B24CB559CA55E1C29EE522 /* CatalogCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F570A623B27EFB00434F42C /* CatalogCardView.swift */; };
@@ -956,7 +952,6 @@
 		CB62174F75826768421F5928 /* ResumeCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeCardView.swift; sourceTree = "<group>"; };
 		CC3D98506E466F46333AAD78 /* ThisJellyFixRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThisJellyFixRootView.swift; sourceTree = "<group>"; };
 		CD22A624FC28110E890D5272 /* IntegrationConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationConfig.swift; sourceTree = "<group>"; };
-		CFA5579F4E96505FDE65BD28 /* HeroCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeroCardView.swift; sourceTree = "<group>"; };
 		D150E40E2CA61714BB72C24F /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		D969DEC8BCB5D66E75AF00D2 /* ImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageView.swift; sourceTree = "<group>"; };
 		DA99768D0EA2FADC0CE71344 /* AVPlaybackEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVPlaybackEngine.swift; sourceTree = "<group>"; };
@@ -1183,7 +1178,6 @@
 				B60780887A822E72106060F1 /* CardBadge.swift */,
 				AD8966043EC34B37438FF4A0 /* ChipView.swift */,
 				AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */,
-				CFA5579F4E96505FDE65BD28 /* HeroCardView.swift */,
 				05829AA22DEA8728FC257895 /* MareaTheme.swift */,
 				CB62174F75826768421F5928 /* ResumeCardView.swift */,
 				38D9C6E2078ECBAFC3312333 /* RowSection.swift */,
@@ -2115,7 +2109,6 @@
 				490B93060111A96F06815BD2 /* DownloadsView.swift in Sources */,
 				66C8F3B1C9E3F924254CAB33 /* FavoritesView.swift in Sources */,
 				472FF1140F38488A12E58149 /* FloatingTabBar.swift in Sources */,
-				54EE2C3A87C8091618232B27 /* HeroCardView.swift in Sources */,
 				6ADFEDADB6206B335A7A7DC7 /* HomeView.swift in Sources */,
 				C4C56DBDF9B8A9994D04A612 /* ImageView.swift in Sources */,
 				59087E0B27C5E1487B4AC4A1 /* IntegrationsSection.swift in Sources */,
@@ -2261,7 +2254,6 @@
 				5FF077FC331885471BDD9F88 /* DownloadsView.swift in Sources */,
 				EF1EB2256E1FC837538136A7 /* FavoritesView.swift in Sources */,
 				7134A1331677D0F8D548C0D8 /* FloatingTabBar.swift in Sources */,
-				D7347820E59B031B42E3AAA6 /* HeroCardView.swift in Sources */,
 				8ED42876B2BBF33403BE7C85 /* HomeView.swift in Sources */,
 				05A6141D001B905D26129D8B /* ImageView.swift in Sources */,
 				CB2F8C0F4893C5D3409FA085 /* IntegrationsSection.swift in Sources */,
@@ -2326,7 +2318,6 @@
 				BB6E2C4C4A6415BFA6D845D1 /* DownloadsView.swift in Sources */,
 				BBC8783AF68A55EE2F87CDEE /* FavoritesView.swift in Sources */,
 				2A732C59D007F6F37CCE4239 /* FloatingTabBar.swift in Sources */,
-				1F7742B4B59DDCBD4BF6015E /* HeroCardView.swift in Sources */,
 				34DB2688B85445F043B37964 /* HomeView.swift in Sources */,
 				C20874ED8C85EB2DBC34EB99 /* ImageView.swift in Sources */,
 				2FC679D3A90C5EEA80C5A69C /* IntegrationsSection.swift in Sources */,
@@ -2542,7 +2533,6 @@
 				D67A9163974970FC4A51CBF8 /* DownloadsView.swift in Sources */,
 				87A080E17BB282C20C06C3B5 /* FavoritesView.swift in Sources */,
 				7993FFE58140E59EB5FC5162 /* FloatingTabBar.swift in Sources */,
-				1F7251F72647C8C8AC97A420 /* HeroCardView.swift in Sources */,
 				58D32FE225B92CEF7C5E82F7 /* HomeView.swift in Sources */,
 				AE7346F33667CF4216217CB2 /* ImageView.swift in Sources */,
 				73DA32F0B40CC0240C2181E6 /* IntegrationsSection.swift in Sources */,
