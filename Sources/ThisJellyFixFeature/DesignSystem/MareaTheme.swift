@@ -16,6 +16,9 @@ enum MareaTheme {
         static let borderGlow = Color.white.opacity(0.18)
         /// Red used for badges and "new season" flags.
         static let badgeRed = Color(red: 0.90, green: 0.06, blue: 0.13)
+
+        /// Neutral slate for "Recién añadido" — visible without shouting.
+        static let badgeNeutral = Color(red: 0.25, green: 0.27, blue: 0.32)
         /// Unified accent — tint, progress bars, active tab.
         static let accent = badgeRed
         /// Fallback backdrop while a hero image loads.

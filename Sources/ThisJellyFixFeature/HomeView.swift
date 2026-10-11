@@ -330,7 +330,13 @@ struct HomeView: View {
                             title: row.title,
                             items: row.items,
                             wide: row.title == "Estás viendo",
-                            badgeFor: { CardBadge.badge(for: $0, resumeItems: resumeIds) },
+                            badgeFor: {
+                                CardBadge.badge(
+                                    for: $0,
+                                    resumeItems: resumeIds,
+                                    verifiedNewSeasonIDs: libraryModel.verifiedNewSeasonIDs
+                                )
+                            },
                             imageURL: { libraryModel.imageURL(for: $0, wide: row.title == "Estás viendo") },
                             fallbackImageURL: row.title == "Estás viendo"
                                 ? { libraryModel.imageURL(for: $0, wide: false) }

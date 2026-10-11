@@ -95,6 +95,13 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
             // Descend into subfolders of the view (collections, genre
             // folders) — without it movies inside a subfolder vanish too.
             URLQueryItem(name: "Recursive", value: "true"),
+            // Novelty badges are date-verified (NoveltyClassifier); the DTO
+            // omits DateCreated/DateLastMediaAdded/Overview/Genres/ProviderIds
+            // unless explicitly requested via Fields.
+            URLQueryItem(
+                name: "Fields",
+                value: "DateCreated,DateLastMediaAdded,Overview,Genres,ProviderIds"
+            ),
         ]
 
         if let parentId {
@@ -124,6 +131,9 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
         )!
         components.queryItems = [
             URLQueryItem(name: "userId", value: userId),
+            // Season creation dates are the only verifiable "Nueva temporada"
+            // signal (NoveltyClassifier.hasVerifiedNewSeason).
+            URLQueryItem(name: "Fields", value: "DateCreated"),
         ]
 
         let data = try await fetchData(from: components.url!, token: token)

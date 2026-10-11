@@ -6,14 +6,12 @@ struct BadgeView: View {
 
     var body: some View {
         switch badge {
+        case .newEpisodeToday:
+            flag(text: "Nuevo hoy", background: MareaTheme.Colors.accent, foreground: .black)
         case .newSeason:
-            Text("Nueva temporada")
-                .font(.caption2.bold())
-                .foregroundStyle(.white)
-                .padding(.horizontal, MareaTheme.Spacing.sm)
-                .padding(.vertical, MareaTheme.Spacing.xs)
-                .background(MareaTheme.Colors.badgeRed)
-                .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.small / 2))
+            flag(text: "Nueva temporada", background: MareaTheme.Colors.badgeRed, foreground: .white)
+        case .recentlyAdded:
+            flag(text: "Recién añadido", background: MareaTheme.Colors.badgeNeutral, foreground: .white)
         case .nextEpisode(let day):
             VStack(spacing: 0) {
                 Text("Siguiente episodio")
@@ -36,11 +34,23 @@ struct BadgeView: View {
             .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.small / 2))
         }
     }
+
+    private func flag(text: String, background: Color, foreground: Color) -> some View {
+        Text(text)
+            .font(.caption2.bold())
+            .foregroundStyle(foreground)
+            .padding(.horizontal, MareaTheme.Spacing.sm)
+            .padding(.vertical, MareaTheme.Spacing.xs)
+            .background(background)
+            .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.small / 2))
+    }
 }
 
 #Preview {
     VStack(spacing: 12) {
+        BadgeView(badge: .newEpisodeToday)
         BadgeView(badge: .newSeason)
+        BadgeView(badge: .recentlyAdded)
         BadgeView(badge: .nextEpisode(day: "Domingo"))
     }
     .padding()

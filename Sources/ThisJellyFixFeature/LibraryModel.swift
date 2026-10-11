@@ -58,21 +58,45 @@ final class LibraryModel {
     /// cold-launch "Dock → app → nothing" bug.
     var hasLoaded = false
 
-    /// Hero carousel items: up to 3 resume items first (in-progress content
-    /// is the most personal), then filled with the newest library items,
-    /// deduplicated. Pure over loaded rows — no extra fetch.
+    /// Series ids whose "Nueva temporada" was verified by comparing the series
+    /// creation date against its seasons' dates (NoveltyClassifier). Cards
+    /// only show the badge for ids in this set — never for unwatched series.
+    private(set) var verifiedNewSeasonIDs: Set<String> = []
+
+    /// Episode ids incorporated today (current calendar day, server-verified
+    /// via DateCreated). Backs the "Nuevos episodios" row and hero priority.
+    private(set) var newEpisodeIDs: Set<String> = []
+
+    /// Hero carousel items, prioritised: episodes added today (their series),
+    /// verified new seasons, items added within the novelty window, then the
+    /// remaining recent items. Up to 5, deduplicated.
     var heroItems: [JellyfinMediaItem] {
         let resume = rows.first(where: { $0.title == "Estás viendo" })?.items ?? []
+        let newEpisodes = rows.first(where: { $0.title == "Nuevos episodios" })?.items ?? []
         let latest = rows.first(where: { $0.title == "Últimos agregados" })?.items ?? []
         var seen = Set<String>()
-        var heroes: [JellyfinMediaItem] = []
-        for item in resume.prefix(3) + latest {
-            guard heroes.count < 5 else { break }
+        var candidates: [JellyfinMediaItem] = []
+        for item in resume.prefix(3) + newEpisodes + latest {
             if seen.insert(item.id).inserted {
-                heroes.append(item)
+                candidates.append(item)
             }
         }
-        return heroes
+
+        let classifier = NoveltyClassifier()
+        func priority(_ item: JellyfinMediaItem) -> Int {
+            // Resume (in-progress) and today's episodes are both "top shelf":
+            // resume items come first in the candidate list and the stable
+            // sort keeps that tiebreak.
+            if item.resumePositionSeconds ?? 0 > 0 { return 0 }
+            if item.type == "Episode", newEpisodeIDs.contains(item.id) { return 0 }
+            if item.type == "Series", verifiedNewSeasonIDs.contains(item.id) { return 1 }
+            if classifier.novelty(for: item) == .recentlyAdded { return 2 }
+            return 3
+        }
+        // `sorted` is stable, so equal-priority items keep resume-then-latest
+        // order and the carousel doesn't reshuffle between renders.
+        let ordered = candidates.sorted { priority($0) < priority($1) }
+        return Array(ordered.prefix(5))
     }
 
     /// Folder ids of the server views found during `load()`.
@@ -118,7 +142,7 @@ final class LibraryModel {
     /// Canonical row order. Rows publish as their fetches land, so each insert
     /// re-sorts into place.
     private static let rowOrder = [
-        "Estás viendo", "Últimos agregados", "Películas", "Series", "Visto recientemente",
+        "Estás viendo", "Nuevos episodios", "Últimos agregados", "Películas", "Series", "Visto recientemente",
     ]
 
     /// Minimum gap between resume-row refreshes: Home reappears several times
@@ -172,6 +196,7 @@ final class LibraryModel {
                     userId: userId, serverURL: serverURL, token: token, limit: 20
                 )
             } }
+            group.addTask { await self.loadNewEpisodesRow() }
             group.addTask { await self.loadRow("Últimos agregados") {
                 try await client.fetchItems(
                     userId: userId, serverURL: serverURL, token: token,
@@ -210,6 +235,68 @@ final class LibraryModel {
             errorMessage = "No se pudo cargar la biblioteca."
         } else if !rows.isEmpty {
             SpotlightIndexer.shared.index(allItems, serverURL: serverURL)
+            await verifyNewSeasons()
+        }
+    }
+
+    /// "Nuevos episodios": episodes incorporated today (verified via
+    /// DateCreated on the same calendar day). Published only when at least
+    /// one qualifies — an empty row is never shown, and old incorporations
+    /// are not dressed up as news.
+    private func loadNewEpisodesRow() async {
+        do {
+            let episodes = try await libraryClient.fetchItems(
+                userId: userId, serverURL: serverURL, token: token,
+                parentId: nil, includeTypes: "Episode",
+                limit: 20, orderBy: "DateCreated", filters: nil
+            )
+            let classifier = NoveltyClassifier()
+            let todays = episodes.filter {
+                classifier.novelty(for: $0) == .newEpisodeToday
+            }
+            newEpisodeIDs = Set(todays.map(\.id))
+            TJFLog("load: Nuevos episodios total=\(episodes.count) today=\(todays.count)")
+            publish(ContentRow(title: "Nuevos episodios", items: todays))
+        } catch {
+            // Degrade silently: novelty is decoration, never blocking.
+            TJFLog("load: Nuevos episodios FAILED: \(error.localizedDescription)")
+        }
+    }
+
+    /// Verifies "Nueva temporada" for candidate series (older than the window
+    /// with recent media additions) by fetching their seasons and comparing
+    /// dates. Bounded work: only candidates pass the cheap pre-filter, and a
+    /// failed verification simply withholds the badge — it never guesses.
+    private func verifyNewSeasons() async {
+        let classifier = NoveltyClassifier()
+        let candidates = allItems.filter { classifier.isSeasonCandidate($0) }
+        guard !candidates.isEmpty else { return }
+
+        let client = libraryClient
+        let serverURL = self.serverURL
+        let userId = self.userId
+        let token = self.token
+        let verified = await withTaskGroup(of: String?.self) { group -> Set<String> in
+            for series in candidates.prefix(10) {
+                group.addTask {
+                    guard let seasons = try? await client.fetchSeasons(
+                        userId: userId, serverURL: serverURL, token: token,
+                        seriesId: series.id
+                    ) else { return nil }
+                    return classifier.hasVerifiedNewSeason(
+                        seriesDateCreated: series.dateCreated, seasons: seasons
+                    ) ? series.id : nil
+                }
+            }
+            var ids = Set<String>()
+            for await id in group {
+                if let id { ids.insert(id) }
+            }
+            return ids
+        }
+        if !verified.isEmpty {
+            verifiedNewSeasonIDs.formUnion(verified)
+            TJFLog("verifyNewSeasons verified=\(verified.sorted().joined(separator: ","))")
         }
     }
 

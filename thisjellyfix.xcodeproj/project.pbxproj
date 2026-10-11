@@ -52,6 +52,7 @@
 		1C0D725DA523C20086FD0FC9 /* LibraryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81B3D72ECAE6007FFBAAB00 /* LibraryModel.swift */; };
 		1C9D4E334AB64CAD850DA35F /* Feature-macOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0F734B1401D9FD0BC14D69A3 /* Feature-macOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1CDFD2E99223FA7A8BEE0060 /* Discovery-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 254C0B74C8FEB50FABE082D8 /* Discovery-macOS.framework */; };
+		1E9A4BC0274DB8CE139E0BC6 /* JellyfinDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF3A4DC6E40C71A45C0AEE7 /* JellyfinDate.swift */; };
 		1ED4A5B65CF03E5BE3A23483 /* SegmentDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79376088B951694B385D36F4 /* SegmentDetector.swift */; };
 		1EFBE2CD0398A093315196F9 /* Tracks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97E9EEA43F53F2987FA00763 /* Tracks.swift */; };
 		1F7251F72647C8C8AC97A420 /* HeroCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFA5579F4E96505FDE65BD28 /* HeroCardView.swift */; };
@@ -87,6 +88,7 @@
 		30C39CE45B886D4555031BD5 /* DownloadCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF10F8D4613F087EAA9548D6 /* DownloadCoordinator.swift */; };
 		3213BB9C11C053A0841709D1 /* JellyfinMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C641EF70183F4B189E8FF9C2 /* JellyfinMediaItem.swift */; };
 		324D3145B36FE5B7CF50F296 /* Discovery-visionOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9F129648C9CE2188D4CABACC /* Discovery-visionOS.framework */; };
+		325415A4F8A644345CF71640 /* NoveltyClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96F9C5B3D49C8454F0AED97 /* NoveltyClassifier.swift */; };
 		327043F32668930345C92AD2 /* Discovery-tvOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 506A0F1EEDDEB3C13263B882 /* Discovery-tvOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		32768F3A16A828D60EA08AB1 /* PipCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DCD81FFBAA6C6AA2BFB3756 /* PipCoordinator.swift */; };
 		32BEF039ED671FFA0D116DFE /* MareaTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05829AA22DEA8728FC257895 /* MareaTheme.swift */; };
@@ -188,6 +190,7 @@
 		68943B90D066F1588D9219A5 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32AABCCCB0DE1978AAC1A80 /* Logging.swift */; };
 		694DFA354EE5A1DE12F3E71D /* SubtitleCue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A24BC16265B62686EBD9A1B6 /* SubtitleCue.swift */; };
 		6999136D8DBE253803823E87 /* Playback-tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08D186E415A343598A9C5A82 /* Playback-tvOS.framework */; };
+		6AB14EDEA3D41E7611CB514F /* NoveltyClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96F9C5B3D49C8454F0AED97 /* NoveltyClassifier.swift */; };
 		6AC4757212C9B6FA2EF81AF8 /* MediaCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEB7F8477231F3435F0C3EF /* MediaCardView.swift */; };
 		6ADFEDADB6206B335A7A7DC7 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39CFC19AA8E51100A6C3ECC /* HomeView.swift */; };
 		6BFF32C1029FBCCEB1839223 /* LanguagePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AED9E47165C3D3A03CA2FA1 /* LanguagePreferences.swift */; };
@@ -225,6 +228,7 @@
 		7B8484CA12166F51025E11F3 /* LibraryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81B3D72ECAE6007FFBAAB00 /* LibraryModel.swift */; };
 		7C4510EBAA167A4D3636AC96 /* IntegrationConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD22A624FC28110E890D5272 /* IntegrationConfig.swift */; };
 		7D02F10BE9A808E675DC8DA6 /* ThisJellyFixRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3D98506E466F46333AAD78 /* ThisJellyFixRootView.swift */; };
+		7F7D12A7F88392B377BE6914 /* JellyfinDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF3A4DC6E40C71A45C0AEE7 /* JellyfinDate.swift */; };
 		805EFBA09B456A10273CCB90 /* DiscoveryRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8397746BC556FCF6C9C6410E /* DiscoveryRowView.swift */; };
 		805F5B2CA6F310B32BC78140 /* Playback-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9120E3D0C3E4801FF21A328 /* Playback-macOS.framework */; };
 		809F0276A34C260BBECCF666 /* JellyfinPlaybackClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708CC6C4AD140C5FD530E54A /* JellyfinPlaybackClient.swift */; };
@@ -232,6 +236,7 @@
 		81571F78F439C1E9681ED51C /* Core-visionOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F3F6965BFCB98549AC54BC6 /* Core-visionOS.framework */; };
 		81CFFAB9493090F3705A6B59 /* MareaTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53823A8CBDE617D4E9EAADE9 /* MareaTabBar.swift */; };
 		8262173985F2D997771C6EEA /* AuthModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 771C356E05590A913549B4C7 /* AuthModel.swift */; };
+		828E2320A2E7F10D49EA1445 /* NoveltyClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96F9C5B3D49C8454F0AED97 /* NoveltyClassifier.swift */; };
 		839DDCF9C5E462CFC0494815 /* Core-visionOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8F3F6965BFCB98549AC54BC6 /* Core-visionOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		83EC22EF2B914DA95CCA35D7 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AE0C6C290BD2E1075089FE0 /* PlayerView.swift */; };
 		842704C42612DE6FCF0B5DB1 /* MediaCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEB7F8477231F3435F0C3EF /* MediaCardView.swift */; };
@@ -255,6 +260,7 @@
 		93E5A042C1DD72FB893D7ACC /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0070D0D9221BE56B2567FE64 /* PlayerViewModel.swift */; };
 		944F20DA1791A48E7FC9828F /* JellyfinItemDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EE3D2B8C7BBD9638113273F /* JellyfinItemDetail.swift */; };
 		9489C1859C6F6416E386835B /* JellyfinServerProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA95529E78948EB1C050098F /* JellyfinServerProbe.swift */; };
+		974769D1BA5F0ECBADBFF024 /* JellyfinDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF3A4DC6E40C71A45C0AEE7 /* JellyfinDate.swift */; };
 		97968A415A3BDC30E661150F /* Networking-visionOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A974A29AA43C3493A45094B0 /* Networking-visionOS.framework */; };
 		986090525AE75DBFC0304734 /* AirPlayRouteState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51A886EEBA41B779079A5E7 /* AirPlayRouteState.swift */; };
 		9AA1BD94619556785A5A3FDA /* HandoffActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CCF05E90E5A2BF897FAF75 /* HandoffActivity.swift */; };
@@ -296,6 +302,7 @@
 		B7DAB16EB420E18AB910AC77 /* Core-visionOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F3F6965BFCB98549AC54BC6 /* Core-visionOS.framework */; };
 		B802478F8F3067B73BEE5F77 /* ArrClients.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CCEBE8191BD631CB2D6664D /* ArrClients.swift */; };
 		B81BCD379A618CDB87A7FF5D /* RowSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D9C6E2078ECBAFC3312333 /* RowSection.swift */; };
+		B8C378552335EFB5FE3D56D3 /* NoveltyClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96F9C5B3D49C8454F0AED97 /* NoveltyClassifier.swift */; };
 		B964348FE3FDB83AFB94715A /* JellyfinLibraryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF84CCF843B7012ACFEC948 /* JellyfinLibraryClient.swift */; };
 		B9977F26872EB4319E7A60CD /* PipCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DCD81FFBAA6C6AA2BFB3756 /* PipCoordinator.swift */; };
 		BB6E2C4C4A6415BFA6D845D1 /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0A35B0D698DCB78411E69B /* DownloadsView.swift */; };
@@ -375,6 +382,7 @@
 		E5958240A4BA3B54952C5DF8 /* DownloadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010E594C024E41161B0DBF4 /* DownloadQueue.swift */; };
 		E6B2EDC2439F00E0520AC325 /* PipCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DCD81FFBAA6C6AA2BFB3756 /* PipCoordinator.swift */; };
 		E6CA5DB1F51D008732DD31CC /* PiPHandoffPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0CB53C40E7A1184874167E /* PiPHandoffPolicy.swift */; };
+		EAA693A7B4D6ED6DAF915AFE /* JellyfinDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF3A4DC6E40C71A45C0AEE7 /* JellyfinDate.swift */; };
 		EADB82E7A9F98EC1DF8F49D9 /* Networking-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A23B93170F6FEA62AF418B4E /* Networking-iOS.framework */; };
 		EDCF4945CCAAEB4D751830D0 /* Playback-iOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 043C1E8AA788346A3AA0558A /* Playback-iOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		EE0981D6B51D1474027473FE /* Discovery-tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 506A0F1EEDDEB3C13263B882 /* Discovery-tvOS.framework */; };
@@ -894,6 +902,7 @@
 		771C356E05590A913549B4C7 /* AuthModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModel.swift; sourceTree = "<group>"; };
 		79376088B951694B385D36F4 /* SegmentDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SegmentDetector.swift; sourceTree = "<group>"; };
 		795E1D455A04697AC05EAE12 /* CatalogRecommender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogRecommender.swift; sourceTree = "<group>"; };
+		7BF3A4DC6E40C71A45C0AEE7 /* JellyfinDate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinDate.swift; sourceTree = "<group>"; };
 		7DCD81FFBAA6C6AA2BFB3756 /* PipCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PipCoordinator.swift; sourceTree = "<group>"; };
 		8397746BC556FCF6C9C6410E /* DiscoveryRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryRowView.swift; sourceTree = "<group>"; };
 		84F87CDCAE9FC0160557A33C /* LibraryGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryGridView.swift; sourceTree = "<group>"; };
@@ -912,6 +921,7 @@
 		A81F9A0889A259BD616996FE /* CatalogDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogDetailView.swift; sourceTree = "<group>"; };
 		A9120E3D0C3E4801FF21A328 /* Playback-macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Playback-macOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A9627EED1BAD19BE4D412F23 /* Feature-tvOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Feature-tvOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A96F9C5B3D49C8454F0AED97 /* NoveltyClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoveltyClassifier.swift; sourceTree = "<group>"; };
 		A974A29AA43C3493A45094B0 /* Networking-visionOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Networking-visionOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAA58138FA31937A9F9027DC /* JellyfinItemDetailClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinItemDetailClient.swift; sourceTree = "<group>"; };
 		AAB7034B466503BCE33E95A1 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
@@ -1200,6 +1210,7 @@
 				0C9F5C725FAFDEFC11645DC9 /* HandoffCenter.swift */,
 				DBBD2C4E8CBC681A8161FEE4 /* HandoffResolver.swift */,
 				CD22A624FC28110E890D5272 /* IntegrationConfig.swift */,
+				7BF3A4DC6E40C71A45C0AEE7 /* JellyfinDate.swift */,
 				9EE3D2B8C7BBD9638113273F /* JellyfinItemDetail.swift */,
 				C641EF70183F4B189E8FF9C2 /* JellyfinMediaItem.swift */,
 				54122B1375204F29118DED99 /* JellyfinServer.swift */,
@@ -1207,6 +1218,7 @@
 				AAB7034B466503BCE33E95A1 /* KeychainStore.swift */,
 				2AED9E47165C3D3A03CA2FA1 /* LanguagePreferences.swift */,
 				C32AABCCCB0DE1978AAC1A80 /* Logging.swift */,
+				A96F9C5B3D49C8454F0AED97 /* NoveltyClassifier.swift */,
 				0A0CB53C40E7A1184874167E /* PiPHandoffPolicy.swift */,
 				00193F5C845E2D76D677171B /* PlaybackDeviceProfile.swift */,
 				EF44E1A84B76AB6E359404F9 /* PlaybackInfo.swift */,
@@ -2162,6 +2174,7 @@
 				D2B02E76F28DC6F273B13A58 /* HandoffCenter.swift in Sources */,
 				430332776C5289EC52EC8AFF /* HandoffResolver.swift in Sources */,
 				6C4C058CBF8DD997D93D03E0 /* IntegrationConfig.swift in Sources */,
+				EAA693A7B4D6ED6DAF915AFE /* JellyfinDate.swift in Sources */,
 				5971FCA219A2C453F0DCF9B7 /* JellyfinItemDetail.swift in Sources */,
 				F155438A9C9AB5F4C5EC25E6 /* JellyfinMediaItem.swift in Sources */,
 				E074E85182B5703EB3E28008 /* JellyfinServer.swift in Sources */,
@@ -2169,6 +2182,7 @@
 				3FB0908BBABF8F061243233A /* KeychainStore.swift in Sources */,
 				9F470FAFF426C5271E17AFFD /* LanguagePreferences.swift in Sources */,
 				A37A170374EC15F9D4AE5584 /* Logging.swift in Sources */,
+				6AB14EDEA3D41E7611CB514F /* NoveltyClassifier.swift in Sources */,
 				6F43DC17E61B90643299ECA7 /* PiPHandoffPolicy.swift in Sources */,
 				155DF913687A0FBC67603BD7 /* PlaybackDeviceProfile.swift in Sources */,
 				DF9E8588B987ADEA150BF8ED /* PlaybackInfo.swift in Sources */,
@@ -2321,6 +2335,7 @@
 				AD26FA637B6CF2F57C639DA1 /* HandoffCenter.swift in Sources */,
 				50BF247455D84A4846F69D4F /* HandoffResolver.swift in Sources */,
 				7C4510EBAA167A4D3636AC96 /* IntegrationConfig.swift in Sources */,
+				7F7D12A7F88392B377BE6914 /* JellyfinDate.swift in Sources */,
 				AA7FF5A27F4C97394257ADB3 /* JellyfinItemDetail.swift in Sources */,
 				3213BB9C11C053A0841709D1 /* JellyfinMediaItem.swift in Sources */,
 				056906E71EF0BABC3DDF84F4 /* JellyfinServer.swift in Sources */,
@@ -2328,6 +2343,7 @@
 				D29500D2A60E7CAC972DC617 /* KeychainStore.swift in Sources */,
 				74C5596A3D4DC9B73A36B447 /* LanguagePreferences.swift in Sources */,
 				6FECE1B63C7B29DD65D1F8ED /* Logging.swift in Sources */,
+				828E2320A2E7F10D49EA1445 /* NoveltyClassifier.swift in Sources */,
 				25C8987EF7A40F139D58DD11 /* PiPHandoffPolicy.swift in Sources */,
 				F154FC7F737AEC376A7E67C8 /* PlaybackDeviceProfile.swift in Sources */,
 				F8DAC96B6EAEEB9823792B33 /* PlaybackInfo.swift in Sources */,
@@ -2365,6 +2381,7 @@
 				AB2C189F38C048060428830B /* HandoffCenter.swift in Sources */,
 				2F9B4223AC85D9C2E9D7EB48 /* HandoffResolver.swift in Sources */,
 				127832817E84E6EF4072631C /* IntegrationConfig.swift in Sources */,
+				1E9A4BC0274DB8CE139E0BC6 /* JellyfinDate.swift in Sources */,
 				298EB607B3A5A78C14013F23 /* JellyfinItemDetail.swift in Sources */,
 				2DE594ACF00968235BD4D4A3 /* JellyfinMediaItem.swift in Sources */,
 				101A597D9E5D6C554F5CCC25 /* JellyfinServer.swift in Sources */,
@@ -2372,6 +2389,7 @@
 				0311FAC43A0D125F5888CB4D /* KeychainStore.swift in Sources */,
 				6BFF32C1029FBCCEB1839223 /* LanguagePreferences.swift in Sources */,
 				A9DED7F8ED1DDD7E3464245A /* Logging.swift in Sources */,
+				325415A4F8A644345CF71640 /* NoveltyClassifier.swift in Sources */,
 				E14C0478D629F29BE0C250CB /* PiPHandoffPolicy.swift in Sources */,
 				BFFE664027915CD4A28924AE /* PlaybackDeviceProfile.swift in Sources */,
 				9C349B9B7CF1578FF5B4FABC /* PlaybackInfo.swift in Sources */,
@@ -2417,6 +2435,7 @@
 				02211DC06B098016AD7DE541 /* HandoffCenter.swift in Sources */,
 				6427E640FC2644DB5F9C20AB /* HandoffResolver.swift in Sources */,
 				3C830FE6B5CD7BD04959ED88 /* IntegrationConfig.swift in Sources */,
+				974769D1BA5F0ECBADBFF024 /* JellyfinDate.swift in Sources */,
 				944F20DA1791A48E7FC9828F /* JellyfinItemDetail.swift in Sources */,
 				71F7318AD602868AC4D236B4 /* JellyfinMediaItem.swift in Sources */,
 				EFECCFD4537FC63BB40CDA0A /* JellyfinServer.swift in Sources */,
@@ -2424,6 +2443,7 @@
 				119FCB01434D29D48349DBE8 /* KeychainStore.swift in Sources */,
 				7714A23CB3C52ED90ADAEDE7 /* LanguagePreferences.swift in Sources */,
 				68943B90D066F1588D9219A5 /* Logging.swift in Sources */,
+				B8C378552335EFB5FE3D56D3 /* NoveltyClassifier.swift in Sources */,
 				E6CA5DB1F51D008732DD31CC /* PiPHandoffPolicy.swift in Sources */,
 				78E72C717C386A25431AF5C1 /* PlaybackDeviceProfile.swift in Sources */,
 				01824714F1DC9253E8A6D61E /* PlaybackInfo.swift in Sources */,

@@ -17,6 +17,56 @@ public struct JellyfinMediaItem: Codable, Sendable, Equatable, Identifiable, Has
     public let userData: UserData?
     /// External provider ids the server knows ("Tmdb", "Imdb", "Tvdb", …).
     public let providerIds: [String: String]?
+    /// Raw ISO8601 creation date (requires `Fields=DateCreated`). Kept as the
+    /// wire string — the server emits fractions of a second that the default
+    /// JSON date strategy can't parse; convert with `JellyfinDate.parse`.
+    public let dateCreated: String?
+    /// Raw ISO8601 "last media added" (requires `Fields=DateLastMediaAdded`,
+    /// folders only). Tells when an established series got new episodes.
+    public let dateLastMediaAdded: String?
+    /// Raw ISO8601 original air/release date (always present in the DTO).
+    /// Distinguishes a true premiere from a late incorporation into the library.
+    public let premiereDate: String?
+
+    public init(
+        id: String,
+        name: String,
+        type: String,
+        overview: String? = nil,
+        seriesName: String? = nil,
+        indexNumber: Int? = nil,
+        parentIndexNumber: Int? = nil,
+        year: Int? = nil,
+        imageTags: [String: String]? = nil,
+        backdropImageTags: [String]? = nil,
+        officialRating: String? = nil,
+        communityRating: Double? = nil,
+        genres: [String]? = nil,
+        userData: UserData? = nil,
+        providerIds: [String: String]? = nil,
+        dateCreated: String? = nil,
+        dateLastMediaAdded: String? = nil,
+        premiereDate: String? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.type = type
+        self.overview = overview
+        self.seriesName = seriesName
+        self.indexNumber = indexNumber
+        self.parentIndexNumber = parentIndexNumber
+        self.year = year
+        self.imageTags = imageTags
+        self.backdropImageTags = backdropImageTags
+        self.officialRating = officialRating
+        self.communityRating = communityRating
+        self.genres = genres
+        self.userData = userData
+        self.providerIds = providerIds
+        self.dateCreated = dateCreated
+        self.dateLastMediaAdded = dateLastMediaAdded
+        self.premiereDate = premiereDate
+    }
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -34,6 +84,9 @@ public struct JellyfinMediaItem: Codable, Sendable, Equatable, Identifiable, Has
         case genres = "Genres"
         case userData = "UserData"
         case providerIds = "ProviderIds"
+        case dateCreated = "DateCreated"
+        case dateLastMediaAdded = "DateLastMediaAdded"
+        case premiereDate = "PremiereDate"
     }
 
     /// Value for an external provider key, case-insensitive (`Tmdb`/`tmdb`).
@@ -123,6 +176,25 @@ public struct JellyfinSeason: Codable, Sendable, Equatable, Identifiable {
     public let indexNumber: Int?
     public let seriesId: String?
     public let imageTags: [String: String]?
+    /// Raw ISO8601 creation date (requires `Fields=DateCreated` on the seasons
+    /// request). The only verifiable signal for "Nueva temporada".
+    public let dateCreated: String?
+
+    public init(
+        id: String,
+        name: String,
+        indexNumber: Int? = nil,
+        seriesId: String? = nil,
+        imageTags: [String: String]? = nil,
+        dateCreated: String? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.indexNumber = indexNumber
+        self.seriesId = seriesId
+        self.imageTags = imageTags
+        self.dateCreated = dateCreated
+    }
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -130,6 +202,7 @@ public struct JellyfinSeason: Codable, Sendable, Equatable, Identifiable {
         case indexNumber = "IndexNumber"
         case seriesId = "SeriesId"
         case imageTags = "ImageTags"
+        case dateCreated = "DateCreated"
     }
 
     public var displayName: String {
