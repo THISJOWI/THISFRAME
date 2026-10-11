@@ -8,18 +8,39 @@ struct ProfileView: View {
     var token: String? = nil
     var userId: String? = nil
 
+    /// Jellyfin user avatar (`/Users/{id}/Images/Primary`), tagged with the
+    /// session token. Nil when any session piece is missing.
+    private var avatarURL: URL? {
+        guard let serverURL, let userId, let token, !token.isEmpty else { return nil }
+        return serverURL
+            .appendingPathComponent("Users/\(userId)/Images/Primary")
+            .appending(queryItems: [URLQueryItem(name: "api_key", value: token)])
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Avatar
+                    // Avatar — the user's Jellyfin picture, falling back to
+                    // the generic icon when the account has none.
                     ZStack {
                         Circle()
                             .fill(MareaTheme.Colors.accent.opacity(0.2))
                             .frame(width: 100, height: 100)
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 44))
-                            .foregroundStyle(MareaTheme.Colors.accent)
+                        AsyncImage(url: avatarURL) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            default:
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 44))
+                                    .foregroundStyle(MareaTheme.Colors.accent)
+                            }
+                        }
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle())
                     }
                     .padding(.top, 24)
 
