@@ -66,13 +66,7 @@ struct RowSection: View {
 
     @ViewBuilder
     private func card(for item: JellyfinMediaItem) -> some View {
-        let card = MediaCardView(
-            item: item,
-            imageURL: imageURL(item),
-            wide: wide,
-            fallbackImageURL: fallbackImageURL?(item),
-            badge: badgeFor?(item)
-        )
+        let card = cardView(for: item)
 
         if item.type == "Episode" || item.type == "Movie", let onPlayDirect {
             // Direct playback — no DetailView in between.
@@ -82,5 +76,24 @@ struct RowSection: View {
             NavigationLink(value: item) { card }
                 .buttonStyle(.plain)
         }
+    }
+
+    private func cardView(for item: JellyfinMediaItem) -> AnyView {
+        if wide {
+            // "Estás viendo": dedicated panoramic card — 16:9 backdrop with
+            // title on the scrim and a progress bar on the lower edge.
+            return AnyView(ResumeCardView(
+                item: item,
+                imageURL: imageURL(item),
+                fallbackImageURL: fallbackImageURL?(item)
+            ))
+        }
+        return AnyView(MediaCardView(
+            item: item,
+            imageURL: imageURL(item),
+            wide: wide,
+            fallbackImageURL: fallbackImageURL?(item),
+            badge: badgeFor?(item)
+        ))
     }
 }
