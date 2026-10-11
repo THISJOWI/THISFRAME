@@ -3,6 +3,7 @@ import ThisJellyFixCore
 import ThisJellyFixPlayback
 import AVKit
 #if os(iOS)
+import AVFoundation
 import UIKit
 #elseif os(macOS)
 import AppKit
@@ -76,13 +77,6 @@ struct PlayerView: View {
     /// no UI. Cancelled in `onDisappear`.
     @State private var playbackTask: Task<Void, Never>?
     @State private var episodeSwapTask: Task<Void, Never>?
-    #if os(iOS)
-    /// Screen brightness while the player runs. `originalBrightness` is the
-    /// pre-player value captured on first slider touch, restored on exit so
-    /// the player never leaves the system dimmed.
-    @State private var screenBrightness: Double = UIScreen.main.brightness
-    @State private var originalBrightness: Double?
-    #endif
 
     // MARK: - Fit / fill pinch
     @State private var isPinching = false
@@ -208,26 +202,6 @@ struct PlayerView: View {
         activity.targetContentIdentifier = built.targetContentIdentifier
     }
 
-    /// iOS brightness binding consumed by the overlay's edge slider; the
-    /// pre-player value is captured on first touch so it can be restored.
-    #if os(iOS)
-    private var brightnessBinding: Binding<Double> {
-        Binding(
-            get: { screenBrightness },
-            set: { newValue in
-                if originalBrightness == nil {
-                    originalBrightness = screenBrightness
-                }
-                let clamped = min(1, max(0, newValue))
-                screenBrightness = clamped
-                UIScreen.main.brightness = clamped
-            }
-        )
-    }
-    #else
-    private var brightnessBinding: Binding<Double>? { nil }
-    #endif
-
     /// Open the media and start playback for the first mount.
     private func startPlayback() {
         playbackTask = Task {
@@ -270,24 +244,30 @@ struct PlayerView: View {
 
     /// Full controls overlay, mounted only while shown.
     @ViewBuilder
+    /// Controls are ALWAYS mounted and hidden with opacity instead of being
+    /// torn out of the tree. Two reasons: the AirPlay route picker must never
+    /// unmount (remounting it leaves the system sheet dead — later taps do
+    /// nothing and the receiver list re-prompts), and the fade in/out stays a
+    /// pure opacity animation. Hidden = no hit testing, so taps fall through
+    /// to the video's tap catcher below.
     private var controlsOverlay: some View {
-        if viewModel.showControls {
-            ControlsOverlay(
-                title: title,
-                subtitle: subtitle,
-                viewModel: viewModel,
-                onDismiss: { dismissPlayer() },
-                onToggleFullscreen: {
-                    #if os(macOS)
-                    if let nsWindow = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isKeyWindow }) {
-                        nsWindow.toggleFullScreen(nil)
-                    }
-                    #endif
-                },
-                onAirPlayPresenting: onAirPlayPresenting
-            )
-            .transition(.opacity)
-        }
+        ControlsOverlay(
+            title: title,
+            subtitle: subtitle,
+            viewModel: viewModel,
+            onDismiss: { dismissPlayer() },
+            onToggleFullscreen: {
+                #if os(macOS)
+                if let nsWindow = NSApp.keyWindow ?? NSApp.windows.first(where: { $0.isKeyWindow }) {
+                    nsWindow.toggleFullScreen(nil)
+                }
+                #endif
+            },
+            onAirPlayPresenting: onAirPlayPresenting
+        )
+        .opacity(viewModel.showControls ? 1 : 0)
+        .allowsHitTesting(viewModel.showControls)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.showControls)
     }
 
     var body: some View {
@@ -525,12 +505,6 @@ struct PlayerView: View {
             #if os(iOS)
             // Restore auto-rotation when leaving player
             restoreOrientation()
-            // Leave the system brightness where the user had it before the
-            // player's edge slider moved it.
-            if let originalBrightness {
-                UIScreen.main.brightness = originalBrightness
-            }
-            originalBrightness = nil
             // This mount's PiP observers are dead weight now — the root view
             // keeps its own permanent pair for restore/close.
             viewModel.detachPipHandlers()
@@ -860,6 +834,14 @@ private struct AirPlayRoutePicker: UIViewRepresentable {
 
         func routePickerViewWillBeginPresentingRoutes(_ routePickerView: AVRoutePickerView) {
             TJFLog("airplay: picker presenting BEGIN")
+            // An INACTIVE audio session makes the receiver list come back empty
+            // (engine only activates on play()). Activate here so the sheet
+            // lists Apple TVs even when the user taps AirPlay while paused.
+            do {
+                try AVAudioSession.sharedInstance().setActive(true)
+            } catch {
+                TJFLog("airplay: session activate FAILED \(error)")
+            }
             onPresentingChanged(true)
         }
 
@@ -1171,58 +1153,6 @@ private struct ControlsOverlay: View {
         return String(format: "%d:%02d", m, s)
     }
 }
-
-// MARK: - Vertical edge slider (brightness / volume)
-
-#if !os(tvOS)
-/// Vertical slider matching the reference's edge controls: thin track with a
-/// filled portion, thumb, and an icon at the base. Drag anywhere on the track
-/// to set the value. tvOS omits it — the remote has no drag input.
-private struct VerticalSlider: View {
-    let icon: String
-    @Binding var value: Double
-
-    var body: some View {
-        VStack(spacing: 8) {
-            GeometryReader { geo in
-                let trackHeight = geo.size.height
-                ZStack(alignment: .bottom) {
-                    Capsule()
-                        .fill(.white.opacity(0.3))
-                        .frame(width: 4)
-
-                    Capsule()
-                        .fill(.white)
-                        .frame(width: 4, height: max(6, trackHeight * clamped))
-
-                    Circle()
-                        .fill(.white)
-                        .frame(width: 12, height: 12)
-                        .offset(y: -(trackHeight * clamped) + 6)
-                }
-                .frame(width: 44)
-                .frame(maxHeight: .infinity)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { v in
-                            let fraction = 1 - (v.location.y / max(1, trackHeight))
-                            value = min(1, max(0, fraction))
-                        }
-                )
-            }
-            .frame(width: 44)
-
-            Image(systemName: icon)
-                .font(.caption)
-                .foregroundStyle(.white.opacity(0.85))
-        }
-        .frame(height: 180)
-    }
-
-    private var clamped: Double { min(1, max(0, value)) }
-}
-#endif
 
 // MARK: - Seek Bar
 

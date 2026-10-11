@@ -75,9 +75,6 @@ final class PlayerViewModel {
     var onPlayPreviousEpisode: (() -> Void)?
     /// true when a previous-episode action is wired (transport ⏮).
     var hasPreviousEpisode = false
-    /// Output volume (0...1), mirrored from the engine so the slider observes
-    /// it; write via `setVolume(_:)` which applies it to the shared AVPlayer.
-    var volume: Double = 1.0
     /// true while a next-episode swap is loading — the view covers the loading
     /// gap with an in-player indicator instead of dropping back out.
     var isSwitchingEpisode = false
@@ -143,14 +140,6 @@ final class PlayerViewModel {
         selectedQuality = StreamQuality(
             rawValue: UserDefaults.standard.integer(forKey: Self.qualityDefaultsKey)
         ) ?? .auto
-        #if os(iOS)
-        // Slider starts at the REAL output level, and hardware volume
-        // buttons move it too (observer → `volume` → the edge slider).
-        volume = SystemVolumeController.shared.value
-        SystemVolumeController.shared.onChange = { [weak self] next in
-            self?.volume = next
-        }
-        #endif
         // Real state machine: .failed surfaces a message, .ended is the true
         // end-of-media signal (the `duration - 1.5` guess is gone).
         engine.onStateChanged = { [weak self] state in
@@ -714,10 +703,6 @@ final class PlayerViewModel {
                 // Keep the system auto-start gate in sync with the policy:
                 // a user-paused player must not float away on background.
                 PipCoordinator.shared.setAutoStartEnabled(self.canAutoHandoffToPiP)
-                // Volume buttons: KVO can miss events, so the tick re-reads the
-                // real output level — the slider follows hardware presses even
-                // when the observer stays silent.
-                SystemVolumeController.shared.refresh()
                 #endif
 
                 // Determine if playback is active — time advancement as fallback.
@@ -849,24 +834,6 @@ final class PlayerViewModel {
     func playNextNow() {
         guard hasNextEpisode else { return }
         onPlayNextEpisode?()
-    }
-
-    /// Applies the slider's volume.
-    ///
-    /// iOS moves the REAL device output (volume buttons / Control Center stay
-    /// in sync via the `outputVolume` observer) — `AVPlayer.volume` is only
-    /// the app-private gain and made the slider lie about what you hear.
-    /// macOS/tvOS/visionOS have no public system-volume surface, so the
-    /// player-local gain is the honest value there.
-    func setVolume(_ value: Double) {
-        let clamped = min(1, max(0, value))
-        volume = clamped
-        #if os(iOS)
-        SystemVolumeController.shared.set(clamped)
-        engine.player.volume = 1.0
-        #else
-        engine.player.volume = Float(clamped)
-        #endif
     }
 
     /// Segment start positions as 0...1 fractions of the duration — the seek

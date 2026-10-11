@@ -32,23 +32,6 @@ final class PlayerViewModelControlTests: XCTestCase {
         XCTAssertEqual(PlayerViewModel.tickFractions(markers: markers, duration: 2400), [])
     }
 
-    // MARK: - Volume
-
-    func testSetVolumeClampsAndAppliesToPlayer() {
-        let vm = PlayerViewModel()
-        vm.setVolume(1.7)
-        XCTAssertEqual(vm.volume, 1.0)
-        XCTAssertEqual(vm.engine.player.volume, 1.0)
-
-        vm.setVolume(-0.3)
-        XCTAssertEqual(vm.volume, 0.0)
-        XCTAssertEqual(vm.engine.player.volume, 0.0)
-
-        vm.setVolume(0.42)
-        XCTAssertEqual(vm.volume, 0.42, accuracy: 0.0001)
-        XCTAssertEqual(vm.engine.player.volume, 0.42, accuracy: 0.0001)
-    }
-
     // MARK: - Previous/next episode guards
 
     func testPlayPreviousEpisodeDoesNothingWhenUnwired() {
