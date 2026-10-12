@@ -82,13 +82,26 @@ struct DetailView: View {
                 }
                 .task { await loadDetailAndMaybeAutoplay() }
                 .onChange(of: showPlayer) { _, showing in
-                    if !showing { onPlayerDismiss?() }
+                    // Keep the sidebar out of the way while the player covers
+                    // the window; restore it (and the previous column value)
+                    // the moment the player goes away.
+                    if showing {
+                        SplitViewState.shared.collapseForPlayer()
+                    } else {
+                        SplitViewState.shared.restore()
+                        onPlayerDismiss?()
+                    }
                 }
                 // Ownership: a mounted detail claims the Handoff slot (counted
                 // in HandoffCenter for nested stacks). This covers TAP pushes
                 // too — push-site tracking missed them (double activity).
                 .onAppear { HandoffCenter.shared.setDetailActive(true) }
-                .onDisappear { HandoffCenter.shared.setDetailActive(false) }
+                .onDisappear {
+                    HandoffCenter.shared.setDetailActive(false)
+                    // Safety net: if this detail dies while its player is up,
+                    // the ZStack goes with it — never leave the sidebar hidden.
+                    if showPlayer { SplitViewState.shared.restore() }
+                }
                 // m4: while this screen is the top one it OWNS the Handoff
                 // slot (browsing yields on push, playing yields once the
                 // player mounts) — this also makes the receiving

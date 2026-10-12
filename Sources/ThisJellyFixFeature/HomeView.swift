@@ -107,7 +107,11 @@ struct HomeView: View {
     @State private var selectedTab: MareaTab = .home
 
     private var sidebarLayout: some View {
-        NavigationSplitView {
+        // macOS: the player is a ZStack sibling inside the DETAIL column, so it
+        // can never paint over the sidebar. While it's up the sidebar collapses
+        // to .detailOnly (restored on dismiss) — SplitViewState explains why.
+        @Bindable var split = SplitViewState.shared
+        return NavigationSplitView(columnVisibility: $split.visibility) {
             VStack(spacing: 0) {
                 // Logo header
                 HStack {
@@ -387,6 +391,16 @@ struct HomeView: View {
                     onClosed: closeDirectPlayer
                 )
                 .ignoresSafeArea()
+            }
+        }
+        // Same rule as the DetailView player: this overlay sits inside the
+        // split view's detail column, so the sidebar must collapse while a
+        // direct-from-home playback covers the window (SplitViewState).
+        .onChange(of: directItem) { _, item in
+            if item != nil {
+                SplitViewState.shared.collapseForPlayer()
+            } else {
+                SplitViewState.shared.restore()
             }
         }
         #else
