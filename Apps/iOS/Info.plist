@@ -50,5 +50,17 @@
 		<string>com.thisjellyfix.activity.detail</string>
 		<string>com.thisjellyfix.activity.playing</string>
 	</array>
+
+	<!-- Single scene: the app publishes NSUserActivity with a
+	     targetContentIdentifier (handoff routing), and without this
+	     declaration the system is free to create a SECOND scene session to
+	     satisfy a targeted continuation — the "two windows" seen after
+	     tapping the icon. false forces every activation into the one running
+	     scene; the system cannot open a second window at all. -->
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
 </dict>
 </plist>

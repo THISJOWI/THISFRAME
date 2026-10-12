@@ -96,4 +96,24 @@ final class InfoPlistNetworkPermissionTests: XCTestCase {
             XCTAssertEqual(Set(declared), expected, "\(path) NSUserActivityTypes mismatch")
         }
     }
+
+    /// Tapping the app icon opened TWO app windows (two scene sessions in the
+    /// switcher): the app publishes NSUserActivity with a
+    /// `targetContentIdentifier` (routing aid for handoff continuations) but
+    /// never declared itself single-scene, so the system was free to spawn a
+    /// second scene session for a targeted continuation instead of reusing
+    /// the running one. Declaring `UIApplicationSupportsMultipleScenes=false`
+    /// forces every activation (icon tap, continuation, URL) into the ONE
+    /// scene — the system cannot create a second window at all.
+    func testIOSDeclaresSingleSceneApplication() throws {
+        let info = try plist("Apps/iOS/Info.plist")
+        let manifest = try XCTUnwrap(
+            info["UIApplicationSceneManifest"] as? [String: Any],
+            "iOS app must declare UIApplicationSceneManifest (single scene)"
+        )
+        XCTAssertEqual(
+            manifest["UIApplicationSupportsMultipleScenes"] as? Bool, false,
+            "UIApplicationSupportsMultipleScenes must be false — a second scene is a second window"
+        )
+    }
 }
