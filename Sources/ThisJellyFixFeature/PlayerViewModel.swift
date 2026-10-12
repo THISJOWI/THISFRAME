@@ -122,6 +122,19 @@ final class PlayerViewModel {
     private var userId: String?
     private var reportingConfigured = false
 
+    // MARK: - Handoff takeover (playback moved to another device)
+    /// Name of the device that took playback of the current item away from
+    /// this one. Non-nil → the view shows the black takeover screen.
+    var handoffTakeoverDeviceName: String?
+    /// true when this playback session STARTED from a received handoff
+    /// continuation. The receiver sees the sender's still-active /Sessions
+    /// entry for a few seconds and must NEVER yield back — both would stop.
+    var receivedViaHandoff = false
+    /// Injectable /Sessions client (tests).
+    var sessionClient: any JellyfinSessionProviding = JellyfinSessionClient()
+    /// One poll at a time — a slow server must not stack fetches on the tick.
+    private var takeoverCheckInFlight = false
+
     // MARK: - Lock screen (Now Playing)
     private var nowPlayingActive = false
     private var nowPlayingSession: Int?
@@ -398,7 +411,7 @@ final class PlayerViewModel {
     /// root view can rebuild the fullscreen player after a floating window.
     private var currentStreamURL: URL?
     /// True once the engine has been stopped (view disappeared).
-    private var engineStopped = false
+    private(set) var engineStopped = false
     /// A stop report was already sent for this item — teardown must not
     /// send a second, stale one (float→close→exit chains).
     private var stopReported = false
@@ -949,6 +962,12 @@ final class PlayerViewModel {
                 // Skip segments: fetch markers once, then evaluate every tick
                 await self.loadSegmentsIfNeeded()
                 self.evaluateSkipState(delta: 0.5)
+
+                // Handoff takeover poll — every 10th tick (≈5 s) while this
+                // session still owns playback.
+                if self.timerTickCount % 10 == 0, !self.stopReported, !self.engineStopped {
+                    await self.checkHandoffTakeover()
+                }
             }
         }
         // External cue refresh runs alongside the reporting tick.
@@ -1358,6 +1377,65 @@ final class PlayerViewModel {
         stopReported = true
         engine.stop()
         stopUpdating()
+    }
+
+    // MARK: - Handoff takeover
+
+    /// Ask the server who is playing what (GET /Sessions). NSUserActivity is
+    /// one-way — after the continuation lands on the receiver there is no
+    /// push channel back — so polling is the only signal that a handoff moved
+    /// playback to another device. Wired to the 0.5 s tick (every 10th tick).
+    func checkHandoffTakeover() async {
+        guard !receivedViaHandoff,
+              handoffTakeoverDeviceName == nil,
+              !takeoverCheckInFlight,
+              !stopReported,
+              !engineStopped,
+              reportingConfigured,
+              let serverURL, let token, let itemId
+        else { return }
+        #if os(iOS)
+        // Cast: the local engine is already idle and the remote session is
+        // CastController's, not a Jellyfin device taking playback away.
+        if isCastEmitting { return }
+        #endif
+        takeoverCheckInFlight = true
+        defer { takeoverCheckInFlight = false }
+
+        do {
+            let sessions = try await sessionClient.fetchActiveSessions(
+                serverURL: serverURL, token: token
+            )
+            // Admin accounts see EVERY user's sessions — only our own user's
+            // sessions can be a handoff takeover of our playback.
+            let ownUserSessions = sessions.filter { $0.userId == nil || $0.userId == userId }
+            guard let taker = ActiveSessionInfo.takeoverSource(
+                in: ownUserSessions,
+                ourDeviceId: DeviceIdentifier().current(),
+                itemId: itemId
+            ) else { return }
+            applyHandoffTakeover(taker)
+        } catch {
+            TJFLog("handoff takeover check FAILED: \(error.localizedDescription)")
+        }
+    }
+
+    /// Another device is actively playing our item: go dark HERE. First clear
+    /// our own /Sessions claim (the new owner runs the same check and must
+    /// never see our stale entry as a takeover source), then tear down.
+    private func applyHandoffTakeover(_ taker: ActiveSessionInfo) {
+        let name = taker.deviceName ?? "otro dispositivo"
+        handoffTakeoverDeviceName = name
+        TJFLog("handoff takeover: '\(name)' (deviceId=\(taker.deviceId ?? "?")) now plays item=\(itemId ?? "?") — this device goes dark")
+        reportStopped()
+        stopReported = true
+        #if os(iOS)
+        // A floating window must not outlive the takeover either.
+        if PipCoordinator.shared.isWindowActive {
+            PipCoordinator.shared.stop()
+        }
+        #endif
+        stopSync(reportStop: true)
     }
 
     /// Synchronous stop — call from onDisappear to guarantee the engine stops

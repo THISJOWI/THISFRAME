@@ -115,6 +115,128 @@ public struct JellyfinPlaybackClient: JellyfinPlaybackProviding {
     }
 }
 
+// MARK: - Active Sessions (handoff takeover)
+
+/// Minimal view of a Jellyfin `/Sessions` entry — only what the handoff
+/// takeover check needs (who is playing what, right now).
+public struct ActiveSessionInfo: Decodable, Sendable, Equatable {
+    public let deviceId: String?
+    public let userId: String?
+    public let deviceName: String?
+    public let nowPlayingItemId: String?
+    public let isPaused: Bool
+
+    public init(
+        deviceId: String?,
+        userId: String?,
+        deviceName: String?,
+        nowPlayingItemId: String?,
+        isPaused: Bool
+    ) {
+        self.deviceId = deviceId
+        self.userId = userId
+        self.deviceName = deviceName
+        self.nowPlayingItemId = nowPlayingItemId
+        self.isPaused = isPaused
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case deviceId = "DeviceId"
+        case userId = "UserId"
+        case deviceName = "DeviceName"
+        case nowPlayingItem = "NowPlayingItem"
+        case playState = "PlayState"
+        case itemId = "Id"
+        case isPaused = "IsPaused"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        deviceId = try container.decodeIfPresent(String.self, forKey: .deviceId)
+        userId = try container.decodeIfPresent(String.self, forKey: .userId)
+        deviceName = try container.decodeIfPresent(String.self, forKey: .deviceName)
+        // NowPlayingItem is a nested object ({"Id": ...}) — nil when idle.
+        if let item = try? container.nestedContainer(keyedBy: CodingKeys.self, forKey: .nowPlayingItem) {
+            nowPlayingItemId = try item.decodeIfPresent(String.self, forKey: .itemId)
+        } else {
+            nowPlayingItemId = nil
+        }
+        if let state = try? container.nestedContainer(keyedBy: CodingKeys.self, forKey: .playState) {
+            isPaused = (try? state.decodeIfPresent(Bool.self, forKey: .isPaused)) ?? false
+        } else {
+            isPaused = false
+        }
+    }
+
+    /// The OTHER session that has taken playback of `itemId` away from this
+    /// device, if any: a different DeviceId actively playing the same item
+    /// (paused peers haven't taken over — they may resume on our device).
+    public static func takeoverSource(
+        in sessions: [ActiveSessionInfo],
+        ourDeviceId: String,
+        itemId: String
+    ) -> ActiveSessionInfo? {
+        sessions.first { session in
+            session.deviceId != nil
+                && session.deviceId != ourDeviceId
+                && session.nowPlayingItemId == itemId
+                && session.isPaused == false
+        }
+    }
+}
+
+public protocol JellyfinSessionProviding: Sendable {
+    func fetchActiveSessions(serverURL: URL, token: String) async throws -> [ActiveSessionInfo]
+}
+
+/// GET /Sessions: every active session on the server. Used to detect that a
+/// handoff moved playback to another device (NSUserActivity is one-way — the
+/// only cross-device signal available after the continuation is delivered).
+public struct JellyfinSessionClient: JellyfinSessionProviding {
+    private let session: any JellyfinNetworkSession
+
+    public init(session: any JellyfinNetworkSession = URLSession.shared) {
+        self.session = session
+    }
+
+    public func fetchActiveSessions(serverURL: URL, token: String) async throws -> [ActiveSessionInfo] {
+        let url = serverURL.appendingPathComponent("Sessions")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 10
+        request.setValue(
+            "MediaBrowser Client=\"thisjellyfix\", Device=\"\(deviceOS)\", DeviceId=\"\(DeviceIdentifier().current())\", Version=\"0.1\", Token=\"\(token)\"",
+            forHTTPHeaderField: "Authorization"
+        )
+
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw LibraryError.invalidResponse
+        }
+        switch httpResponse.statusCode {
+        case 200: break
+        case 401: throw LibraryError.unauthorized
+        default: throw LibraryError.serverError(httpResponse.statusCode)
+        }
+
+        return try JSONDecoder().decode([ActiveSessionInfo].self, from: data)
+    }
+
+    private var deviceOS: String {
+        #if os(macOS)
+        "macOS"
+        #elseif os(iOS)
+        "iOS"
+        #elseif os(tvOS)
+        "tvOS"
+        #elseif os(visionOS)
+        "visionOS"
+        #else
+        "unknown"
+        #endif
+    }
+}
+
 // MARK: - Playback Reporting
 
 /// Reports playback progress to Jellyfin so episodes get marked as watched.

@@ -57,6 +57,10 @@ struct PlayerView: View {
     var onPlayPreviousEpisode: ((JellyfinEpisode) -> Void)? = nil
     /// Series name shown under the episode/movie title in the controls.
     var subtitle: String? = nil
+    /// true when this playback session started from a received handoff
+    /// continuation: the receiver must never yield back to the sender's
+    /// still-active session (both devices would stop otherwise).
+    var receivedViaHandoff: Bool = false
     #if os(iOS)
     /// The floating PiP session's live view model: restore hands it back so
     /// playback continues uninterrupted (same AVPlayer — no re-prepare, no
@@ -107,6 +111,7 @@ struct PlayerView: View {
         previousEpisode: JellyfinEpisode? = nil,
         onPlayPreviousEpisode: ((JellyfinEpisode) -> Void)? = nil,
         subtitle: String? = nil,
+        receivedViaHandoff: Bool = false,
         restoredViewModel: PlayerViewModel? = nil
     ) {
         self.streamURL = streamURL
@@ -126,6 +131,7 @@ struct PlayerView: View {
         self.previousEpisode = previousEpisode
         self.onPlayPreviousEpisode = onPlayPreviousEpisode
         self.subtitle = subtitle
+        self.receivedViaHandoff = receivedViaHandoff
         #if os(iOS)
         self.restoredViewModel = restoredViewModel
         _viewModel = State(initialValue: restoredViewModel ?? PlayerViewModel())
@@ -150,6 +156,11 @@ struct PlayerView: View {
     /// Wire the CURRENT item into the view model: reporting, server streams and
     /// PiP prefetch. Called once, when the player mounts.
     private func configureEpisode() {
+        // A restored (floating) VM keeps its own flag — only a fresh mount
+        // adopts the view's handoff provenance.
+        if !isRestoring {
+            viewModel.receivedViaHandoff = receivedViaHandoff
+        }
         if let itemId, let serverURL, let token, let userId {
             viewModel.configureReporting(userId: userId, serverURL: serverURL, token: token, itemId: itemId, playSessionId: playSessionId)
         } else {
@@ -437,6 +448,33 @@ struct PlayerView: View {
                             .buttonStyle(.borderedProminent)
                             .tint(MareaTheme.Colors.accent)
                     }
+                }
+            }
+
+            // Handoff takeover: another device took the item — the engine is
+            // already stopped, this screen goes dark and says who took over.
+            .overlay {
+                if let taker = viewModel.handoffTakeoverDeviceName {
+                    ZStack {
+                        Color.black.ignoresSafeArea()
+                        VStack(spacing: 14) {
+                            Image(systemName: "rectangle.on.rectangle.slash")
+                                .font(.system(size: 44))
+                                .foregroundStyle(.white.opacity(0.7))
+                            Text("La reproducción continuó en \(taker)")
+                                .font(.title3.weight(.semibold))
+                                .foregroundStyle(.white)
+                                .multilineTextAlignment(.center)
+                            Text("Este dispositivo se ha detenido.")
+                                .font(.subheadline)
+                                .foregroundStyle(.white.opacity(0.6))
+                            Button("Cerrar") { dismissPlayer() }
+                                .buttonStyle(.borderedProminent)
+                                .tint(MareaTheme.Colors.accent)
+                        }
+                        .padding(32)
+                    }
+                    .transition(.opacity)
                 }
             }
 

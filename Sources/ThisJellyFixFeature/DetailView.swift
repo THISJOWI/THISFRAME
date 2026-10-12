@@ -34,6 +34,10 @@ struct DetailView: View {
     /// Handoff autoplay fires at most once per DetailView instance — a SwiftUI
     /// rebuild must not restart playback over the user's head.
     @State private var handoffAutoplayStarted = false
+    /// true when the CURRENT presented player session started from a received
+    /// handoff continuation. Passed to PlayerView: the receiver must never
+    /// yield back to the sender's still-active /Sessions entry.
+    @State private var startedViaHandoff = false
 
     // MARK: - Seasons & Episodes
     @State private var seasons: [JellyfinSeason] = []
@@ -143,7 +147,8 @@ struct DetailView: View {
                     onPlayPreviousEpisode: { episode in
                         Task { await playEpisode(episode) }
                     },
-                    subtitle: playerSubtitle
+                    subtitle: playerSubtitle,
+                    receivedViaHandoff: startedViaHandoff
                 )
                 .ignoresSafeArea()
             }
@@ -179,7 +184,8 @@ struct DetailView: View {
                         onPlayPreviousEpisode: { episode in
                             Task { await playEpisode(episode) }
                         },
-                        subtitle: playerSubtitle
+                        subtitle: playerSubtitle,
+                        receivedViaHandoff: startedViaHandoff
                     )
                     .ignoresSafeArea()
                 }
@@ -662,6 +668,7 @@ struct DetailView: View {
         let start = HandoffResolver.effectiveStart(handoff: handoff, serverResume: serverResume)
         TJFLog("handoff: autoplay item=\(item.id) start=\(Int(start)) (handoff=\(Int(handoff)) server=\(serverResume.map(Int.init) ?? -1))")
         streamTitle = detail?.name ?? item.name
+        startedViaHandoff = true
         await preparePlayback(itemId: item.id, startPosition: start > 0 ? start : nil)
     }
 
@@ -671,6 +678,7 @@ struct DetailView: View {
         // previous episode play.
         nextEpisode = nil
         previousEpisode = nil
+        startedViaHandoff = false
         await preparePlayback(itemId: item.id, startPosition: resumeSeconds(detail))
     }
 
@@ -747,6 +755,7 @@ struct DetailView: View {
         streamTitle = episode.name
         nextEpisode = nextEpisodeAfter(episode)
         previousEpisode = previousEpisodeBefore(episode)
+        startedViaHandoff = false
         await preparePlayback(itemId: episode.id, startPosition: episode.resumePositionSeconds)
     }
 
