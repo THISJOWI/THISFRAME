@@ -1,5 +1,6 @@
 import SwiftUI
 import ThisJellyFixFeature
+import ThisJellyFixCast
 
 @main
 struct ThisJellyFixIOSApp: App {
@@ -16,5 +17,18 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         supportedInterfaceOrientationsFor window: UIWindow?
     ) -> UIInterfaceOrientationMask {
         application.tjf_orientationLock
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        // Cast: inicialización única y temprana (debe ser ANTES de cualquier
+        // uso de GCKDiscoveryManager/GCKSessionManager). Idempotente por
+        // diseño — una segunda llamada sería no-op, imposible duplicarla.
+        // El descubrimiento NO arranca aquí: solo cuando el usuario abre el
+        // selector (ahorro de red y de permisos).
+        CastSDK.initialize()
+        return true
     }
 }

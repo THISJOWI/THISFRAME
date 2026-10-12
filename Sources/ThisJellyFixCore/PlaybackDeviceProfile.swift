@@ -195,4 +195,49 @@ public struct PlaybackDeviceProfile: Codable, Sendable, Equatable {
             SubtitleProfile(format: "pgssub", deliveryMethod: "Embed"),
         ]
     )
+
+    /// Google Cast profile: lo que el Default Media Receiver (y los
+    /// Chromecast en general) decodifican de forma fiable.
+    ///
+    /// Direct play limitado a mp4/m4v con h264+aac — los contenedores y
+    /// códecs que el receptor soporta sin remitente de por medio. mkv/hevc
+    /// NO se declaran: el servidor los remuxea/transcodifica a HLS h264+aac
+    /// (TranscodingUrl) que el receptor consume vía MSE. La transcodificación
+    /// la hace el SERVIDOR, nunca el dispositivo Apple.
+    public static let chromecast = PlaybackDeviceProfile(
+        name: "thisjellyfix-chromecast",
+        maxStaticBitrate: 100_000_000,
+        maxStreamingBitrate: 100_000_000,
+        directPlayProfiles: [
+            DirectPlayProfile(
+                container: "mp4,m4v",
+                type: "Video",
+                videoCodec: "h264",
+                audioCodec: "aac,mp3,ac3,eac3"
+            )
+        ],
+        transcodingProfiles: [
+            TranscodingProfile(
+                container: "ts",
+                type: "Video",
+                streamingProtocol: "hls",
+                videoCodec: "h264",
+                audioCodec: "aac",
+                context: "Streaming",
+                maxAudioChannels: "6"
+            )
+        ],
+        // El receptor renderiza subs si el servidor los incrusta o sirve en
+        // un formato Cast entiende (webvtt). ASS/SSA no: quedan como External
+        // para que el remitente decida no ofrecerlos.
+        subtitleProfiles: [
+            SubtitleProfile(format: "webvtt", deliveryMethod: "Embed"),
+            SubtitleProfile(format: "srt", deliveryMethod: "External"),
+            SubtitleProfile(format: "subrip", deliveryMethod: "External"),
+            SubtitleProfile(format: "mov_text", deliveryMethod: "Embed"),
+            SubtitleProfile(format: "pgssub", deliveryMethod: "Encode"),
+            SubtitleProfile(format: "dvdsub", deliveryMethod: "Encode"),
+            SubtitleProfile(format: "dvb_subtitle", deliveryMethod: "Encode")
+        ]
+    )
 }

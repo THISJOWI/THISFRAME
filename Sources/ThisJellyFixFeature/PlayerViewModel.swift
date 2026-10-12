@@ -3,6 +3,9 @@ import Observation
 import ThisJellyFixCore
 import ThisJellyFixNetworking
 import ThisJellyFixPlayback
+#if os(iOS)
+import ThisJellyFixCast
+#endif
 
 @MainActor
 @Observable
@@ -14,8 +17,13 @@ final class PlayerViewModel {
     var userPaused = false
     /// Whether an automatic PiP handoff (view exit / background) may run.
     var canAutoHandoffToPiP: Bool {
+        // Emisión Cast: la salida activa es el receptor — flotar el video
+        // local en PiP (parado) crearía una segunda salida incoherente.
+        #if os(iOS)
+        if isCastEmitting { return false }
+        #endif
         // The rule lives in Core (`PiPHandoffPolicy`) so it is unit-tested.
-        PiPHandoffPolicy.canAutoStart(
+        return PiPHandoffPolicy.canAutoStart(
             isPlaying: isPlaying,
             userPaused: userPaused,
             position: currentTime,
@@ -131,6 +139,24 @@ final class PlayerViewModel {
     var airplayMessage: String?
     #endif
 
+    #if os(iOS)
+    // MARK: - Google Cast (iOS only — no SDK on macOS/tvOS/visionOS)
+    /// Salida remota Cast. Cargada por defecto; el test la sustituye.
+    var castController: CastController?
+    /// Sheet del selector de dispositivos.
+    var showCastPicker = false
+    /// El transporte (play/pause/seek) va al RECEPTOR, no al engine local.
+    var isCastEmitting: Bool { castController?.isEmitting == true }
+    /// Sesión Cast conectada (botón con punto rojo).
+    var isCastConnected: Bool { castController?.isConnected ?? false }
+    /// Mensaje de error Cast mostrado hasta el próximo evento.
+    var castMessage: String?
+    /// true durante el swap de episodio cuando el anterior terminÓ EN EL
+    /// RECEPTOR con sesión viva: el nuevo episodio se emite, no se reproduce
+    /// localmente (los episodios consecutivos siguen en el Chromecast).
+    private var castCarryOver = false
+    #endif
+
     init(
         engine: AVPlaybackEngine = AVPlaybackEngine(),
         segmentClient: any JellyfinSegmentProviding = JellyfinSegmentClient()
@@ -176,7 +202,110 @@ final class PlayerViewModel {
         np.onSeek = { [weak self] position in
             Task { await self?.seek(to: position) }
         }
+
+        #if os(iOS)
+        // Cast: el controller es singleton (la sesión vive más que el player).
+        // El hook reenvía el estado del RECEPTOR a la UI del player.
+        castController = CastController.shared
+        castController?.onMediaStatus = { [weak self] status in
+            Task { @MainActor [weak self] in self?.handleCastMediaStatus(status) }
+        }
+        #endif
     }
+
+    #if os(iOS)
+    // MARK: - Cast
+
+    /// Estado del receptor → UI del player (posición/duración/play-pause).
+    /// El engine local está parado mientras se emite: el timer NO debe
+    /// sobreescribir con las lecturas del AVPlayer detenido.
+    private func handleCastMediaStatus(_ status: CastMediaState) {
+        guard !engineStopped else { return }
+        if !isSeeking { currentTime = status.position }
+        if let duration = status.duration { self.duration = duration }
+        if let playing = status.isPlaying { isPlaying = playing }
+        NowPlayingController.shared.update(
+            time: currentTime,
+            duration: duration,
+            rate: isPlaying ? playbackRate : Float(0)
+        )
+        if status.ended {
+            // El contenido terminó en el receptor. Si hay cadena de
+            // episodios, auto-avanzar EMITIENDO el siguiente en el receptor
+            // (castCarryOver lo mantiene emitiendo durante el swap; sin
+            // cadena, la salida vuelve a control local).
+            TJFLog("cast: receptor terminó — hasNextEpisode=\(hasNextEpisode)")
+            if hasNextEpisode {
+                #if os(iOS)
+                castCarryOver = castController?.isConnected ?? false
+                #endif
+                onPlayNextEpisode?()
+            }
+        }
+        if let error = status.errorMessage { castMessage = error }
+    }
+
+    /// Emite el contenido ACTUAL del player al dispositivo conectado.
+    /// Pausa el engine local (una sola salida sonora a la vez) y carga el
+    /// stream en el receptor — reanudando desde la posición actual.
+    func castCurrentItem() async {
+        guard let castController, let url = currentStreamURL,
+              let itemId, let serverURL, let token, let userId else {
+            castMessage = "No hay contenido reproducible para emitir."
+            return
+        }
+        guard castController.isConnected else {
+            showCastPicker = true
+            return
+        }
+        do {
+            // Regla de convivencia: UNA salida activa. La reproducción local
+            // se pausa; AirPlay es externo al engine y el usuario lo gestiona
+            // con su propio picker (no se toca).
+            engine.pause()
+            isPlaying = false
+            userPaused = true
+
+            try await castController.cast(
+                url: url,
+                itemId: itemId,
+                mediaSourceId: itemId,
+                userId: userId,
+                serverURL: serverURL,
+                token: token,
+                playSessionId: reportingSessionId,
+                title: playbackTitle.isEmpty ? "ThisJellyFix" : playbackTitle,
+                subtitle: nil,
+                artworkURL: serverURL.appendingPathComponent("Items/\(itemId)/Images/Primary?maxWidth=400&quality=90"),
+                startTime: currentTime > 5 ? currentTime : nil
+            )
+            castMessage = nil
+        } catch {
+            castMessage = error.localizedDescription
+            TJFLog("cast: emisión fallida \(error.localizedDescription)")
+        }
+    }
+
+    /// Desconexión elegida en el sheet: retoma la reproducción local desde
+    /// la posición del receptor (vuelta local técnicamente posible).
+    func castDisconnectedByUser() async {
+        guard let castController, castController.isEmitting else { return }
+        let position = castController.media.position
+        castController.disconnect()
+        castMessage = nil
+        // El engine quedó pausado al emitir: reanudar LOCAL en la posición
+        // del receptor. Si el engine murió (view reciclada), no tocar nada.
+        guard !engineStopped else { return }
+        if position > 0 {
+            await engine.seek(to: position)
+            currentTime = position
+        }
+        engine.play()
+        isPlaying = true
+        userPaused = false
+        stopReported = false
+    }
+    #endif
 
     /// Lock screen / Control Center: publish what's playing (title + poster).
     /// Called once when the player mounts; the timer keeps time/rate fresh.
@@ -317,6 +446,21 @@ final class PlayerViewModel {
         // Zombie guard: playback work that outlived the player (dismissal
         // during the post-prepare delay) must not restart audio.
         guard !engineStopped else { return }
+        #if os(iOS)
+        // Emisión Cast: el transporte va al RECEPTOR (el engine local está
+        // pausado y no debe reanudarse por accidente).
+        if isCastEmitting {
+            if isPlaying {
+                castController?.pause()
+                isPlaying = false
+            } else {
+                castController?.play()
+                isPlaying = true
+            }
+            userPaused = !isPlaying
+            return
+        }
+        #endif
         #if !os(visionOS)
         // A1: play/pause while a receiver handoff is negotiating aborts the
         // connection in AVPlayer — the "starts but never completes" race.
@@ -376,6 +520,44 @@ final class PlayerViewModel {
         // zombie continuation would call play() + startUpdating() on a view
         // that is already gone.
         guard !Task.isCancelled, !engineStopped else { return }
+
+        #if os(iOS)
+        // Swap dentro de una cadena Cast: el episodio se EMITE en el
+        // receptor (el stream local ni siquiera se prepara). Si la URL
+        // resuelta no sirve para el receptor (p. ej. mkv directo), el
+        // controller la re-resolve con el perfil chromecast.
+        if castCarryOver, let castController, castController.isConnected {
+            castCarryOver = false
+            if let itemId, let serverURL, let token, let userId {
+                do {
+                    try await castController.cast(
+                        url: url,
+                        itemId: itemId,
+                        mediaSourceId: itemId,
+                        userId: userId,
+                        serverURL: serverURL,
+                        token: token,
+                        playSessionId: playSessionId,
+                        title: playbackTitle.isEmpty ? "ThisJellyFix" : playbackTitle,
+                        subtitle: nil,
+                        artworkURL: serverURL.appendingPathComponent(
+                            "Items/\(itemId)/Images/Primary?maxWidth=400&quality=90"
+                        ),
+                        startTime: nil
+                    )
+                    isPlaying = true
+                    userPaused = false
+                    startUpdating()
+                    TJFLog("cast: swap de episodio — siguiente emitido en el receptor")
+                } catch {
+                    castMessage = error.localizedDescription
+                    TJFLog("cast: swap fallido, vuelta a local \\(error.localizedDescription)")
+                }
+            }
+            return
+        }
+        castCarryOver = false
+        #endif
 
         await prepareStream(url: url, startPosition: startPosition)
         guard !Task.isCancelled else { return }
@@ -515,6 +697,17 @@ final class PlayerViewModel {
     func seek(to seconds: Double) async {
         // Zombie guard — a dismissed player must not keep positioning.
         guard !engineStopped else { return }
+        #if os(iOS)
+        // Emisión Cast: el seek va al receptor; la posición local solo se
+        // sincroniza (el receiver la confirma por listener).
+        if isCastEmitting {
+            isSeeking = true
+            currentTime = seconds
+            castController?.seek(to: seconds)
+            isSeeking = false
+            return
+        }
+        #endif
         // Coalesce overlapping triggers (scrub release + auto-skip, double tap
         // ±15s, swipe while scrubbing).
         if isSeeking {
@@ -656,6 +849,21 @@ final class PlayerViewModel {
         guard updateTimer == nil else { return }
         updateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in            Task { @MainActor [weak self] in
                 guard let self else { return }
+                #if os(iOS)
+                // Emisión Cast: el engine local está parado — sus lecturas
+                // congelarían la UI en la posición del corte. El estado
+                // llega del receptor vía handleCastMediaStatus; el tick solo
+                // mantiene el reporte y el lock-screen.
+                if self.isCastEmitting {
+                    self.duration = self.castController?.media.duration ?? self.duration
+                    NowPlayingController.shared.update(
+                        time: self.currentTime,
+                        duration: self.duration,
+                        rate: self.isPlaying ? self.playbackRate : Float(0)
+                    )
+                    return
+                }
+                #endif
                 if self.isSeeking {
                     // A seek holds `currentTime` at its target, but duration and
                     // play state don't depend on it — freezing the whole snapshot
@@ -1157,6 +1365,26 @@ final class PlayerViewModel {
     /// - Parameter reportStop: false when playback continues in the floating
     ///   PiP window — this view model keeps reporting progress on its own.
     func stopSync(reportStop: Bool = true) {
+        #if os(iOS)
+        // Emisión Cast: la sesión vive en CastController (singleton) y su
+        // reporter es el único autoridad de posición. Un stop local aquí
+        // marcaría el ítem como visto parado mientras el Chromecast sigue.
+        if isCastEmitting {
+            TJFLog("cast: view exit — la emisión continúa vía CastController")
+            engine.stopSync()
+            stopUpdating()
+            engineStopped = true
+            // El lock-screen pasa a describir la emisión remota gestionada
+            // por CastController; los comandos del sistema ya no deben caer
+            // en este VM muerto.
+            if nowPlayingActive {
+                nowPlayingActive = false
+                NowPlayingController.shared.deactivate(session: nowPlayingSession)
+                nowPlayingSession = nil
+            }
+            return
+        }
+        #endif
         if reportStop && !stopReported {
             // Only latch when a stop was actually sent — reportStopped skips
             // the POST at position 0 (to preserve the saved resume), and that

@@ -351,8 +351,7 @@ struct PlayerView: View {
             // AirPlay status: connecting (transport blocked) or last failure.
             .overlay(alignment: .top) {
                 #if !os(visionOS)
-                if viewModel.isAirPlayConnecting {
-                    Label("Conectando AirPlay…", systemImage: "airplayvideo")
+                if viewModel.isAirPlayConnecting {                    Label("Conectando AirPlay…", systemImage: "airplayvideo")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14)
@@ -362,6 +361,31 @@ struct PlayerView: View {
                         .transition(.opacity)
                 } else if let message = viewModel.airplayMessage {
                     Label(message, systemImage: "airplay.exclamationmark")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(.red.opacity(0.75), in: Capsule())
+                        .padding(.top, 56)
+                        .transition(.opacity)
+                }
+                #endif
+                #if os(iOS)
+                // Cast: emitiendo (con nombre del dispositivo) o error.
+                // Muestra SIEMPRE la salida activa — impide que el usuario
+                // crea que sigue viendo en el iPhone cuando no es así.
+                if viewModel.isCastEmitting,
+                   let name = viewModel.castController?.sessionState.lastDeviceName {
+                    Label("Transmitiendo a \(name)", systemImage: "tv.badge.waveform")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(.black.opacity(0.6), in: Capsule())
+                        .padding(.top, viewModel.isAirPlayConnecting ? 100 : 56)
+                        .transition(.opacity)
+                } else if let message = viewModel.castMessage {
+                    Label(message, systemImage: "tv.badge.exclamationmark")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14)
@@ -530,7 +554,8 @@ struct PlayerView: View {
                 viewModel.handleViewExit(handoffAllowed: !PlayerTeardown.consumeErrorFlag())
             }
         }
-        .onChange(of: viewModel.isPlaying) { _, playing in            // Show controls when playback pauses/stops unexpectedly (buffering, error)
+        .onChange(of: viewModel.isPlaying) { _, playing in
+            // Show controls when playback pauses/stops unexpectedly (buffering, error)
             if wasPlaying && !playing {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     viewModel.showControls = true
@@ -590,6 +615,9 @@ struct PlayerView: View {
                 Task { await viewModel.switchQuality(quality) }
             }
         }
+        #if os(iOS)
+        .modifier(CastPickerSheetModifier(viewModel: viewModel))
+        #endif
     }
 
     // MARK: - Fit / fill gestures
@@ -1002,6 +1030,20 @@ private struct ControlsOverlay: View {
                 AirPlayRoutePicker(onPresentingChanged: onAirPlayPresenting)
                     .frame(width: 40, height: 40)
                     .background(.black.opacity(0.4), in: Circle())
+                #endif
+                #if os(iOS)
+                // Cast: tecnología DIFERENTE de AirPlay (glifo propio, flujo
+                // propio). Conectado → emite directo; sin sesión → selector.
+                CastButton(
+                    isConnected: viewModel.isCastConnected,
+                    isConnecting: viewModel.castController?.isConnecting ?? false
+                ) {
+                    if viewModel.isCastConnected {
+                        Task { await viewModel.castCurrentItem() }
+                    } else {
+                        viewModel.showCastPicker = true
+                    }
+                }
                 #endif
             }
         }
@@ -1678,6 +1720,35 @@ struct PipLayerHostView: UIViewRepresentable {
         } else {
             layer.frame = uiView.bounds
         }
+    }
+}
+#endif
+
+#if os(iOS)
+/// Sheet del selector de Cast, extraído de la cadena principal del player:
+/// la ViewBuilder del overlay ya es enorme y el type-checker se agotaba con
+/// el modifier inline. La lógica vive aquí: al conectar desde el selector,
+/// el contenido actual se lanza al receptor (conectar solo no emite); un
+/// fallo de conexión cierra el sheet y se muestra como cápsula de estado.
+struct CastPickerSheetModifier: ViewModifier {
+    @Bindable var viewModel: PlayerViewModel
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $viewModel.showCastPicker) {
+                CastDevicePickerSheet()
+                    .onChange(of: viewModel.castController?.isConnected == true) { _, connected in
+                        if connected {
+                            viewModel.showCastPicker = false
+                            Task { await viewModel.castCurrentItem() }
+                        }
+                    }
+                    .onChange(of: viewModel.castController?.sessionState.phase) { _, phase in
+                        if case .failed = phase {
+                            viewModel.showCastPicker = false
+                        }
+                    }
+            }
     }
 }
 #endif

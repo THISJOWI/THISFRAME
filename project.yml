@@ -1,4 +1,11 @@
 name: thisjellyfix
+packages:
+  # Google Cast iOS Sender SDK (binario oficial vía SPM, único canal soportado
+  # desde que CocoaPods quedó deprecado). Solo iOS: el manifest del paquete
+  # declara platforms [.iOS(.v16)] — por eso SOLO el target Cast-iOS lo usa.
+  GoogleCast:
+    url: https://github.com/googlecast/google-cast-ios-sdk
+    from: 4.8.6
 options:
   bundleIdPrefix: com.thisjellyfix
   deploymentTarget:
@@ -43,6 +50,23 @@ targets:
     dependencies:
       - target: Core-iOS
     settings: { base: { PRODUCT_MODULE_NAME: ThisJellyFixPlayback, PRODUCT_NAME: ThisJellyFixPlayback } }
+  # Cast solo existe en iOS: Google no publica SDK de Cast para macOS nativo,
+  # tvOS ni visionOS. Feature-iOS lo importa condicionalmente (canImport).
+  Cast-iOS:
+    type: framework
+    platform: iOS
+    sources: [Sources/ThisJellyFixCast]
+    dependencies:
+      - target: Core-iOS
+      - target: Networking-iOS
+      # Static: los símbolos se fusionan en Cast-iOS (el wrapper dinámico de
+      # SPM NO propaga el binario cuando un framework intermedio lo enlaza,
+      # provocando undefined symbols en el link de la app). No usamos los
+      # bundles de UI de Google (selector propio en SwiftUI) ni Catalyst,
+      # así que las contraindicaciones de la variante static no aplican.
+      - package: GoogleCast
+        product: GoogleCastStatic
+    settings: { base: { PRODUCT_MODULE_NAME: ThisJellyFixCast, PRODUCT_NAME: ThisJellyFixCast } }
   Feature-iOS:
     type: framework
     platform: iOS
@@ -53,6 +77,7 @@ targets:
       - target: Networking-iOS
       - target: Playback-iOS
       - target: Discovery-iOS
+      - target: Cast-iOS
     settings: { base: { PRODUCT_MODULE_NAME: ThisJellyFixFeature, PRODUCT_NAME: ThisJellyFixFeature } }
   thisjellyfix-iOS:
     type: application
@@ -70,7 +95,16 @@ targets:
         embed: true
       - target: Discovery-iOS
         embed: true
-    settings: { base: { PRODUCT_BUNDLE_IDENTIFIER: com.thisjellyfix.ios, INFOPLIST_FILE: Apps/iOS/Info.plist, CODE_SIGN_ENTITLEMENTS: Apps/iOS/ThisJellyfix.entitlements } }
+      - target: Cast-iOS
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.thisjellyfix.ios
+        INFOPLIST_FILE: Apps/iOS/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Apps/iOS/ThisJellyfix.entitlements
+        # GoogleCastStatic (SPM): Google exige -ObjC en el app con la
+        # variante static — las categorías ObjC del SDK no se cargan sin él.
+        OTHER_LDFLAGS: "$(inherited) -ObjC"
 
   Core-macOS:
     type: framework
