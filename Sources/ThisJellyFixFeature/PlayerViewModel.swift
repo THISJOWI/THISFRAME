@@ -48,6 +48,22 @@ final class PlayerViewModel {
     /// True once the user manually picked a subtitle track (or turned them
     /// off): preference auto-selection must not override that choice later.
     var subtitleSelectionLocked = false
+    /// Manual subtitle language chosen by the user (e.g. "es"), preserved
+    /// across episode swaps so the next episode re-picks the SAME language
+    /// via fresh indices instead of falling back to the profile default.
+    /// Nil = no manual language (follow profile prefs); `manualSubtitlesOff`
+    /// covers the explicit-off case.
+    private var manualSubtitleLanguage: String?
+    /// True when the user explicitly turned subtitles off: episode swaps
+    /// must stay off instead of auto-enabling via preferences.
+    private var manualSubtitlesOff = false
+    /// Bumped on every episode swap — async subtitle loads from a previous
+    /// item must not populate the new item's lists.
+    private var subtitleGeneration = 0
+    /// Server stream index backing each overlay track (parallel to
+    /// `externalSubs`): maps the metadata-ranked pick to the overlay id
+    /// without reusing stale per-episode ids.
+    private var externalSubServerIndices: [Int?] = []
     /// Subtitle tracks loaded as SRT from the server, with their cues.
     /// All subtitles are rendered exclusively by the SwiftUI client overlay (black background).
     private var externalSubs: [(track: SubtitleTrack, cues: [SubtitleCue])] = []
@@ -765,12 +781,19 @@ final class PlayerViewModel {
 
     /// Forget everything that belongs to the previous item.
     private func resetItemState() {
+        // Invalidate any in-flight subtitle fetch for the old item before
+        // dropping its lists — a slow response must not populate the new one.
+        subtitleGeneration += 1
         availableAudioTracks = []
         availableSubtitleTracks = []
         selectedAudioTrackIndex = nil
         selectedSubtitleTrackIndex = nil
-        subtitleSelectionLocked = false
+        // Per-item lock is cleared, but the MANUAL language/off choice
+        // survives: the next episode re-picks the same language via fresh
+        // indices (or stays off) instead of reverting to profile defaults.
+        subtitleSelectionLocked = manualSubtitlesOff || manualSubtitleLanguage != nil
         externalSubs = []
+        externalSubServerIndices = []
         selectedExternalSubIndex = nil
         subtitleText = nil
         showAudioPicker = false
@@ -911,6 +934,12 @@ final class PlayerViewModel {
         // stored preference for the rest of this item. Never recreates the
         // player item: PiP wiring (same AVPlayer/AVPlayerLayer) is untouched.
         subtitleSelectionLocked = true
+        if let track {
+            manualSubtitlesOff = false
+            manualSubtitleLanguage = track.language
+        } else {
+            manualSubtitlesOff = true
+        }
         await applySubtitleSelection(track)
     }
 
@@ -921,15 +950,23 @@ final class PlayerViewModel {
             selectedExternalSubIndex = nil
             selectedSubtitleTrackIndex = nil
             subtitleText = nil
+            refreshSubtitleTimer()
             return
         }
         // Subtitles are rendered exclusively by the client overlay with black background.
-        // AVPlayer native legible rendering is kept permanently disabled (-1).
+        // AVPlayer native legible rendering stays disabled in fullscreen (-1);
+        // when PiP is already active the same language is mirrored natively
+        // so the system window shows it (single renderer per surface).
         await engine.selectSubtitleTrack(index: -1)
         selectedExternalSubIndex = track.id
         selectedSubtitleTrackIndex = track.id
         updateSubtitleText()
         refreshSubtitleTimer()
+        #if os(iOS)
+        if PipCoordinator.shared.isWindowActive {
+            applyPiPSubtitleMode(active: true)
+        }
+        #endif
         TJFLog("subtitles select id=\(track.id) name=\(track.name)")
     }
 
@@ -1226,8 +1263,18 @@ final class PlayerViewModel {
         }
 
         await addExternalSubtitlesIfNeeded()
-        // Ensure native legible subtitles in AVPlayer are permanently kept off
+        // Fullscreen invariant: native legible stays off (overlay renders).
+        // While PiP is active the native track IS the renderer — forcing -1
+        // here would mute PiP subs on every poll until tracks settle.
+        #if os(iOS)
+        if PipCoordinator.shared.isWindowActive {
+            applyPiPSubtitleMode(active: true)
+        } else {
+            await engine.selectSubtitleTrack(index: -1)
+        }
+        #else
         await engine.selectSubtitleTrack(index: -1)
+        #endif
     }
 
     // MARK: - Track display names
@@ -1310,8 +1357,12 @@ final class PlayerViewModel {
         return result
     }
 
-    /// Apply profile language preferences once per item, only when the user
-    /// hasn't manually picked a track yet.
+    /// Apply language preferences once per item, honoring a manual choice first.
+    ///
+    /// Subtitle auto-pick is metadata-ranked (`SubtitleSelection`): among the
+    /// server streams matching the wanted language, full dialogue tracks win
+    /// over forced-only and non-SDH wins over SDH/CC. Nothing is filtered by
+    /// TEXT — every track stays manually selectable.
     private func applyLanguagePreferences() async {
         let prefs = LanguagePreferences.current()
         // Never configured (`nil`) → follow the system language.
@@ -1329,14 +1380,45 @@ final class PlayerViewModel {
             selectedAudioTrackIndex = audio.id
         }
 
-        if !subtitleSelectionLocked, selectedSubtitleTrackIndex == nil,
-           let sub = LanguagePreferences.selectTrack(
-               in: availableSubtitleTracks,
-               preferred: preferredSubtitles,
-               language: { $0.language }
-           ) {
-            TJFLog("langPref subtitles -> id=\(sub.id) lang=\(sub.language ?? "-")")
-            await applySubtitleSelection(sub)
+        // Explicit manual off survives episode swaps — never auto-enable.
+        if manualSubtitlesOff {
+            TJFLog("langPref subtitles: manual off — staying off")
+            return
+        }
+        guard !subtitleSelectionLocked, selectedSubtitleTrackIndex == nil else { return }
+
+        // Manual language (same-language re-pick across episodes) wins over
+        // the stored profile preference.
+        let wanted = manualSubtitleLanguage ?? preferredSubtitles
+        guard let wanted, !wanted.isEmpty else { return }
+        guard let pick = pickBestOverlayTrack(preferred: wanted) else {
+            TJFLog("langPref subtitles: no match for \(wanted) among \(availableSubtitleTracks.count) tracks")
+            return
+        }
+        TJFLog("langPref subtitles -> id=\(pick.id) lang=\(pick.language ?? "-") forced=\(pick.isForced) sdh=\(pick.isHearingImpaired) wanted=\(wanted)")
+        await applySubtitleSelection(pick)
+    }
+
+    /// Best overlay track for `preferred` using server stream metadata.
+    /// Maps the ranked server stream back to its overlay id via
+    /// `externalSubServerIndices` — never reuses a stale per-episode id.
+    private func pickBestOverlayTrack(preferred: String) -> SubtitleTrack? {
+        // Overlay tracks mirror a subset of server subtitle streams (text
+        // formats with parseable cues). Rank at the STREAM level so forced /
+        // SDH / default flags decide, then map to the overlay track built
+        // from that stream.
+        let subStreams = serverMediaStreams.filter { $0.type == "Subtitle" }
+        guard let streamIdx = SubtitleSelection.bestStreamIndex(in: subStreams, preferred: preferred) else { return nil }
+        let pickedStream = subStreams[streamIdx]
+        // Prefer the overlay track built from this exact server stream.
+        if let serverIndex = pickedStream.index,
+           let overlayIdx = externalSubServerIndices.firstIndex(where: { $0 == serverIndex }) {
+            return externalSubs[overlayIdx].track
+        }
+        // Fallback: first overlay track whose language matches (stream-level
+        // flags unavailable, e.g. sidecar added post-load).
+        return availableSubtitleTracks.first {
+            LanguagePreferences.matches(preferred: preferred, trackLanguage: $0.language)
         }
     }
 
@@ -1349,6 +1431,7 @@ final class PlayerViewModel {
         guard !externalSubsLoaded, !serverMediaStreams.isEmpty else { return }
         guard reportingConfigured, let itemId, let serverURL, let token else { return }
         externalSubsLoaded = true
+        let gen = subtitleGeneration
 
         // Single-renderer subtitles: EVERY text subtitle stream (embedded or
         // external) is fetched as SRT and painted by the SwiftUI overlay, the
@@ -1367,6 +1450,11 @@ final class PlayerViewModel {
             return
         }
         for (i, stream) in candidates.enumerated() {
+            // Episode swapped mid-fetch: drop stale results for the old item.
+            guard gen == subtitleGeneration, !engineStopped else {
+                TJFLog("extSubs: stale load dropped (episode changed)")
+                return
+            }
             guard let idx = stream.index else { continue }
             // Always ask for SRT: the server converts ASS/SSA/VTT on the fly
             // and SRTParser only speaks SRT.
@@ -1393,23 +1481,65 @@ final class PlayerViewModel {
                     serverTitle: stream.displayTitle ?? stream.title,
                     index: i
                 )
+                // Surface server flags in the caption so same-language tracks
+                // are distinguishable (full vs forced vs SDH). Title stays
+                // untouched; flags never hide a track.
+                var captionParts: [String] = []
+                if let caption = display.caption, !caption.isEmpty { captionParts.append(caption) }
+                if stream.isForced == true { captionParts.append("Forzados") }
+                if stream.isHearingImpaired == true { captionParts.append("SDH") }
                 let track = SubtitleTrack(
                     id: externalSubs.count,
                     name: display.title,
                     language: stream.language,
-                    languageName: display.caption,
-                    isExternal: true
+                    languageName: captionParts.isEmpty ? nil : captionParts.joined(separator: " · "),
+                    isExternal: true,
+                    isForced: stream.isForced == true,
+                    isHearingImpaired: stream.isHearingImpaired == true,
+                    isDefault: stream.isDefault == true
                 )
                 externalSubs.append((track: track, cues: cues))
+                externalSubServerIndices.append(idx)
                 TJFLog("extSubs idx=\(idx) cues=\(cues.count)")
             } catch {
                 TJFLog("extSubs idx=\(idx) failed: \(error)")
             }
         }
         if !externalSubs.isEmpty {
+            // A swap landed while we fetched: the new item owns fresh lists —
+            // never publish the old item's tracks into it.
+            guard gen == subtitleGeneration, !engineStopped else {
+                TJFLog("extSubs: stale results dropped after fetch (episode changed)")
+                return
+            }
             availableSubtitleTracks = displayExternalSubs()
             await applyLanguagePreferences()
+            // PiP may already be active for the new item (auto-start on
+            // background during a swap): mirror the fresh selection natively.
+            #if os(iOS)
+            if PipCoordinator.shared.isWindowActive {
+                applyPiPSubtitleMode(active: true)
+            }
+            #endif
         }
+    }
+
+    /// Late-arriving server streams for the CURRENT item (episode-swap prop
+    /// updates that land after `streamURL`). Refreshes the overlay lists
+    /// without touching playback — fixes swaps that kept the old episode's
+    /// (or empty) subtitle state forever.
+    func refreshMediaStreams(_ streams: [MediaStream]) {
+        guard !engineStopped else { return }
+        // Same content: nothing to do (avoids re-fetch loops from repeated
+        // SwiftUI updates).
+        guard streams != serverMediaStreams else { return }
+        TJFLog("refreshMediaStreams: \(serverMediaStreams.count) -> \(streams.count)")
+        serverMediaStreams = streams
+        // New streams for the same item: reload overlay tracks once.
+        externalSubsLoaded = false
+        tracksLoaded = false
+        trackLoadAttempts = 0
+        Task { await addExternalSubtitlesIfNeeded() }
     }
 
     // MARK: - Remote subtitle search + download (P6)
@@ -1784,6 +1914,26 @@ final class PlayerViewModel {
         if PipCoordinator.shared.liveVM === self {
             PipCoordinator.shared.liveVM = nil
         }
+    }
+
+    /// Language of the currently selected overlay track (nil = off).
+    /// PiP mirrors THIS language natively — never a different one.
+    var pipSubtitleLanguage: String? {
+        guard let idx = selectedExternalSubIndex, idx < externalSubs.count else { return nil }
+        return externalSubs[idx].track.language
+    }
+
+    /// Switch the subtitle renderer for PiP WITHOUT touching PiP itself.
+    ///
+    /// - active=true (window started): enable the embedded native option
+    ///   matching the overlay selection so the system window shows subs.
+    /// - active=false (window stopped/restored): clear native again — the
+    ///   fullscreen overlay is the single renderer once more.
+    /// No-ops when subs are off or the engine is dead; never invents a
+    /// language when there is no native match (engine stays clear).
+    func applyPiPSubtitleMode(active: Bool) {
+        guard !engineStopped else { return }
+        engine.setPiPSubtitleMode(active: active, language: active ? pipSubtitleLanguage : nil)
     }
     #endif
 

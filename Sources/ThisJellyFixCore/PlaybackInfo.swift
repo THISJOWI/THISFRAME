@@ -72,6 +72,9 @@ public struct MediaStream: Codable, Sendable, Equatable {
     public let displayTitle: String?
     public let isForced: Bool?
     public let isDefault: Bool?
+    /// Jellyfin `IsHearingImpaired` (SDH/CC): dialogue + sound/background
+    /// descriptions. Nil when the server omits it (treated as non-SDH).
+    public let isHearingImpaired: Bool?
     public let width: Int?
     public let height: Int?
     /// Bitrate in bits per second. Jellyfin versions disagree on the key casing
@@ -92,12 +95,47 @@ public struct MediaStream: Codable, Sendable, Equatable {
         case displayTitle = "DisplayTitle"
         case isForced = "IsForced"
         case isDefault = "IsDefault"
+        case isHearingImpaired = "IsHearingImpaired"
         case width = "Width"
         case height = "Height"
         case bitRate = "BitRate"
         case bitRateAlias = "Bitrate"
         case realFrameRate = "RealFrameRate"
         case videoRange = "VideoRange"
+    }
+
+    public init(
+        type: String,
+        language: String? = nil,
+        title: String? = nil,
+        index: Int? = nil,
+        isExternal: Bool? = nil,
+        codec: String? = nil,
+        displayTitle: String? = nil,
+        isForced: Bool? = nil,
+        isDefault: Bool? = nil,
+        isHearingImpaired: Bool? = nil,
+        width: Int? = nil,
+        height: Int? = nil,
+        bitRate: Int64? = nil,
+        realFrameRate: Double? = nil,
+        videoRange: String? = nil
+    ) {
+        self.type = type
+        self.language = language
+        self.title = title
+        self.index = index
+        self.isExternal = isExternal
+        self.codec = codec
+        self.displayTitle = displayTitle
+        self.isForced = isForced
+        self.isDefault = isDefault
+        self.isHearingImpaired = isHearingImpaired
+        self.width = width
+        self.height = height
+        self.bitRate = bitRate
+        self.realFrameRate = realFrameRate
+        self.videoRange = videoRange
     }
 
     public init(from decoder: Decoder) throws {
@@ -111,6 +149,7 @@ public struct MediaStream: Codable, Sendable, Equatable {
         self.displayTitle = try container.decodeIfPresent(String.self, forKey: .displayTitle)
         self.isForced = try container.decodeIfPresent(Bool.self, forKey: .isForced)
         self.isDefault = try container.decodeIfPresent(Bool.self, forKey: .isDefault)
+        self.isHearingImpaired = try container.decodeIfPresent(Bool.self, forKey: .isHearingImpaired)
         self.width = try container.decodeIfPresent(Int.self, forKey: .width)
         self.height = try container.decodeIfPresent(Int.self, forKey: .height)
         self.bitRate =
@@ -131,6 +170,7 @@ public struct MediaStream: Codable, Sendable, Equatable {
         try container.encodeIfPresent(displayTitle, forKey: .displayTitle)
         try container.encodeIfPresent(isForced, forKey: .isForced)
         try container.encodeIfPresent(isDefault, forKey: .isDefault)
+        try container.encodeIfPresent(isHearingImpaired, forKey: .isHearingImpaired)
         try container.encodeIfPresent(width, forKey: .width)
         try container.encodeIfPresent(height, forKey: .height)
         try container.encodeIfPresent(bitRate, forKey: .bitRate)

@@ -578,6 +578,10 @@ struct PlayerView: View {
             // Episode swap: stay mounted and hand the engine the new stream — the
             // player never drops back out to the episode list.
             wireNextEpisode()
+            // A fast double-swap must not stack concurrent prepares: the
+            // older task is cancelled and its async subtitle loads are
+            // generation-guarded inside the view model.
+            episodeSwapTask?.cancel()
             episodeSwapTask = Task {
                 await viewModel.switchToEpisode(
                     url: newURL,
@@ -590,6 +594,17 @@ struct PlayerView: View {
                     mediaStreams: mediaStreams
                 )
             }
+        }
+        .onChange(of: itemId) { _, _ in
+            // `streamURL` and `mediaStreams`/`itemId` update in separate
+            // render passes (DetailView/DirectPlayer set them sequentially):
+            // the streamURL swap above may have run with the PREVIOUS
+            // episode's streams. Re-sync late-arriving props without
+            // touching playback.
+            viewModel.refreshMediaStreams(mediaStreams)
+        }
+        .onChange(of: mediaStreams) { _, _ in
+            viewModel.refreshMediaStreams(mediaStreams)
         }
         .onChange(of: nextEpisode) { _, _ in
             // The credits list can resolve AFTER mount — keep the overlay wired.

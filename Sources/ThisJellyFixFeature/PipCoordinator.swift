@@ -298,6 +298,11 @@ extension PipCoordinator: AVPictureInPictureControllerDelegate {
     ) {
         windowStarted = true
         TJFLog("pip: window started")
+        // Subtitles only: mirror the overlay selection natively so the
+        // system window (AVPlayerLayer only) shows them. PiP start/stop
+        // behavior itself is untouched.
+        floatingVM?.applyPiPSubtitleMode(active: true)
+        liveVM?.applyPiPSubtitleMode(active: true)
     }
 
     func pictureInPictureController(
@@ -354,16 +359,22 @@ extension PipCoordinator: AVPictureInPictureControllerDelegate {
         if restoring {
             restoring = false
             TJFLog("pip: stopped after restore")
+            // Back to fullscreen: the overlay is the single renderer again.
+            floatingVM?.applyPiPSubtitleMode(active: false)
+            liveVM?.applyPiPSubtitleMode(active: false)
             return
         }
         if programmaticStop {
             programmaticStop = false
             TJFLog("pip: stopped programmatically")
+            floatingVM?.applyPiPSubtitleMode(active: false)
+            liveVM?.applyPiPSubtitleMode(active: false)
             return
         }
         if let vm = floatingVM {
             // User closed the FLOATING window → playback ended.
             TJFLog("pip: floating window closed by user")
+            vm.applyPiPSubtitleMode(active: false)
             releaseFloating()
             vm.stopSync(reportStop: true)
             detachLayerFromHost()
@@ -372,6 +383,7 @@ extension PipCoordinator: AVPictureInPictureControllerDelegate {
             // User closed PiP while the fullscreen view is on screen →
             // ended playback, dismiss fullscreen (old live-handler behavior).
             TJFLog("pip: window closed by user (live view)")
+            vm.applyPiPSubtitleMode(active: false)
             vm.stopSync(reportStop: true)
             vm.onPiPClosed?()
         }

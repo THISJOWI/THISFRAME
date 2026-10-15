@@ -271,6 +271,48 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         applySubtitleSelectionNow()
     }
 
+    /// Native legible index best matching `language` (case/region tolerant),
+    /// nil when no embedded option matches. Used ONLY for PiP: the system
+    /// window renders solely the `AVPlayerLayer`, so the SwiftUI overlay
+    /// cannot appear there.
+    public func nativeSubtitleIndex(matching language: String?) -> Int? {
+        guard let language, !language.isEmpty else { return nil }
+        let options = withStateLock { _subtitleOptions }
+        // Reuse the tolerant matcher (es-ES ~ es, spa ~ es, names).
+        for (idx, option) in options.enumerated() {
+            if LanguagePreferences.matches(preferred: language, trackLanguage: Self.languageCode(of: option)) {
+                return idx
+            }
+        }
+        return nil
+    }
+
+    /// Enter/exit PiP subtitle mode WITHOUT touching PiP itself.
+    ///
+    /// - active=true: select the embedded legible option matching `language`
+    ///   so the system window shows subtitles. No match (external-only SRT,
+    ///   bitmap, or subs off) → stay cleared, never guess another language.
+    /// - active=false: restore the overlay invariant (native cleared, the
+    ///   SwiftUI overlay is the single renderer again).
+    /// Single-renderer per surface is preserved: fullscreen keeps the overlay
+    /// while PiP shows the native track; each window renders at most one.
+    public func setPiPSubtitleMode(active: Bool, language: String?) {
+        if active {
+            if let language, !language.isEmpty,
+               let idx = nativeSubtitleIndex(matching: language) {
+                withStateLock { desiredSubtitleIndex = idx }
+                TJFLog("subtitles: PiP mode ON native=\(idx) lang=\(language)")
+            } else {
+                withStateLock { desiredSubtitleIndex = -1 }
+                TJFLog("subtitles: PiP mode ON no native match lang=\(language ?? "off") — staying clear")
+            }
+        } else {
+            withStateLock { desiredSubtitleIndex = -1 }
+            TJFLog("subtitles: PiP mode OFF — overlay resumes")
+        }
+        applySubtitleSelectionNow()
+    }
+
     /// Continuous enforcement of the single-renderer invariant.
     ///
     /// AVPlayer can re-preselect a legible option AFTER our explicit select

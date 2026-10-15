@@ -30,18 +30,30 @@ public struct SubtitleTrack: Identifiable, Sendable, Equatable {
     /// `TrackNaming` from server/engine metadata.
     public let languageName: String?
     public let isExternal: Bool
+    /// Server metadata (overlay tracks only; native options report false).
+    /// Used ONLY to order the automatic pick and to label rows
+    /// ("Forzados"/"SDH") — never to hide a track.
+    public let isForced: Bool
+    public let isHearingImpaired: Bool
+    public let isDefault: Bool
 
     public init(
         id: Int,
         name: String,
         language: String? = nil,
         languageName: String? = nil,
-        isExternal: Bool = false
+        isExternal: Bool = false,
+        isForced: Bool = false,
+        isHearingImpaired: Bool = false,
+        isDefault: Bool = false
     ) {
         self.id = id
         self.name = name
         self.language = language
         self.languageName = languageName
         self.isExternal = isExternal
+        self.isForced = isForced
+        self.isHearingImpaired = isHearingImpaired
+        self.isDefault = isDefault
     }
 }
