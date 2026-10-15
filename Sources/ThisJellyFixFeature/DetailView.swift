@@ -27,6 +27,9 @@ struct DetailView: View {
     @State private var currentItemId: String?
     @State private var currentPlaySessionId: String?
     @State private var currentMediaStreams: [MediaStream] = []
+    /// Audio SERVIDO por el plan (`MediaStream.index` pedido o default).
+    /// Viaja al PlayerView junto a `mediaStreams` para el mapeo engine↔servidor.
+    @State private var currentAudioServerIndex: Int?
     @State private var isPreparingPlayback = false
     @State private var playbackError: String?
     @State private var nextEpisode: JellyfinEpisode?
@@ -139,6 +142,7 @@ struct DetailView: View {
                     mediaType: playingMediaType,
                     playSessionId: currentPlaySessionId,
                     mediaStreams: currentMediaStreams,
+                    audioServerIndex: currentAudioServerIndex,
                     nextEpisode: nextEpisode,
                     onPlayNextEpisode: { episode in
                         Task { await playNextEpisode(episode) }
@@ -176,6 +180,7 @@ struct DetailView: View {
                         mediaType: playingMediaType,
                         playSessionId: currentPlaySessionId,
                         mediaStreams: currentMediaStreams,
+                        audioServerIndex: currentAudioServerIndex,
                         nextEpisode: nextEpisode,
                         onPlayNextEpisode: { episode in
                             Task { await playNextEpisode(episode) }
@@ -695,28 +700,24 @@ struct DetailView: View {
         defer { isPreparingPlayback = false }
 
         do {
-            let client = JellyfinPlaybackClient()
-            let infoStartedAt = Date()
-            // The persisted picker value applies from the FIRST frame — it
-            // used to be ignored here and playback always opened in Auto.
+            // Plan con pre-resolución de índices: 1 roundtrip si el default
+            // del servidor ya coincide, 2 si hay que pedir audio/sub.
             let quality = StreamQuality.persisted
-            let info = try await client.fetchPlaybackInfo(
+            let plan = try await resolvePlaybackPlan(
                 userId: userId,
                 serverURL: serverURL,
                 token: token,
                 itemId: itemId,
-                deviceProfile: .avPlayer.capped(to: quality.maxBitrate),
-                maxStreamingBitrate: quality.maxBitrate
+                quality: quality
             )
-            TJFLog("playbackInfo: \(Int(Date().timeIntervalSince(infoStartedAt) * 1000)) ms item=\(itemId) quality=\(quality.label)")
+            TJFLog("playbackInfo: item=\(itemId) quality=\(quality.label)")
+            let source = plan.source
 
-            guard let source = info.mediaSources.first else {
-                failPlayback("No hay fuente de reproducción disponible.")
-                return
-            }
-
-            currentPlaySessionId = info.playSessionId
+            currentPlaySessionId = plan.playSessionId
             currentMediaStreams = source.mediaStreams
+            // Audio SERVIDO (pedido o default): el picker lo usa para
+            // mapear engine↔servidor sin adivinar por idioma.
+            currentAudioServerIndex = plan.audioServerIndex
 
             // AVPlayer ladder (direct → remux → HLS) + relative paths + ApiKey.
             let url = StreamURLResolver.playbackURL(
@@ -739,6 +740,10 @@ struct DetailView: View {
             streamURL = finalURL
             streamStartPosition = startPosition
             showPlayer = true
+        } catch let libraryError as LibraryError where libraryError == .invalidResponse {
+            // El plan no trajo fuente (equivale al antiguo guard): mensaje
+            // específico en vez del genérico del decoder.
+            failPlayback("No hay fuente de reproducción disponible.")
         } catch {
             // A failed next-episode swap must return to the detail screen where
             // the error is visible, instead of stranding a stopped player.

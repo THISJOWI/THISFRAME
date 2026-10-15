@@ -127,6 +127,11 @@ final class PlayerViewModel {
     // MARK: - Server media streams (external subtitles)
     private var serverMediaStreams: [MediaStream] = []
     private var externalSubsLoaded = false
+    /// Índice SERVIDOR (`MediaStream.index`) del audio que trae el stream
+    /// actual: el pedido vía `AudioStreamIndex` o el default del servidor.
+    /// Sin esto el picker solo vería el audio servido (remux/transcode traen
+    /// uno solo) y el mapeo engine↔servidor sería una adivinanza por idioma.
+    private var servedAudioServerIndex: Int?
 
     // MARK: - Favorite (P7 in-player toggle)
     /// Server is the source of truth (UserData): loaded on mount, optimistic
@@ -506,6 +511,17 @@ final class PlayerViewModel {
         TJFLog("configureMediaStreams total=\(streams.count) extSubs=\(streams.filter { $0.type == "Subtitle" && $0.isExternal == true }.count)")
     }
 
+    /// Audio SERVIDOR que trae el stream actual (`MediaStream.index` pedido
+    /// o default). Registra, sin tocar playback: el stream YA es ese; solo
+    /// corrige el mapeo engine↔servidor del picker (llega en render aparte).
+    func noteServedAudioServerIndex(_ index: Int?) {
+        guard servedAudioServerIndex != index else { return }
+        servedAudioServerIndex = index
+        // Re-mapear con el dato bueno (la unión anterior pudo adivinar).
+        tracksLoaded = false
+        trackLoadAttempts = 0
+    }
+
     // MARK: - Playback Control
 
     /// Stream URL of the current playback — the PiP context carries it so the
@@ -611,7 +627,8 @@ final class PlayerViewModel {
         token: String?,
         userId: String?,
         playSessionId: String?,
-        mediaStreams: [MediaStream]
+        mediaStreams: [MediaStream],
+        audioServerIndex: Int? = nil
     ) async {
         isSwitchingEpisode = true
         defer { isSwitchingEpisode = false }
@@ -628,6 +645,7 @@ final class PlayerViewModel {
             reportingConfigured = false
         }
         configureMediaStreams(mediaStreams)
+        servedAudioServerIndex = audioServerIndex
 
         engine.stop()
         // Dismissed mid-swap: the task is cancelled in onDisappear, and a
@@ -709,56 +727,36 @@ final class PlayerViewModel {
         // Warn instead of pretending the receiver follows along.
         let wasExternallyActive = engine.player.isExternalPlaybackActive
 
-        do {
-            let info = try await JellyfinPlaybackClient().fetchPlaybackInfo(
-                userId: userId,
-                serverURL: serverURL,
-                token: token,
-                itemId: itemId,
-                deviceProfile: .avPlayer.capped(to: quality.maxBitrate),
-                maxStreamingBitrate: quality.maxBitrate
-            )
-            guard let source = info.mediaSources.first else {
-                TJFLog("switchQuality: no media source for \(quality.label)")
-                return
-            }
-            guard let url = StreamURLResolver.playbackURL(
-                source: source,
-                serverURL: serverURL,
-                itemId: itemId,
-                token: token
-            ) else {
-                TJFLog("switchQuality: unresolved stream URL for \(quality.label)")
-                return
-            }
-            // Verifiable delivery (not just the picker label): direct file vs
-            // server transcode ladder.
-            let delivery = source.transcodingUrl != nil ? "transcode" : "direct"
-            TJFLog("switchQuality: \(quality.label) cap=\(quality.maxBitrate.map(String.init) ?? "nil") delivery=\(delivery) url=\(url.absoluteString.prefix(120))")
+        // El cambio de calidad NO debe perder el audio/sub elegidos: se
+        // re-piden con los mismos índices servidor del swap actual.
+        guard let swapped = await fetchPlaybackSwap(
+            audioServerIndex: servedAudioServerIndex,
+            subtitleServerIndex: currentSubtitleServerIndex ?? -1
+        ) else { return }
+        let delivery = swapped.url.absoluteString.contains(".m3u8") ? "transcode" : "direct"
+        TJFLog("switchQuality: \(quality.label) cap=\(quality.maxBitrate.map(String.init) ?? "nil") delivery=\(delivery)")
 
-            await switchToEpisode(
-                url: url,
-                startPosition: position,
-                itemId: itemId,
-                serverURL: serverURL,
-                token: token,
-                userId: userId,
-                playSessionId: info.playSessionId,
-                mediaStreams: source.mediaStreams
-            )
-            // switchToEpisode always plays: restore what the user had.
-            if rate != 1.0 { await setPlaybackRate(rate) }
-            if !wasPlaying {
-                engine.pause()
-                isPlaying = false
-                userPaused = true
-            }
-            if wasExternallyActive {
-                airplayMessage = "AirPlay detenido por el cambio de calidad — vuelve a seleccionarlo"
-                TJFLog("airplay: quality swap ended external session — user must re-select")
-            }
-        } catch {
-            TJFLog("switchQuality failed: \(error)")
+        await switchToEpisode(
+            url: swapped.url,
+            startPosition: position,
+            itemId: itemId,
+            serverURL: serverURL,
+            token: token,
+            userId: userId,
+            playSessionId: swapped.playSessionId,
+            mediaStreams: swapped.mediaStreams,
+            audioServerIndex: servedAudioServerIndex
+        )
+        // switchToEpisode always plays: restore what the user had.
+        if rate != 1.0 { await setPlaybackRate(rate) }
+        if !wasPlaying {
+            engine.pause()
+            isPlaying = false
+            userPaused = true
+        }
+        if wasExternallyActive {
+            airplayMessage = "AirPlay detenido por el cambio de calidad — vuelve a seleccionarlo"
+            TJFLog("airplay: quality swap ended external session — user must re-select")
         }
     }
 
@@ -921,8 +919,110 @@ final class PlayerViewModel {
 
     func selectAudioTrack(_ track: AudioTrack?) async {
         guard let track else { return }
-        await engine.selectAudioTrack(index: track.id)
-        selectedAudioTrackIndex = track.id
+        // Zombie guard (igual que subtítulos): sin engine vivo no se toca nada.
+        guard !engineStopped else { return }
+        if let engineIdx = track.engineIndex {
+            // El stream servido trae este audio: cambio instantáneo.
+            await engine.selectAudioTrack(index: engineIdx)
+            selectedAudioTrackIndex = track.id
+            return
+        }
+        guard let serverIdx = track.serverIndex else { return }
+        // El servido no lo trae (remux/transcode mono-audio): pedirlo al
+        // servidor y re-montar en caliente preservando posición/estado.
+        await switchAudio(toServerIndex: serverIdx)
+    }
+
+    /// Índice SERVIDOR del subtítulo overlay seleccionado (para preservarlo
+    /// en re-fetches), o nil si están desactivados.
+    private var currentSubtitleServerIndex: Int? {
+        guard let idx = selectedExternalSubIndex, idx < externalSubServerIndices.count else { return nil }
+        return externalSubServerIndices[idx]
+    }
+
+    /// Cambia a un audio solo-declarado-por-el-servidor: re-pide PlaybackInfo
+    /// con `AudioStreamIndex` y re-monta en caliente (mismo patrón que
+    /// `switchQuality`: posición, play/pausa y rate se preservan).
+    func switchAudio(toServerIndex serverIndex: Int) async {
+        guard !engineStopped, !Task.isCancelled,
+              let userId, let serverURL, let token, let itemId else { return }
+        guard serverIndex != servedAudioServerIndex else {
+            // Ya servido (carrera picker↔re-mapeo): solo marcar la fila.
+            if let row = availableAudioTracks.first(where: { $0.serverIndex == serverIndex }) {
+                selectedAudioTrackIndex = row.id
+            }
+            return
+        }
+        let position = currentTime
+        let wasPlaying = isPlaying
+        let rate = playbackRate
+        TJFLog("switchAudio: serverIndex=\(serverIndex) pos=\(String(format: "%.1f", position))")
+        guard let swapped = await fetchPlaybackSwap(
+            audioServerIndex: serverIndex,
+            subtitleServerIndex: currentSubtitleServerIndex ?? -1
+        ) else { return }
+        await switchToEpisode(
+            url: swapped.url,
+            startPosition: position,
+            itemId: itemId,
+            serverURL: serverURL,
+            token: token,
+            userId: userId,
+            playSessionId: swapped.playSessionId,
+            mediaStreams: swapped.mediaStreams,
+            audioServerIndex: serverIndex
+        )
+        if rate != 1.0 { await setPlaybackRate(rate) }
+        if !wasPlaying {
+            engine.pause()
+            isPlaying = false
+            userPaused = true
+        }
+        if let row = availableAudioTracks.first(where: { $0.serverIndex == serverIndex }) {
+            selectedAudioTrackIndex = row.id
+        }
+    }
+
+    /// Re-pide PlaybackInfo preservando la selección actual de audio/sub y
+    /// resuelve la URL reproducible. Comparte la maquinaria de `switchQuality`
+    /// y `switchAudio` para no duplicar el ladder de entrega.
+    private func fetchPlaybackSwap(
+        audioServerIndex: Int?,
+        subtitleServerIndex: Int?
+    ) async -> (url: URL, playSessionId: String?, mediaStreams: [MediaStream])? {
+        guard let userId, let serverURL, let token, let itemId else { return nil }
+        do {
+            let quality = selectedQuality
+            let info = try await JellyfinPlaybackClient().fetchPlaybackInfo(
+                userId: userId,
+                serverURL: serverURL,
+                token: token,
+                itemId: itemId,
+                deviceProfile: .avPlayer.capped(to: quality.maxBitrate),
+                maxStreamingBitrate: quality.maxBitrate,
+                subtitleStreamIndex: subtitleServerIndex,
+                audioStreamIndex: audioServerIndex
+            )
+            guard let source = info.mediaSources.first else {
+                TJFLog("fetchPlaybackSwap: no media source")
+                return nil
+            }
+            guard let url = StreamURLResolver.playbackURL(
+                source: source,
+                serverURL: serverURL,
+                itemId: itemId,
+                token: token
+            ) else {
+                TJFLog("fetchPlaybackSwap: unresolved stream URL")
+                return nil
+            }
+            let delivery = source.transcodingUrl != nil ? "transcode" : "direct"
+            TJFLog("fetchPlaybackSwap: delivery=\(delivery) audio=\(audioServerIndex.map(String.init) ?? "-") sub=\(subtitleServerIndex.map(String.init) ?? "-")")
+            return (url, info.playSessionId, source.mediaStreams)
+        } catch {
+            TJFLog("fetchPlaybackSwap failed: \(error)")
+            return nil
+        }
     }
 
     func selectSubtitleTrack(_ track: SubtitleTrack?) async {
@@ -1254,7 +1354,19 @@ final class PlayerViewModel {
     // MARK: - Private
 
     private func loadTracks() async {
-        availableAudioTracks = displayAudio(await engine.availableAudioTracks)
+        let union = unionAudioTracks(engineTracks: await engine.availableAudioTracks)
+        // Reconstruye mientras haya novedad (el engine aterriza tarde, el
+        // servido llega en render aparte): congela solo cuando estabiliza.
+        if union != availableAudioTracks {
+            availableAudioTracks = union
+            // La selección visual sigue al audio servido aunque la lista
+            // llegara después (o se re-mapeara con el índice tardío).
+            if selectedAudioTrackIndex == nil,
+               let served = servedAudioServerIndex,
+               let row = union.first(where: { $0.serverIndex == served }) {
+                selectedAudioTrackIndex = row.id
+            }
+        }
 
         TJFLog("loadTracks audio=\(availableAudioTracks.count) subs=\(availableSubtitleTracks.count) ext=\(externalSubs.count) attempt=\(trackLoadAttempts)")
 
@@ -1279,28 +1391,83 @@ final class PlayerViewModel {
 
     // MARK: - Track display names
 
-    /// Enrich engine-reported audio tracks with server metadata so the
-    /// picker shows "Inglés" instead of "Track 1". Selection ids and the
-    /// raw ISO `language` (preference matching) stay untouched.
-    private func displayAudio(_ tracks: [AudioTrack]) -> [AudioTrack] {
-        let matched = pairServerStreams(to: tracks, server: serverStreams(type: "Audio")) { $0.language }
+    /// Unión engine + servidor para el picker de audio.
+    ///
+    /// Un remux/transcode trae UN solo audio (el servido): exponer solo el
+    /// engine escondería el resto ("a veces faltan pistas"). Cada fila
+    /// servidor lleva su `serverIndex`; la fila servida además su
+    /// `engineIndex` para selección directa. Sin metadata servidor, expone el
+    /// engine tal cual (comportamiento anterior).
+    /// Internal para tests (el orden/mapeo de la unión es contrato).
+    func unionAudioTracks(engineTracks: [AudioTrack]) -> [AudioTrack] {
+        let server = serverStreams(type: "Audio")
+        guard !server.isEmpty else {
+            return engineTracks.enumerated().map { i, track in
+                let display = TrackNaming.display(
+                    rawName: track.name,
+                    languageCode: track.language,
+                    serverTitle: nil,
+                    index: i,
+                    fallbackPrefix: "Audio"
+                )
+                return AudioTrack(
+                    id: i,
+                    name: display.title,
+                    language: track.language,
+                    languageName: display.caption,
+                    engineIndex: track.engineIndex ?? track.id
+                )
+            }
+        }
 
-        return tracks.enumerated().map { i, track in
-            let stream = matched[i]
+        // engine → posición en `server`.
+        var engineToServer: [Int: Int] = [:]
+        if engineTracks.count == server.count {
+            for i in engineTracks.indices { engineToServer[i] = i }
+        } else if let served = servedAudioServerIndex,
+                  let pos = server.firstIndex(where: { $0.index == served }),
+                  let first = engineTracks.indices.first {
+            // Caso típico remux/transcode: la única opción engine ES la servida.
+            engineToServer[first] = pos
+        }
+        // Opciones engine extra sin contraparte: selección nativa directa.
+        var out: [AudioTrack] = []
+        for (pos, stream) in server.enumerated() {
+            let engIdx = engineToServer.first(where: { $0.value == pos })?.key
+            let engTrack = engIdx.flatMap { engineTracks.indices.contains($0) ? engineTracks[$0] : nil }
             let display = TrackNaming.display(
-                rawName: track.name,
-                languageCode: stream?.language ?? track.language,
-                serverTitle: stream?.displayTitle ?? stream?.title,
-                index: i,
+                rawName: engTrack?.name,
+                languageCode: stream.language ?? engTrack?.language,
+                serverTitle: stream.displayTitle ?? stream.title,
+                index: pos,
                 fallbackPrefix: "Audio"
             )
-            return AudioTrack(
-                id: track.id,
+            out.append(AudioTrack(
+                id: out.count,
                 name: display.title,
-                language: track.language ?? stream?.language,
-                languageName: display.caption
-            )
+                language: stream.language ?? engTrack?.language,
+                languageName: display.caption,
+                serverIndex: stream.index,
+                engineIndex: engIdx.flatMap { engineTracks.indices.contains($0) ? (engineTracks[$0].engineIndex ?? $0) : nil }
+            ))
         }
+        for (eIdx, track) in engineTracks.enumerated() where engineToServer[eIdx] == nil {
+            let display = TrackNaming.display(
+                rawName: track.name,
+                languageCode: track.language,
+                serverTitle: nil,
+                index: out.count,
+                fallbackPrefix: "Audio"
+            )
+            out.append(AudioTrack(
+                id: out.count,
+                name: display.title,
+                language: track.language,
+                languageName: display.caption,
+                engineIndex: track.engineIndex ?? eIdx
+            ))
+        }
+        return out
     }
 
     /// All subtitles (both embedded and external) are served by the overlay list with 0-based IDs.
@@ -1315,46 +1482,6 @@ final class PlayerViewModel {
         let embedded = streams.filter { $0.isExternal != true }.sorted { ($0.index ?? 0) < ($1.index ?? 0) }
         let external = streams.filter { $0.isExternal == true }.sorted { ($0.index ?? 0) < ($1.index ?? 0) }
         return embedded + external
-    }
-
-    /// Pair each engine track with its server stream: exact position when the
-    /// counts agree, otherwise by language first and position for the rest.
-    /// Result may contain nils (display-only fallback → "Subtítulo N"/"Audio N").
-    private func pairServerStreams<T>(
-        to tracks: [T],
-        server: [MediaStream],
-        language: (T) -> String?
-    ) -> [MediaStream?] {
-        if server.count == tracks.count { return server }
-
-        var result = [MediaStream?](repeating: nil, count: tracks.count)
-        var used = Set<Int>()
-
-        // Language match first (engine and server usually agree on ISO codes).
-        var byLanguage: [String: [Int]] = [:]
-        for (j, stream) in server.enumerated() {
-            if let code = stream.language?.lowercased() {
-                byLanguage[code, default: []].append(j)
-            }
-        }
-        for (i, track) in tracks.enumerated() {
-            guard let code = language(track)?.lowercased(),
-                  let candidates = byLanguage[code],
-                  let j = candidates.first(where: { !used.contains($0) }) else { continue }
-            result[i] = server[j]
-            used.insert(j)
-        }
-
-        // Leftovers by position — helps while external files are still
-        // loading (counts transiently differ).
-        let free = server.indices.filter { !used.contains($0) }
-        var next = free.makeIterator()
-        for i in result.indices where result[i] == nil {
-            guard let j = next.next() else { break }
-            result[i] = server[j]
-            used.insert(j)
-        }
-        return result
     }
 
     /// Apply language preferences once per item, honoring a manual choice first.
@@ -1375,9 +1502,20 @@ final class PlayerViewModel {
                preferred: preferredAudio,
                language: { $0.language }
            ) {
-            TJFLog("langPref audio -> id=\(audio.id) lang=\(audio.language ?? "-")")
-            await engine.selectAudioTrack(index: audio.id)
-            selectedAudioTrackIndex = audio.id
+            if let engineIdx = audio.engineIndex {
+                TJFLog("langPref audio -> id=\(audio.id) lang=\(audio.language ?? "-")")
+                await engine.selectAudioTrack(index: engineIdx)
+                selectedAudioTrackIndex = audio.id
+            } else if audio.serverIndex == servedAudioServerIndex {
+                // Fila solo-servidor que YA suena (remux/transcode con el
+                // preferido pre-resuelto): solo marcar el checkmark.
+                selectedAudioTrackIndex = audio.id
+            } else {
+                // Fila solo-servidor que NO suena: no marcar (mentiría el
+                // checkmark) ni auto re-request (la pre-resolución del plan
+                // ya eligió al pedir el stream). Cambio manual vía picker.
+                TJFLog("langPref audio: server-only non-served id=\(audio.id) — leaving served stream")
+            }
         }
 
         // Explicit manual off survives episode swaps — never auto-enable.
@@ -1449,38 +1587,65 @@ final class PlayerViewModel {
             TJFLog("extSubs: server declares none")
             return
         }
-        for (i, stream) in candidates.enumerated() {
-            // Episode swapped mid-fetch: drop stale results for the old item.
-            guard gen == subtitleGeneration, !engineStopped else {
-                TJFLog("extSubs: stale load dropped (episode changed)")
-                return
+        // Descarga CONCURRENTE (antes secuencial: N pistas × RTT dejaba el
+        // picker vacío durante segundos tras cada cambio de episodio).
+        // Cada pista lleva timeout propio; el padre publica una sola vez en
+        // orden de servidor para que los ids del overlay sean estables.
+        let fetched: [(order: Int, stream: MediaStream, cues: [SubtitleCue])] = await withTaskGroup(
+            of: (Int, MediaStream, [SubtitleCue])?.self
+        ) { group in
+            for (i, stream) in candidates.enumerated() {
+                guard let idx = stream.index else { continue }
+                group.addTask {
+                    // Siempre SRT: el servidor convierte ASS/SSA/VTT al vuelo
+                    // y SRTParser solo habla SRT (ahora también limpia
+                    // restos de formato ASS).
+                    let urlString = "\(serverURL.absoluteString)/Videos/\(itemId)/\(itemId)/Subtitles/\(idx)/Stream.srt?api_key=\(token)"
+                    guard let url = URL(string: urlString) else { return nil }
+                    var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
+                    request.setValue("MediaBrowser Token=\"\(token)\"", forHTTPHeaderField: "Authorization")
+                    do {
+                        let (data, response) = try await URLSession.shared.data(for: request)
+                        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                            TJFLog("extSubs idx=\(idx) HTTP \(http.statusCode)")
+                            return nil
+                        }
+                        guard let text = String(data: data, encoding: .utf8)
+                            ?? String(data: data, encoding: .isoLatin1)
+                        else { return nil }
+                        let cues = SRTParser.parse(text)
+                        guard !cues.isEmpty else {
+                            TJFLog("extSubs idx=\(idx) parsed 0 cues — skipped")
+                            return nil
+                        }
+                        TJFLog("extSubs idx=\(idx) cues=\(cues.count)")
+                        return (i, stream, cues)
+                    } catch {
+                        TJFLog("extSubs idx=\(idx) failed: \(error.localizedDescription)")
+                        return nil
+                    }
+                }
             }
-            guard let idx = stream.index else { continue }
-            // Always ask for SRT: the server converts ASS/SSA/VTT on the fly
-            // and SRTParser only speaks SRT.
-            let urlString = "\(serverURL.absoluteString)/Videos/\(itemId)/\(itemId)/Subtitles/\(idx)/Stream.srt?api_key=\(token)"
-            guard let url = URL(string: urlString) else { continue }
-            TJFLog("extSubs load idx=\(idx) codec=\(stream.codec ?? "-") lang=\(stream.language ?? "-") title=\(stream.title ?? "-")")
-            do {
-                let (data, response) = try await URLSession.shared.data(from: url)
-                if let http = response as? HTTPURLResponse, http.statusCode != 200 {
-                    TJFLog("extSubs idx=\(idx) HTTP \(http.statusCode)")
-                    continue
-                }
-                guard let text = String(data: data, encoding: .utf8)
-                    ?? String(data: data, encoding: .isoLatin1)
-                else { continue }
-                let cues = SRTParser.parse(text)
-                guard !cues.isEmpty else {
-                    TJFLog("extSubs idx=\(idx) parsed 0 cues — skipped")
-                    continue
-                }
-                let display = TrackNaming.display(
-                    rawName: stream.displayTitle ?? stream.title ?? "Subtítulo \(i + 1)",
-                    languageCode: stream.language,
-                    serverTitle: stream.displayTitle ?? stream.title,
-                    index: i
-                )
+            var collected: [(Int, MediaStream, [SubtitleCue])] = []
+            for await result in group {
+                if let result { collected.append(result) }
+            }
+            return collected.map { (order: $0.0, stream: $0.1, cues: $0.2) }
+        }
+        // Swap durante la descarga: el nuevo item tiene listas propias —
+        // nunca publicar pistas del anterior.
+        guard gen == subtitleGeneration, !engineStopped else {
+            TJFLog("extSubs: stale results dropped after fetch (episode changed)")
+            return
+        }
+        for entry in fetched.sorted(by: { $0.order < $1.order }) {
+            let (i, stream, cues) = (entry.order, entry.stream, entry.cues)
+            let display = TrackNaming.display(
+                rawName: stream.displayTitle ?? stream.title ?? "Subtítulo \(i + 1)",
+                languageCode: stream.language,
+                serverTitle: stream.displayTitle ?? stream.title,
+                index: i
+            )
                 // Surface server flags in the caption so same-language tracks
                 // are distinguishable (full vs forced vs SDH). Title stays
                 // untouched; flags never hide a track.
@@ -1499,19 +1664,9 @@ final class PlayerViewModel {
                     isDefault: stream.isDefault == true
                 )
                 externalSubs.append((track: track, cues: cues))
-                externalSubServerIndices.append(idx)
-                TJFLog("extSubs idx=\(idx) cues=\(cues.count)")
-            } catch {
-                TJFLog("extSubs idx=\(idx) failed: \(error)")
-            }
+                externalSubServerIndices.append(stream.index)
         }
         if !externalSubs.isEmpty {
-            // A swap landed while we fetched: the new item owns fresh lists —
-            // never publish the old item's tracks into it.
-            guard gen == subtitleGeneration, !engineStopped else {
-                TJFLog("extSubs: stale results dropped after fetch (episode changed)")
-                return
-            }
             availableSubtitleTracks = displayExternalSubs()
             await applyLanguagePreferences()
             // PiP may already be active for the new item (auto-start on
@@ -1594,10 +1749,13 @@ final class PlayerViewModel {
             )
             // The sidecar is new server-side: refresh ONLY the stream list
             // (keep the current URL + PlaySessionId — no re-prepare, no stop).
+            // Se preservan los índices actuales para no alterar la sesión.
             let info = try await JellyfinPlaybackClient().fetchPlaybackInfo(
                 userId: userId, serverURL: serverURL, token: token, itemId: itemId,
                 deviceProfile: .avPlayer.capped(to: selectedQuality.maxBitrate),
-                maxStreamingBitrate: selectedQuality.maxBitrate
+                maxStreamingBitrate: selectedQuality.maxBitrate,
+                subtitleStreamIndex: currentSubtitleServerIndex ?? -1,
+                audioStreamIndex: servedAudioServerIndex
             )
             guard let source = info.mediaSources.first else {
                 remoteSubtitleError = "El servidor no devolvió fuentes tras la descarga."

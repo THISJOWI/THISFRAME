@@ -60,6 +60,11 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     /// legible option AFTER our first explicit deselect — that race is what
     /// drew native subs alongside the external-SRT overlay.
     private var desiredSubtitleIndex: Int?
+    /// Overlay language to mirror natively while PiP is active. Persisted
+    /// (not folded into `desiredSubtitleIndex`) so a PiP entry that lands
+    /// BEFORE the legible group loads can still resolve when the groups
+    /// arrive — without this the language was lost and PiP stayed mute.
+    private var pipSubtitleLanguage: String?
     /// Bumped on every `prepare` — async track loads from a previous item
     /// must not populate the new item's lists.
     private var generation = 0
@@ -121,7 +126,12 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         clearItemObservations()
         // Native legible subtitles are disabled (-1) so AVPlayer never renders
         // duplicate background-less subtitles alongside the black-box overlay.
-        withStateLock { desiredSubtitleIndex = -1 }
+        // A pending PiP language belongs to the previous item: the VM
+        // re-asserts PiP mode for the new item once its own selection lands.
+        withStateLock {
+            desiredSubtitleIndex = -1
+            pipSubtitleLanguage = nil
+        }
         notify(.loading)
 
         // AirPlay diagnostics: what container is being offered to the system —
@@ -195,6 +205,7 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         _videoSize = .zero
         _duration = 0
         desiredSubtitleIndex = nil
+        pipSubtitleLanguage = nil
         stateLock.unlock()
         notify(.idle)
     }
@@ -240,7 +251,8 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
                 id: idx,
                 name: option.displayName,
                 language: Self.languageCode(of: option),
-                languageName: nil
+                languageName: nil,
+                engineIndex: idx
             )
         }
     }
@@ -298,16 +310,20 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     /// while PiP shows the native track; each window renders at most one.
     public func setPiPSubtitleMode(active: Bool, language: String?) {
         if active {
+            withStateLock { pipSubtitleLanguage = language }
             if let language, !language.isEmpty,
                let idx = nativeSubtitleIndex(matching: language) {
                 withStateLock { desiredSubtitleIndex = idx }
                 TJFLog("subtitles: PiP mode ON native=\(idx) lang=\(language)")
             } else {
                 withStateLock { desiredSubtitleIndex = -1 }
-                TJFLog("subtitles: PiP mode ON no native match lang=\(language ?? "off") — staying clear")
+                TJFLog("subtitles: PiP mode ON no native match yet lang=\(language ?? "off") — retrying when groups land")
             }
         } else {
-            withStateLock { desiredSubtitleIndex = -1 }
+            withStateLock {
+                pipSubtitleLanguage = nil
+                desiredSubtitleIndex = -1
+            }
             TJFLog("subtitles: PiP mode OFF — overlay resumes")
         }
         applySubtitleSelectionNow()
@@ -639,6 +655,14 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
             TJFLog("tracks loaded audio=\(counts.0) subs=\(counts.1)")
             // Groups just landed: apply (or force-clear) the legible choice
             // against THIS item, mirroring the re-assert done at .ready.
+            // A pending PiP language that found no match at PiP-start time
+            // (groups still loading) resolves here — the deferred retry.
+            if let pipLanguage = withStateLock({ pipSubtitleLanguage }),
+               !pipLanguage.isEmpty,
+               let idx = nativeSubtitleIndex(matching: pipLanguage) {
+                withStateLock { desiredSubtitleIndex = idx }
+                TJFLog("subtitles: PiP deferred match native=\(idx) lang=\(pipLanguage)")
+            }
             applySubtitleSelectionNow()
         } catch {
             TJFLog("tracks load failed: \(error)")

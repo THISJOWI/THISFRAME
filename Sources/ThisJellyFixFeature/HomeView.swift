@@ -272,14 +272,7 @@ struct HomeView: View {
                         .font(.largeTitle.bold())
                     Spacer()
 
-                    HomeActionPill(
-                        userName: userName,
-                        serverURL: serverURL,
-                        token: token,
-                        userId: userId,
-                        onLogout: onLogout,
-                        discovery: discovery
-                    )
+                    HomeActionPill(discovery: discovery)
                 }
                 .padding(.horizontal, MareaTheme.Spacing.xl)
 

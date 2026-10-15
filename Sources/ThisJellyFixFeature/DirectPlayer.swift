@@ -21,6 +21,8 @@ struct DirectPlayer: View {
     @State private var streamURL: URL?
     @State private var playSessionId: String?
     @State private var mediaStreams: [MediaStream] = []
+    /// Audio SERVIDO por el plan (pedido o default del servidor).
+    @State private var audioServerIndex: Int?
     @State private var errorMessage: String?
     @State private var attempt = 0
     @State private var nextEpisode: JellyfinEpisode?
@@ -61,6 +63,7 @@ struct DirectPlayer: View {
                     mediaType: item.type,
                     playSessionId: playSessionId,
                     mediaStreams: mediaStreams,
+                    audioServerIndex: audioServerIndex,
                     nextEpisode: nextEpisode,
                     onPlayNextEpisode: { episode in
                         Task { await play(episode) }
@@ -107,25 +110,20 @@ struct DirectPlayer: View {
         errorMessage = nil
 
         do {
-            let client = JellyfinPlaybackClient()
             // Same persisted cap as DetailView: opening here must not reset to Auto.
             let quality = StreamQuality.persisted
-            let info = try await client.fetchPlaybackInfo(
+            let plan = try await resolvePlaybackPlan(
                 userId: userId,
                 serverURL: serverURL,
                 token: token,
                 itemId: currentItemId,
-                deviceProfile: .avPlayer.capped(to: quality.maxBitrate),
-                maxStreamingBitrate: quality.maxBitrate
+                quality: quality
             )
+            let source = plan.source
 
-            guard let source = info.mediaSources.first else {
-                failPlayback("No hay fuente de reproducción disponible.")
-                return
-            }
-
-            playSessionId = info.playSessionId
+            playSessionId = plan.playSessionId
             mediaStreams = source.mediaStreams
+            audioServerIndex = plan.audioServerIndex
 
             // AVPlayer ladder (direct → remux → HLS) + relative paths + ApiKey.
             let url = StreamURLResolver.playbackURL(
@@ -146,6 +144,8 @@ struct DirectPlayer: View {
             #endif
 
             streamURL = finalURL
+        } catch let libraryError as LibraryError where libraryError == .invalidResponse {
+            failPlayback("No hay fuente de reproducción disponible.")
         } catch {
             // A failed swap must surface the error screen instead of leaving a
             // stopped player up with no way forward.

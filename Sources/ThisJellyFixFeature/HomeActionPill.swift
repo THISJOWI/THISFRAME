@@ -4,16 +4,12 @@ import ThisJellyFixCore
 import ThisJellyFixCast
 #endif
 
-/// Home action pill (P8): profile access + gear settings + transmit entry
-/// (+ downloads when a download service exists). Every destination is reused
-/// — no new flows, no Cast re-implementation: the transmit button only opens
-/// the existing device picker.
+/// Home action pill (P8): gear settings + transmit entry (+ downloads when
+/// a download service exists). Every destination is reused — no new flows,
+/// no Cast re-implementation: the transmit button only opens the existing
+/// device picker. Profile lives in its own tab, so the pill carries no
+/// profile button.
 struct HomeActionPill: View {
-    let userName: String
-    let serverURL: URL
-    let token: String
-    let userId: String
-    let onLogout: () -> Void
     var discovery: DiscoveryModel?
 
     @State private var showCastPicker = false
@@ -23,20 +19,6 @@ struct HomeActionPill: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            NavigationLink(
-                destination: ProfileView(
-                    userName: userName,
-                    onLogout: onLogout,
-                    serverURL: serverURL,
-                    token: token,
-                    userId: userId
-                )
-            ) {
-                Image(systemName: "person.fill")
-                    .pillIcon()
-            }
-            .accessibilityLabel("Perfil")
-
             NavigationLink(destination: SettingsView()) {
                 Image(systemName: "gearshape.fill")
                     .pillIcon()
@@ -77,7 +59,19 @@ struct HomeActionPill: View {
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
-        .background(.white.opacity(0.08), in: Capsule())
+        .pillGlassBackground()
+    }
+}
+
+/// Liquid Glass (OS 26+) con fallback translúcido en versiones anteriores.
+private extension View {
+    @ViewBuilder
+    func pillGlassBackground() -> some View {
+        if #available(iOS 26, macOS 26, tvOS 26, visionOS 26, *) {
+            self.glassEffect(.regular.interactive(), in: Capsule())
+        } else {
+            self.background(.white.opacity(0.08), in: Capsule())
+        }
     }
 }
 

@@ -54,7 +54,48 @@ public enum SRTParser {
         let textLines = lines[(timingIndex + 1)...]
             .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
         guard !textLines.isEmpty else { return nil }
-        return SubtitleCue(start: start, end: end, text: textLines.joined(separator: "\n"))
+        let text = sanitize(textLines.joined(separator: "\n"))
+        guard !text.isEmpty else { return nil }
+        return SubtitleCue(start: start, end: end, text: text)
+    }
+
+    /// Limpia restos de formato ASS/SSA que sobreviven a la conversión a SRT
+    /// del servidor (`{\fad…\pos…}`, `\N`, `\h`, `\an8`…): son instrucciones
+    /// de render, nunca diálogo. Solo toca SINTAXIS de formato:
+    /// - bloques `{...}` que contienen una contrabarra (los literales como
+    ///   `{hola}` se conservan),
+    /// - `\N`/`\n` (saltos ASS) → salto de línea, `\h` → espacio,
+    /// - demás códigos `\comando` o `\comando(params)` → eliminados.
+    /// El texto visible no se filtra ni se reordena.
+    static func sanitize(_ raw: String) -> String {
+        var text = raw
+        // Bloques override con formato: {\...} (multilínea incluida).
+        if let blockRegex = try? NSRegularExpression(
+            pattern: #"\{[^}]*\\[^}]*\}"#,
+            options: [.dotMatchesLineSeparators]
+        ) {
+            text = blockRegex.stringByReplacingMatches(
+                in: text,
+                range: NSRange(text.startIndex..., in: text),
+                withTemplate: ""
+            )
+        }
+        text = text.replacingOccurrences(of: "\\N", with: "\n")
+        text = text.replacingOccurrences(of: "\\n", with: "\n")
+        text = text.replacingOccurrences(of: "\\h", with: " ")
+        // Códigos sueltos: \fad(0,200), \an8, \bord0, \c&HFFFFFF& …
+        if let codeRegex = try? NSRegularExpression(pattern: #"\\[A-Za-z]+(\([^)]*\))?[0-9&]*"#, options: []) {
+            text = codeRegex.stringByReplacingMatches(
+                in: text,
+                range: NSRange(text.startIndex..., in: text),
+                withTemplate: ""
+            )
+        }
+        // Normaliza líneas: recorta y colapsa vacías del borrado.
+        let lines = text.components(separatedBy: "\n")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        return lines.joined(separator: "\n")
     }
 
     /// `HH:MM:SS,mmm` or `HH:MM:SS.mmm` → seconds.

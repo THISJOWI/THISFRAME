@@ -20,11 +20,51 @@
   <a href="LICENSE"><img src="https://img.shields.io/github/license/THISJOWI/THISJELLYFIX" alt="License: MIT" /></a>
   <img src="https://img.shields.io/badge/SPM-compatible-brightgreen" alt="SPM" />
   <img src="https://img.shields.io/badge/XcodeGen-required-lightgrey" alt="XcodeGen" />
+  <br />
+  <img src="https://img.shields.io/github/stars/THISJOWI/THISJELLYFIX?style=social" alt="GitHub stars" />
+  <img src="https://img.shields.io/github/forks/THISJOWI/THISJELLYFIX?style=social" alt="GitHub forks" />
+  <img src="https://img.shields.io/github/issues/THISJOWI/THISJELLYFIX" alt="Open issues" />
+  <img src="https://img.shields.io/github/last-commit/THISJOWI/THISJELLYFIX" alt="Last commit" />
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome" />
 </p>
 
 <p align="center">
-  <a href="#english">English</a> · <a href="#español">Español</a>
+  <a href="#english">English</a> · <a href="#español">Español</a> · <a href="#faq--faq">FAQ</a> · <a href="https://github.com/THISJOWI/THISJELLYFIX/releases">Releases</a> · <a href="https://github.com/THISJOWI/THISJELLYFIX/discussions">Discussions</a>
 </p>
+
+<p align="center">
+  <code>#jellyfin #swiftui #ios #macos #tvos #visionos #avfoundation #selfhosted #media-client #google-cast #airplay #swift-package-manager</code>
+</p>
+
+## Contents · Índice
+
+- [Demo](#demo)
+- [Why ThisJellyFix? · ¿Por qué?](#why-thisjellyfix--por-qué)
+- [English](#english)
+- [Español](#español)
+- [FAQ](#faq--faq)
+- [Star History](#star-history)
+- [Contributors](#contributors)
+- [License · Licencia](#license--licencia)
+
+## Demo
+
+> Drop a 10–20s screen recording here: `Docs/screenshots/demo.gif` (iOS home → detail → play → quality picker). Keep < 5 MB.
+> Deja aquí grabación 10–20s: `Docs/screenshots/demo.gif`. Ver [Docs/screenshots/README.md](Docs/screenshots/README.md).
+
+## Why ThisJellyFix? · ¿Por qué?
+
+| | ThisJellyFix | Jellyfin Mobile (official) | Swiftfin (community) |
+|---|---|---|---|
+| Native SwiftUI, no webview | ✅ | ❌ (web wrapper) | ✅ |
+| iOS + macOS + tvOS + visionOS | ✅ | partial | partial (iOS/tvOS) |
+| La Marea cinematic home | ✅ | ❌ | ❌ |
+| AVFoundation + quality/bitrate cap | ✅ | ✅ | ✅ |
+| Client-side subs overlay | ✅ | — | — |
+| Cast (iOS) + AirPlay + Handoff + PiP | ✅ | partial | partial |
+| Downloads queue | ✅ | ✅ | — |
+| \*Arr + TMDB + segments (intro/credits) | ✅ | ❌ | ❌ |
+| Zero deps (except Cast SDK iOS) | ✅ | — | — |
 
 ---
 
@@ -170,6 +210,42 @@ Igual que arriba. PRs bienvenidos — lee [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-### Topics sugeridos (añadir en GitHub → About → ⚙️)
+### Topics sugeridos (ya aplicados con `gh repo edit`, verifica en About → ⚙️)
 
-`jellyfin`, `swiftui`, `ios`, `macos`, `tvos`, `visionos`, `avfoundation`, `selfhosted`, `media-client`, `google-cast`, `airplay`, `marea`
+`jellyfin`, `swiftui`, `ios`, `macos`, `tvos`, `visionos`, `avfoundation`, `selfhosted`, `media-client`, `google-cast`, `airplay`, `swift-package-manager`, `marea`, `jellyfin-client`
+
+---
+
+## FAQ · FAQ
+
+**Does it need a Jellyfin server? / ¿Necesita servidor Jellyfin?**
+Yes/Sí. Probe `System/Info/Public`, then login. Multi-server supported.
+
+**TestFlight?**
+Planned. Track [releases](https://github.com/THISJOWI/THISJELLYFIX/releases). Placeholder:
+`https://testflight.apple.com/join/XXXXXXX` (replace when public).
+
+**Why no video in simulator? / ¿Por qué falla vídeo en simulador?**
+DRM/codec limits. Test direct play on device.
+
+**Cast on macOS/tvOS?**
+No — Google ships sender SDK for iOS only. macOS/tvOS use AirPlay + Handoff.
+
+**Where are tokens? / ¿Dónde van tokens?**
+Keychain only (`KeychainStore`, `SavedServersStore`). Never logged.
+
+---
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=THISJOWI/THISJELLYFIX&type=Date)](https://star-history.com/#THISJOWI/THISJELLYFIX&Date)
+
+## Contributors
+
+<a href="https://github.com/THISJOWI/THISJELLYFIX/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=THISJOWI/THISJELLYFIX" alt="Contributors" />
+</a>
+
+## License · Licencia
+
+[MIT](LICENSE) © THISJOWI.

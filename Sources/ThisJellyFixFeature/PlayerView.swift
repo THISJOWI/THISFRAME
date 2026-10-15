@@ -49,6 +49,10 @@ struct PlayerView: View {
     var playSessionId: String? = nil
     // Server media streams — needed to load external subtitle files
     var mediaStreams: [MediaStream] = []
+    /// Audio SERVIDO (`MediaStream.index` pedido o default): el picker lo
+    /// usa para mapear engine↔servidor. Llega en render separado de
+    /// `mediaStreams`/`streamURL` (ver onChange): nunca adivinar por idioma.
+    var audioServerIndex: Int? = nil
     // Next episode wiring — when provided, the credits overlay offers it
     var nextEpisode: JellyfinEpisode? = nil
     var onPlayNextEpisode: ((JellyfinEpisode) -> Void)? = nil
@@ -106,6 +110,7 @@ struct PlayerView: View {
         mediaType: String = "",
         playSessionId: String? = nil,
         mediaStreams: [MediaStream] = [],
+        audioServerIndex: Int? = nil,
         nextEpisode: JellyfinEpisode? = nil,
         onPlayNextEpisode: ((JellyfinEpisode) -> Void)? = nil,
         previousEpisode: JellyfinEpisode? = nil,
@@ -126,6 +131,7 @@ struct PlayerView: View {
         self.mediaType = mediaType
         self.playSessionId = playSessionId
         self.mediaStreams = mediaStreams
+        self.audioServerIndex = audioServerIndex
         self.nextEpisode = nextEpisode
         self.onPlayNextEpisode = onPlayNextEpisode
         self.previousEpisode = previousEpisode
@@ -167,6 +173,7 @@ struct PlayerView: View {
             TJFLog("onAppear: reporting NOT configured itemId=\(itemId != nil) serverURL=\(serverURL != nil) token=\(token != nil) userId=\(userId != nil)")
         }
         viewModel.configureMediaStreams(mediaStreams)
+        viewModel.noteServedAudioServerIndex(audioServerIndex)
         viewModel.configureNowPlaying(title: title)
         wireNextEpisode()
         // Server favorite flag for the heart button (fills in when it lands).
@@ -591,9 +598,15 @@ struct PlayerView: View {
                     token: token,
                     userId: userId,
                     playSessionId: playSessionId,
-                    mediaStreams: mediaStreams
+                    mediaStreams: mediaStreams,
+                    audioServerIndex: audioServerIndex
                 )
             }
+        }
+        .onChange(of: audioServerIndex) { _, _ in
+            // Índice servido tardío (mismo caso que `mediaStreams`): solo
+            // registra, sin tocar playback (el stream ya es ese).
+            viewModel.noteServedAudioServerIndex(audioServerIndex)
         }
         .onChange(of: itemId) { _, _ in
             // `streamURL` and `mediaStreams`/`itemId` update in separate

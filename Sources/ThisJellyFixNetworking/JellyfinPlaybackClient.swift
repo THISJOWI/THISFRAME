@@ -32,6 +32,10 @@ public struct JellyfinPlaybackClient: JellyfinPlaybackProviding {
     /// `alwaysBurnInSubtitleWhenTranscoding` defaults to false for the same
     /// reason: nothing may be pixel-burned into the frames. nil opts out of
     /// a key entirely (lets the server decide).
+    ///
+    /// `audioStreamIndex` selects WHICH audio the server serves in a
+    /// remux/transcode (single-audio output): nil = server default (usually
+    /// the first/default track, which is why alternate audios "disappear").
     public func fetchPlaybackInfo(
         userId: String,
         serverURL: URL,
@@ -40,7 +44,8 @@ public struct JellyfinPlaybackClient: JellyfinPlaybackProviding {
         deviceProfile: PlaybackDeviceProfile?,
         maxStreamingBitrate: Int? = nil,
         subtitleStreamIndex: Int? = -1,
-        alwaysBurnInSubtitleWhenTranscoding: Bool? = false
+        alwaysBurnInSubtitleWhenTranscoding: Bool? = false,
+        audioStreamIndex: Int? = nil
     ) async throws -> PlaybackInfo {
         let url = serverURL.appendingPathComponent("Items/\(itemId)/PlaybackInfo")
 
@@ -61,6 +66,11 @@ public struct JellyfinPlaybackClient: JellyfinPlaybackProviding {
         if let subtitleStreamIndex {
             // -1 explicitly tells Jellyfin not to select/burn any subtitle stream into the video
             body["SubtitleStreamIndex"] = subtitleStreamIndex
+        }
+        if let audioStreamIndex {
+            // A remux/transcode carries a SINGLE audio: without this the
+            // server serves its default and the other tracks never reach us.
+            body["AudioStreamIndex"] = audioStreamIndex
         }
         if let alwaysBurnInSubtitleWhenTranscoding {
             body["AlwaysBurnInSubtitleWhenTranscoding"] = alwaysBurnInSubtitleWhenTranscoding
