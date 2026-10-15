@@ -114,6 +114,9 @@ final class LibraryModel {
     /// which used to fire the same `/Items/Resume` GET back to back.
     private static let resumeRefreshCooldown: TimeInterval = 5
     private var lastResumeRefresh: Date?
+    /// True while a resume fetch is in flight — drives the row refresh
+    /// spinner and collapses concurrent manual taps into one request.
+    var isRefreshingResume = false
 
     func load() async {
         isLoading = true
@@ -311,6 +314,12 @@ final class LibraryModel {
         if !force, let last = lastResumeRefresh, Date().timeIntervalSince(last) < Self.resumeRefreshCooldown {
             return
         }
+        // Manual taps share one request instead of stacking GETs — but a
+        // FORCED refresh always runs: it is the authoritative post-playback
+        // update and must not be dropped by a stale fetch in flight.
+        if !force, isRefreshingResume { return }
+        isRefreshingResume = true
+        defer { isRefreshingResume = false }
         let stampedAt = Date()
         // Stamp before the request so concurrent NON-forced triggers don't stack.
         lastResumeRefresh = stampedAt

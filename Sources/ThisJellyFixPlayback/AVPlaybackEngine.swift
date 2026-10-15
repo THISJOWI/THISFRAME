@@ -407,11 +407,22 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
             let raw = (note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt).map(String.init) ?? "?"
             TJFLog("airplay: audio route change reason=\(raw)")
             guard let self else { return }
-            // 4 = .newDeviceAvailable
+            // 4 = selection event (route picker choice). It ALSO fires when
+            // the user switches back to a local output — entering a connect
+            // window then left `connecting` stuck until the 10 s timeout.
+            // Disambiguate by the CURRENT outputs: AirPlay present → connect;
+            // absent while negotiating → the user backed out → idle.
             if raw == "4" {
-                let name = AVAudioSession.sharedInstance().currentRoute.outputs.first?.portName ?? "AirPlay"
-                TJFLog("airplay: new device → connecting to \(name)")
-                self.noteRouteSelected(name: name)
+                let outputs = AVAudioSession.sharedInstance().currentRoute.outputs
+                let hasAirPlay = outputs.contains { $0.portType == AVAudioSession.Port.airPlay }
+                if hasAirPlay {
+                    let name = outputs.first?.portName ?? "AirPlay"
+                    TJFLog("airplay: new device → connecting to \(name)")
+                    self.noteRouteSelected(name: name)
+                } else if self.routeState.isConnecting {
+                    TJFLog("airplay: route back to local while connecting → idle (deselected)")
+                    self.noteAirPlayRouteDeselected()
+                }
             }
         }
         // Interruptions (Siri, calls) and media-services resets desync playback
@@ -469,9 +480,20 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: work)
     }
 
+    /// Dismiss a failure state back to square one (user acked the
+    /// failure capsule). The sticky `failed` phase never cleared on its own —
+    /// the red message survived until the next route event.
+    public func resetAirPlayRoute() {
+        airplayApply { $0.reset() }
+    }
+
+    /// Receiver deselected while negotiating → idle, not failed.
+    public func noteAirPlayRouteDeselected() {
+        airplayApply { $0.routeDeselected() }
+    }
+
     /// Mutate the machine under lock, log the transition, notify on main.
-    private func airplayApply(_ body: (inout AirPlayRouteState) -> Void) {
-        airplayLock.lock()
+    private func airplayApply(_ body: (inout AirPlayRouteState) -> Void) {        airplayLock.lock()
         let before = _routeState
         body(&_routeState)
         let after = _routeState

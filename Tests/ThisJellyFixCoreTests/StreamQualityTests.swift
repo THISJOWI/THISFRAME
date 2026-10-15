@@ -26,4 +26,18 @@ final class StreamQualityTests: XCTestCase {
         XCTAssertEqual(StreamQuality.q480.label, "480p")
         XCTAssertEqual(StreamQuality.q360.label, "360p")
     }
+
+    func testDetailsDescribeBitrateCeilings() {
+        XCTAssertTrue(StreamQuality.auto.detail.contains("Sin límite"))
+        XCTAssertTrue(StreamQuality.q1080.detail.contains("12"))
+        XCTAssertTrue(StreamQuality.q720.detail.contains("8"))
+        XCTAssertTrue(StreamQuality.q480.detail.contains("4"))
+        XCTAssertEqual(StreamQuality.allCases.map(\.detail).count, Set(StreamQuality.allCases.map(\.detail)).count)
+    }
+
+    func testDefaultsKeyIsSingleSourceOfTruth() {
+        // PlayerViewModel must read/write through this key — no forks.
+        XCTAssertEqual(StreamQuality.defaultsKey, "player.selectedQuality")
+        XCTAssertEqual(StreamQuality.persisted, StreamQuality(rawValue: UserDefaults.standard.integer(forKey: StreamQuality.defaultsKey)) ?? .auto)
+    }
 }

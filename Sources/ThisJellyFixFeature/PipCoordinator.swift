@@ -107,18 +107,21 @@ final class PipCoordinator: NSObject {
     // MARK: - Start / stop
 
     /// Manual start (controls button) or safety-net start after background.
-    func start() {
+    /// - Returns: true when the start was issued (or the window is already active).
+    @discardableResult
+    func start() -> Bool {
         guard let controller else {
             TJFLog("pip: start refused — no controller")
-            return
+            return false
         }
+        guard !controller.isPictureInPictureActive else { return true }
         guard controller.isPictureInPicturePossible else {
-            TJFLog("pip: start refused — not possible (playing=\(liveVM?.isPlaying ?? false))")
-            return
+            TJFLog("pip: start refused — not possible (playing=\(liveVM?.isPlaying ?? floatingVM?.isPlaying ?? false))")
+            return false
         }
-        guard !controller.isPictureInPictureActive else { return }
         TJFLog("pip: startPictureInPicture")
         controller.startPictureInPicture()
+        return true
     }
 
     /// Programmatic stop (user returned to the app / new playback starting).
@@ -137,7 +140,9 @@ final class PipCoordinator: NSObject {
     /// The VM keeps its timer running — progress reporting must not pause
     /// just because the cover was dismissed.
     /// - Returns: true when the session is floating (window active or start
-    ///   issued); false → caller must stop playback itself.
+    ///   issued); false → caller must stop playback itself (no ghost session:
+    ///   a `true` with no window left playback running invisible until the
+    ///   system failed it and stopped it — the "PiP desaparece solo" bug).
     func float(_ vm: PlayerViewModel) -> Bool {
         guard AVPictureInPictureController.isPictureInPictureSupported(),
               let ctx = vm.makePipContext()
@@ -145,19 +150,42 @@ final class PipCoordinator: NSObject {
             TJFLog("pip: float refused — supported=false ctx=\(vm.makePipContext() != nil)")
             return false
         }
-        guard controller != nil else { return false }
-
-        attachLayerToHost(vm.engine)
-        floatingVM = vm
-        floatingContext = ctx
+        guard controller != nil else {
+            TJFLog("pip: float refused — no controller (engine never configured)")
+            return false
+        }
 
         if controller?.isPictureInPictureActive == true {
+            attachLayerToHost(vm.engine)
+            floatingVM = vm
+            floatingContext = ctx
             TJFLog("pip: float with window already active item=\(ctx.itemId)")
             windowStarted = true
             return true
         }
+        // Window not active: only claim the session when the start can actually
+        // be issued. `isPictureInPicturePossible` is false while the item has
+        // no video / is still loading — claiming then created a floatingVM
+        // with no window; the later `failedToStart` stopped playback out of
+        // nowhere. Subtitle changes never touch the item, so they cannot flip
+        // this gate (single-renderer overlay invariant).
+        guard controller?.isPictureInPicturePossible == true else {
+            TJFLog("pip: float refused — start not possible yet (item not ready), stopping instead")
+            return false
+        }
+        attachLayerToHost(vm.engine)
+        floatingVM = vm
+        floatingContext = ctx
+
         TJFLog("pip: float → start window item=\(ctx.itemId) pos=\(String(format: "%.1f", vm.currentTime))s")
-        start()
+        guard start() else {
+            // Start could not be issued: release the claim so the caller stops
+            // cleanly instead of leaving a windowless "floating" session.
+            floatingVM = nil
+            floatingContext = nil
+            detachLayerFromHost()
+            return false
+        }
         return true
     }
 

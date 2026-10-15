@@ -543,6 +543,8 @@ final class ServerConnectionModel {
     var isConnecting = false
     var errorMessage: String?
     var server: JellyfinServer?
+    /// Lista persistente de dominios (fuente de verdad del selector).
+    var savedServers: [JellyfinServer] = []
 
     private let probe: any JellyfinServerProbing
     private let keychain: any KeychainStoring
@@ -553,10 +555,34 @@ final class ServerConnectionModel {
     ) {
         self.probe = probe
         self.keychain = keychain
-        // Restore server from Keychain if available
-        if let urlString = keychain.read(key: KeychainKey.serverURL),
-           let url = URL(string: urlString) {
-            server = JellyfinServer(baseURL: url, name: url.host ?? "Server")
+        // 1. Cargar lista; 2. migrar clave histórica si la lista está vacía;
+        // 3. restaurar selección actual (re-normalizando para evitar
+        // trailing-slash / scheme inconsistentes).
+        var loaded = SavedServersStore.load(from: keychain)
+        let migrated = SavedServersStore.migrateLegacyIfNeeded(current: loaded, keychain: keychain)
+        if loaded.isEmpty && !migrated.isEmpty {
+            loaded = migrated
+            do {
+                try SavedServersStore.save(loaded, to: keychain)
+            } catch {
+                TJFLog("servers: migración legacy falló — \(error.localizedDescription)")
+            }
+        }
+        savedServers = loaded
+        if let urlString = keychain.read(key: KeychainKey.serverURL) {
+            let url: URL? = (try? ServerAddress.normalizedURL(from: urlString)) ?? URL(string: urlString)
+            if let url {
+                let key = SavedServersStore.dedupeKey(for: url)
+                if let match = loaded.first(where: { SavedServersStore.dedupeKey(for: $0.baseURL) == key }) {
+                    server = match
+                } else {
+                    server = JellyfinServer(baseURL: url, name: url.host ?? "Server")
+                }
+            }
+        } else if loaded.count == 1 {
+            // Sin "actual" marcado pero con un único guardado: no auto-seleccionar.
+            // El usuario elige explícitamente (evita fantasma tras disconnect).
+            server = nil
         }
     }
 
@@ -568,16 +594,76 @@ final class ServerConnectionModel {
         do {
             let url = try ServerAddress.normalizedURL(from: address)
             let info = try await probe.publicInfo(at: url)
-            server = JellyfinServer(baseURL: url, name: info.serverName)
+            let newServer = JellyfinServer(baseURL: url, name: info.serverName.isEmpty ? (url.host ?? "Server") : info.serverName)
+            // Upsert + persistencia inmediata (antes solo memoria: se perdía al cerrar).
+            savedServers = SavedServersStore.upsert(savedServers, server: newServer)
+            do {
+                try SavedServersStore.save(savedServers, to: keychain)
+                try keychain.save(key: KeychainKey.serverURL, value: url.absoluteString)
+            } catch {
+                TJFLog("servers: persistencia falló — \(error.localizedDescription)")
+                errorMessage = "No se pudo guardar el servidor: \(error.localizedDescription)"
+                return
+            }
+            // Resolver identidad estable (conserva id existente si era duplicado).
+            let key = SavedServersStore.dedupeKey(for: url)
+            server = savedServers.first(where: { SavedServersStore.dedupeKey(for: $0.baseURL) == key }) ?? newServer
+            address = ""
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
+    /// Selecciona un servidor guardado sin re-probar (ya validado al añadir).
+    func select(_ saved: JellyfinServer) {
+        server = saved
+        address = ""
+        errorMessage = nil
+        do {
+            try keychain.save(key: KeychainKey.serverURL, value: saved.baseURL.absoluteString)
+        } catch {
+            TJFLog("servers: no se pudo marcar actual — \(error.localizedDescription)")
+            errorMessage = "No se pudo seleccionar el servidor: \(error.localizedDescription)"
+        }
+    }
+
+    func removeSavedServer(id: JellyfinServer.ID) {
+        savedServers.removeAll { $0.id == id }
+        do {
+            try SavedServersStore.save(savedServers, to: keychain)
+            if let current = server, current.id == id {
+                server = nil
+                try? keychain.delete(key: KeychainKey.serverURL)
+            }
+            // Si la lista queda vacía, limpiar también la clave actual.
+            if savedServers.isEmpty {
+                try? keychain.delete(key: KeychainKey.serverURL)
+            }
+        } catch {
+            TJFLog("servers: no se pudo eliminar — \(error.localizedDescription)")
+            errorMessage = "No se pudo eliminar el servidor: \(error.localizedDescription)"
+        }
+        // Recargar para no dejar estado divergente si el save falló a medias.
+        savedServers = SavedServersStore.load(from: keychain)
+        if let current = server,
+           !savedServers.contains(where: { $0.id == current.id }) {
+            // El actual ya no está en la lista persistida: mantenerlo en memoria
+            // solo si el borrado falló; si se eliminó de verdad, ya es nil arriba.
+            _ = current
+        }
+    }
+
     func disconnect() {
+        // Solo limpia la selección en memoria + la marca de "actual".
+        // La LISTA guardada se conserva (no es un "olvidar todo").
         server = nil
         address = ""
         errorMessage = nil
+        do {
+            try keychain.delete(key: KeychainKey.serverURL)
+        } catch {
+            TJFLog("servers: disconnect no pudo limpiar actual — \(error.localizedDescription)")
+        }
     }
 }
 
@@ -587,52 +673,95 @@ private struct ServerConnectionView: View {
     @Bindable var model: ServerConnectionModel
 
     var body: some View {
-        VStack(spacing: 22) {
-            Image("AppIcon")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 80, height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 18))
-                .shadow(color: MareaTheme.Colors.accent.opacity(0.3), radius: 12)
+        ScrollView {
+            VStack(spacing: 22) {
+                Image("AppIcon")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .shadow(color: MareaTheme.Colors.accent.opacity(0.3), radius: 12)
 
-            VStack(spacing: 8) {
-                Text("THISJELLYFIX")
-                    .font(.largeTitle.bold())
-                Text("Tu biblioteca. A tu manera.")
-                    .foregroundStyle(.secondary)
-            }
+                VStack(spacing: 8) {
+                    Text("THISJELLYFIX")
+                        .font(.largeTitle.bold())
+                    Text("Tu biblioteca. A tu manera.")
+                        .foregroundStyle(.secondary)
+                }
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Servidor Jellyfin")
-                    .font(.headline)
-                TextField("https://jellyfin.example.com", text: $model.address)
-                    .textContentType(.URL)
-                    .padding(12)
-                    .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
-                    .submitLabel(.go)
-                    .onSubmit { Task { await model.connect() } }
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Servidor Jellyfin")
+                        .font(.headline)
+                    TextField("https://jellyfin.example.com", text: $model.address)
+                        .textContentType(.URL)
+                        #if os(iOS)
+                        .keyboardType(.URL)
+                        .autocapitalization(.none)
+                        #endif
+                        .disableAutocorrection(true)
+                        .padding(12)
+                        .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                        .submitLabel(.go)
+                        .onSubmit { Task { await model.connect() } }
 
-                if let errorMessage = model.errorMessage {
-                    Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
+                    if let errorMessage = model.errorMessage {
+                        Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
+                    }
+                }
+                .frame(maxWidth: 440)
+
+                Button {
+                    Task { await model.connect() }
+                } label: {
+                    if model.isConnecting {
+                        ProgressView().tint(.black)
+                    } else {
+                        Text(model.savedServers.isEmpty ? "Conectar" : "Añadir servidor")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.mint)
+                .disabled(model.address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.isConnecting)
+
+                if !model.savedServers.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Servidores guardados")
+                            .font(.headline)
+                        ForEach(model.savedServers) { saved in
+                            HStack(spacing: 12) {
+                                Button {
+                                    model.select(saved)
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(saved.name)
+                                            .font(.body.weight(.semibold))
+                                            .foregroundStyle(.primary)
+                                        Text(saved.baseURL.absoluteString)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .buttonStyle(.plain)
+
+                                Button(role: .destructive) {
+                                    model.removeSavedServer(id: saved.id)
+                                } label: {
+                                    Image(systemName: "trash")
+                                }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel("Eliminar \(saved.name)")
+                            }
+                            .padding(12)
+                            .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                        }
+                    }
+                    .frame(maxWidth: 440)
                 }
             }
-            .frame(maxWidth: 440)
-
-            Button {
-                Task { await model.connect() }
-            } label: {
-                if model.isConnecting {
-                    ProgressView().tint(.black)
-                } else {
-                    Text("Conectar")
-                }
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.mint)
-            .disabled(model.address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.isConnecting)
+            .padding(32)
         }
-        .padding(32)
     }
 }

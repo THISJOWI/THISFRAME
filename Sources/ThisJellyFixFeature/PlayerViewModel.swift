@@ -65,6 +65,7 @@ final class PlayerViewModel {
     var showSpeedPicker = false
     var showQualityPicker = false
     /// Selected quality cap; persisted so the next player opens with it.
+    /// Reads/writes the single source of truth (`StreamQuality.persisted`).
     var selectedQuality: StreamQuality {
         didSet { UserDefaults.standard.set(selectedQuality.rawValue, forKey: Self.qualityDefaultsKey) }
     }
@@ -111,6 +112,81 @@ final class PlayerViewModel {
     private var serverMediaStreams: [MediaStream] = []
     private var externalSubsLoaded = false
 
+    // MARK: - Favorite (P7 in-player toggle)
+    /// Server is the source of truth (UserData): loaded on mount, optimistic
+    /// toggle with rollback — never a local-only flag contradicting Jellyfin.
+    var isFavorite = false
+    var isFavoriteKnown = false
+    var isTogglingFavorite = false
+    var favoriteError: String?
+    /// Injectable clients (tests).
+    var userActionClient: any JellyfinUserActionProviding = JellyfinUserActionClient()
+    var itemDetailClient: any JellyfinItemDetailProviding = JellyfinItemDetailClient()
+
+    /// Load the server flag. Returns false when it could not be determined
+    /// (toggle then refuses to flip blind instead of un-favoriting by mistake).
+    @discardableResult
+    func loadFavoriteState() async -> Bool {
+        if isFavoriteKnown { return true }
+        guard let userId, let serverURL, let token, let itemId else { return false }
+        do {
+            let detail = try await itemDetailClient.fetchItemDetail(
+                userId: userId, serverURL: serverURL, token: token, itemId: itemId
+            )
+            isFavorite = detail.isFavorite
+            isFavoriteKnown = true
+            return true
+        } catch {
+            TJFLog("favorite: initial load failed — \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    /// Optimistic toggle with rollback; concurrent taps collapse into one request.
+    func toggleFavorite() async {
+        // Zombie guard — a dismissed player must not fire user-data writes.
+        guard !engineStopped, !isTogglingFavorite,
+              let userId, let serverURL, let token, let itemId else { return }
+        guard await loadFavoriteState() else {
+            favoriteError = "No se pudo leer el estado de favorito."
+            return
+        }
+        let desired = !isFavorite
+        isFavorite = desired
+        favoriteError = nil
+        isTogglingFavorite = true
+        defer { isTogglingFavorite = false }
+        do {
+            try await userActionClient.setFavorite(
+                desired, userId: userId, serverURL: serverURL, token: token, itemId: itemId
+            )
+        } catch {
+            isFavorite = !desired
+            favoriteError = "No se pudo actualizar el favorito."
+            TJFLog("favorite: toggle failed — \(error.localizedDescription)")
+        }
+    }
+
+    func dismissFavoriteError() {
+        favoriteError = nil
+    }
+
+    // MARK: - Remote subtitle search state (P6 sheet)
+    /// Last search results (server providers); empty until searched.
+    var remoteSubtitleResults: [RemoteSubtitleInfo] = []
+    var isSearchingRemoteSubs = false
+    var remoteSubtitleError: String?
+    /// Prefilled from profile/system language; editable in the sheet.
+    var remoteSubtitleLanguage: String = ""
+    /// Result currently downloading (row spinner); nil when idle.
+    var downloadingRemoteSubtitleId: String?
+    /// True once a search ran (distinguishes "not searched yet" from "no results").
+    var remoteSubsSearched = false
+    /// Search sheet visibility (opened from the subtitle picker).
+    var showSubtitleSearch = false
+    /// Injectable search client (tests).
+    var subtitleClient = JellyfinSubtitleClient()
+
     // MARK: - Playback Reporting
     private var reporter = JellyfinPlaybackReporter()
     private var reportingSessionId: String?
@@ -148,6 +224,17 @@ final class PlayerViewModel {
         if case .connecting = airplayPhase { return true }
         return false
     }
+    /// True while the receiver owns playback (green "transmitting" capsule).
+    var isAirPlayActive: Bool {
+        if case .active = airplayPhase { return true }
+        return false
+    }
+    /// Dismiss a sticky failure capsule back to idle.
+    func dismissAirPlayMessage() {
+        engine.resetAirPlayRoute()
+        airplayPhase = nil
+        airplayMessage = nil
+    }
     /// Transient status line: connection failure shown until the next event.
     var airplayMessage: String?
     #endif
@@ -176,9 +263,7 @@ final class PlayerViewModel {
     ) {
         self.engine = engine
         self.segmentClient = segmentClient
-        selectedQuality = StreamQuality(
-            rawValue: UserDefaults.standard.integer(forKey: Self.qualityDefaultsKey)
-        ) ?? .auto
+        selectedQuality = StreamQuality.persisted
         // Real state machine: .failed surfaces a message, .ended is the true
         // end-of-media signal (the `duration - 1.5` guess is gone).
         engine.onStateChanged = { [weak self] state in
@@ -579,6 +664,9 @@ final class PlayerViewModel {
         isPlaying = true
         userPaused = false
         startUpdating()
+        // New item → its own server favorite flag (fire-and-forget: playback
+        // is already running, the heart fills in when the fetch lands).
+        Task { await loadFavoriteState() }
         if let startPosition, startPosition > 0 {
             await seek(to: startPosition)
         }
@@ -586,7 +674,7 @@ final class PlayerViewModel {
 
     // MARK: - Quality
 
-    private static let qualityDefaultsKey = "player.selectedQuality"
+    private static var qualityDefaultsKey: String { StreamQuality.defaultsKey }
 
     /// Re-resolves the stream under a different bitrate ceiling and hot-swaps
     /// it in place, keeping position, play/pause state and playback rate.
@@ -600,6 +688,10 @@ final class PlayerViewModel {
         let position = currentTime
         let wasPlaying = isPlaying
         let rate = playbackRate
+        // Swapping the item tears down the external session: stop() resets
+        // the route machine, so an active AirPlay session dies silently here.
+        // Warn instead of pretending the receiver follows along.
+        let wasExternallyActive = engine.player.isExternalPlaybackActive
 
         do {
             let info = try await JellyfinPlaybackClient().fetchPlaybackInfo(
@@ -607,7 +699,7 @@ final class PlayerViewModel {
                 serverURL: serverURL,
                 token: token,
                 itemId: itemId,
-                deviceProfile: .avPlayer,
+                deviceProfile: .avPlayer.capped(to: quality.maxBitrate),
                 maxStreamingBitrate: quality.maxBitrate
             )
             guard let source = info.mediaSources.first else {
@@ -623,7 +715,10 @@ final class PlayerViewModel {
                 TJFLog("switchQuality: unresolved stream URL for \(quality.label)")
                 return
             }
-            TJFLog("switchQuality: \(quality.label) cap=\(quality.maxBitrate.map(String.init) ?? "nil") url=\(url.absoluteString.prefix(120))")
+            // Verifiable delivery (not just the picker label): direct file vs
+            // server transcode ladder.
+            let delivery = source.transcodingUrl != nil ? "transcode" : "direct"
+            TJFLog("switchQuality: \(quality.label) cap=\(quality.maxBitrate.map(String.init) ?? "nil") delivery=\(delivery) url=\(url.absoluteString.prefix(120))")
 
             await switchToEpisode(
                 url: url,
@@ -641,6 +736,10 @@ final class PlayerViewModel {
                 engine.pause()
                 isPlaying = false
                 userPaused = true
+            }
+            if wasExternallyActive {
+                airplayMessage = "AirPlay detenido por el cambio de calidad — vuelve a seleccionarlo"
+                TJFLog("airplay: quality swap ended external session — user must re-select")
             }
         } catch {
             TJFLog("switchQuality failed: \(error)")
@@ -677,6 +776,18 @@ final class PlayerViewModel {
         showAudioPicker = false
         showSubtitlePicker = false
         showSpeedPicker = false
+        // A prior takeover ("continued on X, this device stopped") belongs to
+        // the old item — a fresh item must never open on the black screen.
+        handoffTakeoverDeviceName = nil
+        // Remote subtitle search belongs to the old item too.
+        remoteSubtitleResults = []
+        remoteSubtitleError = nil
+        remoteSubsSearched = false
+        downloadingRemoteSubtitleId = nil
+        // Favorite flag belongs to the old item: reload for the new one.
+        isFavorite = false
+        isFavoriteKnown = false
+        favoriteError = nil
 
         errorMessage = nil
         isSeeking = false
@@ -792,8 +903,13 @@ final class PlayerViewModel {
     }
 
     func selectSubtitleTrack(_ track: SubtitleTrack?) async {
+        // Zombie guard: a dismissed player must not re-assert selections on a
+        // dead engine (async picker tasks outliving the view could otherwise
+        // flip state behind a floating PiP session).
+        guard !engineStopped else { return }
         // Manual choice — including explicit "Desactivados" — wins over the
-        // stored preference for the rest of this item.
+        // stored preference for the rest of this item. Never recreates the
+        // player item: PiP wiring (same AVPlayer/AVPlayerLayer) is untouched.
         subtitleSelectionLocked = true
         await applySubtitleSelection(track)
     }
@@ -1296,6 +1412,132 @@ final class PlayerViewModel {
         }
     }
 
+    // MARK: - Remote subtitle search + download (P6)
+
+    /// Default search language: profile preference, else system language.
+    func defaultRemoteSubtitleLanguage() -> String {
+        let prefs = LanguagePreferences.current()
+        if let pref = prefs.preferredSubtitles, !pref.isEmpty { return pref }
+        return LanguagePreferences.systemDefault ?? "es"
+    }
+
+    /// Search server providers. Never touches playback — results land in
+    /// `remoteSubtitleResults` for the sheet. Empty = no provider configured
+    /// server-side or no match (surfaced as helper text, not an error).
+    func searchRemoteSubtitles() async {
+        guard !isSearchingRemoteSubs,
+              let serverURL, let token, let itemId else { return }
+        let language = remoteSubtitleLanguage.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !language.isEmpty else {
+            remoteSubtitleError = SubtitleSearchError.invalidLanguage.localizedDescription
+            return
+        }
+        isSearchingRemoteSubs = true
+        remoteSubtitleError = nil
+        defer { isSearchingRemoteSubs = false }
+        do {
+            remoteSubtitleResults = try await subtitleClient.searchRemoteSubtitles(
+                serverURL: serverURL, token: token, itemId: itemId, language: language
+            )
+            remoteSubsSearched = true
+            if remoteSubtitleResults.isEmpty {
+                TJFLog("subsearch: no results (server may have no subtitle provider configured)")
+            }
+        } catch {
+            remoteSubtitleError = error.localizedDescription
+            TJFLog("subsearch failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Download one remote result server-side, then load the NEW file into
+    /// the overlay and select it — without recreating the player item, so
+    /// playback (and PiP) continue uninterrupted.
+    func downloadAndSelectRemoteSubtitle(_ result: RemoteSubtitleInfo) async {
+        guard downloadingRemoteSubtitleId == nil,
+              let userId, let serverURL, let token, let itemId else { return }
+        downloadingRemoteSubtitleId = result.id
+        remoteSubtitleError = nil
+        defer { downloadingRemoteSubtitleId = nil }
+        do {
+            try await subtitleClient.downloadRemoteSubtitle(
+                serverURL: serverURL, token: token, itemId: itemId, subtitleId: result.id
+            )
+            // The sidecar is new server-side: refresh ONLY the stream list
+            // (keep the current URL + PlaySessionId — no re-prepare, no stop).
+            let info = try await JellyfinPlaybackClient().fetchPlaybackInfo(
+                userId: userId, serverURL: serverURL, token: token, itemId: itemId,
+                deviceProfile: .avPlayer.capped(to: selectedQuality.maxBitrate),
+                maxStreamingBitrate: selectedQuality.maxBitrate
+            )
+            guard let source = info.mediaSources.first else {
+                remoteSubtitleError = "El servidor no devolvió fuentes tras la descarga."
+                return
+            }
+            let knownIndices = Set(serverMediaStreams.compactMap(\.index))
+            let fresh = source.mediaStreams.filter { stream in
+                guard stream.type == "Subtitle", let idx = stream.index else { return false }
+                return !knownIndices.contains(idx)
+            }
+            guard !fresh.isEmpty else {
+                remoteSubtitleError = "Descargado, pero el servidor no expuso el archivo nuevo. Reintenta en unos segundos."
+                return
+            }
+            serverMediaStreams = source.mediaStreams
+            var selected: SubtitleTrack?
+            for stream in fresh {
+                if let track = await fetchRemoteSideloadedTrack(stream) {
+                    selected = track
+                }
+            }
+            availableSubtitleTracks = displayExternalSubs()
+            if let selected {
+                subtitleSelectionLocked = true
+                await applySubtitleSelection(selected)
+            }
+        } catch {
+            remoteSubtitleError = error.localizedDescription
+            TJFLog("subsearch download failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Fetch one freshly-downloaded sidecar as SRT and append it to the overlay.
+    /// Returns the new track (nil when the file has no parseable cues).
+    private func fetchRemoteSideloadedTrack(_ stream: MediaStream) async -> SubtitleTrack? {
+        guard let idx = stream.index,
+              let itemId, let serverURL, let token else { return nil }
+        let urlString = "\(serverURL.absoluteString)/Videos/\(itemId)/\(itemId)/Subtitles/\(idx)/Stream.srt?api_key=\(token)"
+        guard let url = URL(string: urlString) else { return nil }
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            if let http = response as? HTTPURLResponse, http.statusCode != 200 { return nil }
+            guard let text = String(data: data, encoding: .utf8)
+                    ?? String(data: data, encoding: .isoLatin1) else { return nil }
+            let cues = SRTParser.parse(text)
+            guard !cues.isEmpty else {
+                TJFLog("subsearch: downloaded file parsed 0 cues — skipped")
+                return nil
+            }
+            let display = TrackNaming.display(
+                rawName: stream.displayTitle ?? stream.title ?? "Subtítulo \(externalSubs.count + 1)",
+                languageCode: stream.language,
+                serverTitle: stream.displayTitle ?? stream.title,
+                index: externalSubs.count
+            )
+            let track = SubtitleTrack(
+                id: externalSubs.count,
+                name: display.title,
+                language: stream.language,
+                languageName: display.caption,
+                isExternal: true
+            )
+            externalSubs.append((track: track, cues: cues))
+            return track
+        } catch {
+            TJFLog("subsearch: sidecar fetch failed: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
     // MARK: - Playback Reporting
 
     private func reportPlayStarted() {
@@ -1515,11 +1757,13 @@ final class PlayerViewModel {
     }
 
     /// Manual PiP start (controls button) / safety-net start.
+    /// - Returns: true when the window is active or the start was issued.
+    ///   Subtitle selection never recreates the player item, so calling this
+    ///   after a track change keeps the same AVPlayer/AVPlayerLayer wiring.
     func startPictureInPicture() async -> Bool {
         guard !engineStopped else { return false }
         PipCoordinator.shared.configure(engine: engine)
-        PipCoordinator.shared.start()
-        return PipCoordinator.shared.isActive
+        return PipCoordinator.shared.start()
     }
 
     /// Take playback back from the window (pip.exit button) — same player,

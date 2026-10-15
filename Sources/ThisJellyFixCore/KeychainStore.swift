@@ -17,6 +17,7 @@ public enum KeychainKey {
     public static let userId      = "com.thisjellyfix.auth.userId"
     public static let userName    = "com.thisjellyfix.auth.userName"
     public static let serverURL   = "com.thisjellyfix.auth.serverURL"
+    public static let savedServers = "com.thisjellyfix.auth.savedServers"
     public static let deviceId    = "com.thisjellyfix.auth.deviceId"
 }
 
@@ -81,7 +82,7 @@ public struct KeychainStore: KeychainStoring {
               Self.session.markMigrated("legacy-adopt:\(service)") else { return }
         let legacy = KeychainStore(service: "com.thisjellyfix.auth", systemKeychain: true)
         for key in [KeychainKey.accessToken, KeychainKey.userId,
-                    KeychainKey.userName, KeychainKey.serverURL, KeychainKey.deviceId] {
+                    KeychainKey.userName, KeychainKey.serverURL, KeychainKey.savedServers, KeychainKey.deviceId] {
             // Fail-fast lookup: a poisoned legacy item returns nil here
             // WITHOUT ever raising a dialog.
             if let value = legacy.lookup(key: key, interactive: false).value,
@@ -428,6 +429,7 @@ public struct KeychainStore: KeychainStoring {
             KeychainKey.userId,
             KeychainKey.userName,
             KeychainKey.serverURL,
+            KeychainKey.savedServers,
             KeychainKey.deviceId,
         ]
 

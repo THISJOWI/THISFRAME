@@ -66,7 +66,16 @@ targets:
       # así que las contraindicaciones de la variante static no aplican.
       - package: GoogleCast
         product: GoogleCastStatic
-    settings: { base: { PRODUCT_MODULE_NAME: ThisJellyFixCast, PRODUCT_NAME: ThisJellyFixCast } }
+    settings:
+      base:
+        PRODUCT_MODULE_NAME: ThisJellyFixCast
+        PRODUCT_NAME: ThisJellyFixCast
+        # GoogleCastStatic es un ar archive enlazado AQUÍ (no en el app):
+        # sin -ObjC, ld descarta los object files que solo definen categorías
+        # ObjC (NSLocale+GCKAdditions, etc.) y el SDK lanza
+        # "unrecognized selector" al arrancar. El -ObjC del app no llega a
+        # este link, tiene que estar en el target que enlaza la biblioteca.
+        OTHER_LDFLAGS: "$(inherited) -ObjC"
   Feature-iOS:
     type: framework
     platform: iOS

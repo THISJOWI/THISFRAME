@@ -18,15 +18,43 @@ struct RowSection: View {
     var onPlayDirect: ((JellyfinMediaItem) -> Void)? = nil
     /// "Ver todo" handler — nil hides the link (tvOS/visionOS).
     var onSeeAll: (() -> Void)? = nil
+    /// Manual refresh (resume row) — nil hides the button. While
+    /// `isRefreshing` the button shows a spinner and ignores taps.
+    var onRefresh: (() -> Void)? = nil
+    var isRefreshing: Bool = false
+    /// Caption under the title (recommendation reason) — nil hides it.
+    var subtitle: String? = nil
 
     @State private var appeared = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: MareaTheme.Spacing.sm) {
             HStack(alignment: .firstTextBaseline) {
-                Text(title)
-                    .font(.title3.bold())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.title3.bold())
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Spacer()
+                if let onRefresh {
+                    Button(action: onRefresh) {
+                        if isRefreshing {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    .disabled(isRefreshing)
+                    .accessibilityLabel("Actualizar \(title)")
+                }
                 if let onSeeAll {
                     Button(action: onSeeAll) {
                         HStack(spacing: 2) {

@@ -59,4 +59,22 @@ final class PlaybackDeviceProfileTests: XCTestCase {
 
         XCTAssertTrue(subs.contains { $0["Format"] as? String == "srt" && $0["DeliveryMethod"] as? String == "External" })
     }
+
+    func testCappedNilKeepsProfile() {
+        XCTAssertEqual(PlaybackDeviceProfile.avPlayer.capped(to: nil), .avPlayer)
+    }
+
+    func testCappedLowersBothCeilings() {
+        let capped = PlaybackDeviceProfile.avPlayer.capped(to: 8_000_000)
+        XCTAssertEqual(capped.maxStreamingBitrate, 8_000_000)
+        XCTAssertEqual(capped.maxStaticBitrate, 8_000_000)
+        // Direct-play containers untouched: only the ceilings move.
+        XCTAssertEqual(capped.directPlayProfiles, PlaybackDeviceProfile.avPlayer.directPlayProfiles)
+    }
+
+    func testCappedNeverRaisesCeilings() {
+        let capped = PlaybackDeviceProfile.avPlayer.capped(to: 500_000_000)
+        XCTAssertEqual(capped.maxStreamingBitrate, 140_000_000)
+        XCTAssertEqual(capped.maxStaticBitrate, 140_000_000)
+    }
 }

@@ -3417,6 +3417,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OTHER_LDFLAGS = "$(inherited) -ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.thisjellyfix.Cast-iOS";
 				PRODUCT_MODULE_NAME = ThisJellyFixCast;
 				PRODUCT_NAME = ThisJellyFixCast;
@@ -4252,6 +4253,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OTHER_LDFLAGS = "$(inherited) -ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.thisjellyfix.Cast-iOS";
 				PRODUCT_MODULE_NAME = ThisJellyFixCast;
 				PRODUCT_NAME = ThisJellyFixCast;

@@ -108,12 +108,15 @@ struct DirectPlayer: View {
 
         do {
             let client = JellyfinPlaybackClient()
+            // Same persisted cap as DetailView: opening here must not reset to Auto.
+            let quality = StreamQuality.persisted
             let info = try await client.fetchPlaybackInfo(
                 userId: userId,
                 serverURL: serverURL,
                 token: token,
                 itemId: currentItemId,
-                deviceProfile: .avPlayer
+                deviceProfile: .avPlayer.capped(to: quality.maxBitrate),
+                maxStreamingBitrate: quality.maxBitrate
             )
 
             guard let source = info.mediaSources.first else {

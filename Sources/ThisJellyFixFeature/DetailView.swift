@@ -697,14 +697,18 @@ struct DetailView: View {
         do {
             let client = JellyfinPlaybackClient()
             let infoStartedAt = Date()
+            // The persisted picker value applies from the FIRST frame — it
+            // used to be ignored here and playback always opened in Auto.
+            let quality = StreamQuality.persisted
             let info = try await client.fetchPlaybackInfo(
                 userId: userId,
                 serverURL: serverURL,
                 token: token,
                 itemId: itemId,
-                deviceProfile: .avPlayer
+                deviceProfile: .avPlayer.capped(to: quality.maxBitrate),
+                maxStreamingBitrate: quality.maxBitrate
             )
-            TJFLog("playbackInfo: \(Int(Date().timeIntervalSince(infoStartedAt) * 1000)) ms item=\(itemId)")
+            TJFLog("playbackInfo: \(Int(Date().timeIntervalSince(infoStartedAt) * 1000)) ms item=\(itemId) quality=\(quality.label)")
 
             guard let source = info.mediaSources.first else {
                 failPlayback("No hay fuente de reproducción disponible.")

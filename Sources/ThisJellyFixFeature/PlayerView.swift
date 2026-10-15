@@ -169,6 +169,8 @@ struct PlayerView: View {
         viewModel.configureMediaStreams(mediaStreams)
         viewModel.configureNowPlaying(title: title)
         wireNextEpisode()
+        // Server favorite flag for the heart button (fills in when it lands).
+        Task { await viewModel.loadFavoriteState() }
     }
 
     /// Credits overlay action for the CURRENT next episode (re-run whenever
@@ -359,10 +361,20 @@ struct PlayerView: View {
                 }
             }
 
-            // AirPlay status: connecting (transport blocked) or last failure.
+            // AirPlay status: active (green transmitting), connecting
+            // (transport blocked) or last failure (tappable to dismiss).
             .overlay(alignment: .top) {
                 #if !os(visionOS)
-                if viewModel.isAirPlayConnecting {                    Label("Conectando AirPlay…", systemImage: "airplayvideo")
+                if viewModel.isAirPlayActive {
+                    Label("Transmitiendo por AirPlay", systemImage: "airplayvideo")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(.green.opacity(0.7), in: Capsule())
+                        .padding(.top, 56)
+                        .transition(.opacity)
+                } else if viewModel.isAirPlayConnecting {                    Label("Conectando AirPlay…", systemImage: "airplayvideo")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 14)
@@ -371,14 +383,34 @@ struct PlayerView: View {
                         .padding(.top, 56)
                         .transition(.opacity)
                 } else if let message = viewModel.airplayMessage {
-                    Label(message, systemImage: "airplay.exclamationmark")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(.red.opacity(0.75), in: Capsule())
-                        .padding(.top, 56)
-                        .transition(.opacity)
+                    Button {
+                        viewModel.dismissAirPlayMessage()
+                    } label: {
+                        Label("\(message) — tocar para cerrar", systemImage: "airplay.exclamationmark")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(.red.opacity(0.75), in: Capsule())
+                            .padding(.top, 56)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
+                }
+                if let favError = viewModel.favoriteError {
+                    Button {
+                        viewModel.dismissFavoriteError()
+                    } label: {
+                        Label("\(favError) — tocar para cerrar", systemImage: "heart.slash")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(.red.opacity(0.75), in: Capsule())
+                            .padding(.top, viewModel.airplayMessage != nil ? 100 : 56)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
                 }
                 #endif
                 #if os(iOS)
@@ -632,10 +664,7 @@ struct PlayerView: View {
             }
         }
         .sheet(isPresented: $viewModel.showSubtitlePicker) {
-            SubtitlePickerSheet(
-                tracks: viewModel.availableSubtitleTracks,
-                selected: viewModel.selectedSubtitleTrackIndex
-            ) { track in
+            SubtitlePickerSheet(viewModel: viewModel) { track in
                 Task { await viewModel.selectSubtitleTrack(track) }
             }
         }
@@ -1049,6 +1078,14 @@ private struct ControlsOverlay: View {
                 clusterButton("4k.tv", disabled: false) {
                     viewModel.showQualityPicker = true
                 }
+                // Favorite (P7): real server flag, optimistic toggle + rollback.
+                clusterButton(
+                    viewModel.isFavorite ? "heart.fill" : "heart",
+                    disabled: viewModel.isTogglingFavorite
+                ) {
+                    Task { await viewModel.toggleFavorite() }
+                }
+                .accessibilityLabel(viewModel.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos")
                 clusterButton("gauge", disabled: false) {
                     viewModel.showSpeedPicker = true
                 }
@@ -1416,10 +1453,10 @@ private struct AudioPickerSheet: View {
 }
 
 private struct SubtitlePickerSheet: View {
-    let tracks: [SubtitleTrack]
-    let selected: Int?
+    @Bindable var viewModel: PlayerViewModel
     let onSelect: (SubtitleTrack?) -> Void
     @Environment(\.dismiss) private var dismiss
+    @State private var showSearch = false
 
     var body: some View {
         NavigationStack {
@@ -1431,13 +1468,13 @@ private struct SubtitlePickerSheet: View {
                     HStack {
                         Text("Desactivados")
                         Spacer()
-                        if selected == nil {
+                        if viewModel.selectedSubtitleTrackIndex == nil {
                             Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
                         }
                     }
                 }
 
-                ForEach(tracks) { track in
+                ForEach(viewModel.availableSubtitleTracks) { track in
                     Button {
                         onSelect(track)
                         dismiss()
@@ -1450,11 +1487,17 @@ private struct SubtitlePickerSheet: View {
                                 }
                             }
                             Spacer()
-                            if track.id == selected {
+                            if track.id == viewModel.selectedSubtitleTrackIndex {
                                 Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
                             }
                         }
                     }
+                }
+
+                Button {
+                    showSearch = true
+                } label: {
+                    Label("Buscar subtítulos…", systemImage: "magnifyingglass")
                 }
             }
             .navigationTitle("Subtítulos")
@@ -1465,6 +1508,109 @@ private struct SubtitlePickerSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancelar") { dismiss() }
                 }
+            }
+        }
+        .sheet(isPresented: $showSearch) {
+            RemoteSubtitleSearchSheet(viewModel: viewModel)
+        }
+    }
+}
+
+private struct RemoteSubtitleSearchSheet: View {
+    @Bindable var viewModel: PlayerViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    HStack {
+                        TextField("Idioma (es, en…)", text: $viewModel.remoteSubtitleLanguage)
+                            .noAutoCaps()
+                            .disableAutocorrection(true)
+                            .submitLabel(.search)
+                            .onSubmit { Task { await viewModel.searchRemoteSubtitles() } }
+                        if viewModel.isSearchingRemoteSubs {
+                            ProgressView()
+                        } else {
+                            Button("Buscar") {
+                                Task { await viewModel.searchRemoteSubtitles() }
+                            }
+                            .disabled(viewModel.remoteSubtitleLanguage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+                    }
+                    Text("Requiere un proveedor de subtítulos configurado en el servidor (p. ej. OpenSubtitles).")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let error = viewModel.remoteSubtitleError {
+                    Section {
+                        Label(error, systemImage: "exclamationmark.triangle.fill")
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
+                    }
+                }
+
+                Section {
+                    if viewModel.remoteSubtitleResults.isEmpty {
+                        if viewModel.remoteSubsSearched && viewModel.remoteSubtitleError == nil {
+                            Text("Sin resultados para ese idioma.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        } else if !viewModel.remoteSubsSearched {
+                            Text("Busca por idioma y toca un resultado para descargarlo sin detener la reproducción.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        ForEach(viewModel.remoteSubtitleResults) { result in
+                            Button {
+                                Task {
+                                    await viewModel.downloadAndSelectRemoteSubtitle(result)
+                                    if viewModel.remoteSubtitleError == nil {
+                                        // Track auto-selected: close search + picker.
+                                        viewModel.showSubtitlePicker = false
+                                        dismiss()
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(result.displayName)
+                                        if let count = result.downloadCount {
+                                            Text("\(count) descargas")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
+                                    Spacer()
+                                    if viewModel.downloadingRemoteSubtitleId == result.id {
+                                        ProgressView()
+                                    } else if result.isHashMatch == true {
+                                        Image(systemName: "checkmark.seal.fill")
+                                            .foregroundStyle(MareaTheme.Colors.accent)
+                                    }
+                                }
+                            }
+                            .disabled(viewModel.downloadingRemoteSubtitleId != nil)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Buscar subtítulos")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cerrar") { dismiss() }
+                }
+            }
+        }
+        .onAppear {
+            if viewModel.remoteSubtitleLanguage.isEmpty {
+                viewModel.remoteSubtitleLanguage = viewModel.defaultRemoteSubtitleLanguage()
             }
         }
     }
@@ -1526,7 +1672,12 @@ private struct QualityPickerSheet: View {
                     dismiss()
                 } label: {
                     HStack {
-                        Text(quality.label)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(quality.label)
+                            Text(quality.detail)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                         Spacer()
                         if quality == current {
                             Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
@@ -1547,8 +1698,21 @@ private struct QualityPickerSheet: View {
     }
 }
 
-// MARK: - macOS Floating Close Button Window
+/// Disable autocapitalization where the API exists (iOS/tvOS only —
+/// macOS TextField has no such modifier and the shared player code builds
+/// for all platforms).
+private extension View {
+    @ViewBuilder
+    func noAutoCaps() -> some View {
+        #if os(iOS) || os(tvOS) || os(visionOS)
+        self.textInputAutocapitalization(.never)
+        #else
+        self
+        #endif
+    }
+}
 
+// MARK: - macOS Floating Close Button Window
 #if os(macOS)
 /// A SwiftUI-friendly wrapper that manages a floating NSPanel for the close button.
 /// After toggleFullScreen, SwiftUI overlay buttons lose hit testing. This bypasses

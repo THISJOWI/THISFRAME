@@ -79,6 +79,17 @@ public struct AirPlayRouteState: Equatable, Sendable {
         selectedRouteName = nil
     }
 
+    /// Receiver deselected while still negotiating (picker dismissed, route
+    /// changed back to local): back to idle, NOT failed — nothing broke, the
+    /// user simply changed their mind. Without this the machine sat in
+    /// `connecting` until the 10 s timeout and then showed a confusing
+    /// "no respondió" failure for a connection nobody wanted anymore.
+    public mutating func routeDeselected() {
+        guard case .connecting = phase else { return }
+        phase = .idle
+        selectedRouteName = nil
+    }
+
     /// Back to square one (picker dismissed without selection, failure acked).
     public mutating func reset() {
         phase = .idle

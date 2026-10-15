@@ -36,4 +36,27 @@ public enum StreamQuality: Int, CaseIterable, Identifiable, Sendable {
         case .q360: return 2_000_000
         }
     }
+
+    /// Human-readable ceiling. The options cap BITRATE, not resolution: a
+    /// source below the ceiling still direct-plays untouched, and a capped
+    /// transcode keeps the source's resolution at a lower bitrate.
+    public var detail: String {
+        switch self {
+        case .auto: return "Sin límite — el servidor decide"
+        case .q1080: return "Hasta 12 Mbps"
+        case .q720: return "Hasta 8 Mbps"
+        case .q480: return "Hasta 4 Mbps"
+        case .q360: return "Hasta 2 Mbps"
+        }
+    }
+
+    /// Single source of truth for the persisted picker value (UserDefaults).
+    /// PlayerViewModel, DetailView and DirectPlayer all read this — the
+    /// initial PlaybackInfo used to ignore it and always open in Auto.
+    public static var persisted: StreamQuality {
+        let raw = UserDefaults.standard.integer(forKey: Self.defaultsKey)
+        return StreamQuality(rawValue: raw) ?? .auto
+    }
+
+    public static let defaultsKey = "player.selectedQuality"
 }

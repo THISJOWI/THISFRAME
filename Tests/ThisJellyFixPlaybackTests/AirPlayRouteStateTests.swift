@@ -89,4 +89,40 @@ final class AirPlayRouteStateTests: XCTestCase {
         state.externalPlaybackChanged(true)
         XCTAssertEqual(state.phase, .active)
     }
+
+    func testRouteDeselectedWhileConnectingReturnsToIdle() {
+        var state = AirPlayRouteState()
+        state.routeSelected(name: "Apple TV")
+        state.routeDeselected()
+        XCTAssertEqual(state.phase, .idle)
+        XCTAssertNil(state.selectedRouteName)
+        XCTAssertFalse(state.blocksTransportCommands)
+    }
+
+    func testRouteDeselectedOutsideConnectingKeepsPhase() {
+        var idle = AirPlayRouteState()
+        idle.routeDeselected()
+        XCTAssertEqual(idle.phase, .idle)
+
+        var failed = AirPlayRouteState()
+        failed.routeSelected(name: "Apple TV")
+        failed.timedOut()
+        failed.routeDeselected()
+        XCTAssertEqual(failed.phase, .failed(reason: "Apple TV no respondió en 10 s"))
+
+        var active = AirPlayRouteState()
+        active.routeSelected(name: "Apple TV")
+        active.externalPlaybackChanged(true)
+        active.routeDeselected()
+        XCTAssertEqual(active.phase, .active)
+    }
+
+    func testResetClearsFailed() {
+        var state = AirPlayRouteState()
+        state.routeSelected(name: "Apple TV")
+        state.timedOut()
+        state.reset()
+        XCTAssertEqual(state.phase, .idle)
+        XCTAssertNil(state.selectedRouteName)
+    }
 }

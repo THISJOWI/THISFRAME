@@ -63,11 +63,21 @@ final class AuthModel {
                 deviceId: deviceId
             )
 
-            // Persist to Keychain
-            try keychain.save(key: KeychainKey.accessToken, value: result.accessToken)
-            try keychain.save(key: KeychainKey.userId, value: result.user.id)
-            try keychain.save(key: KeychainKey.userName, value: result.user.name)
-            try keychain.save(key: KeychainKey.serverURL, value: serverURL.absoluteString)
+            // Persist to Keychain: URL primero para no dejar token huérfano
+            // sin servidor (arranque con isAuthenticated=true pero sin server).
+            // Si algún save falla, rollback para no corromper la sesión.
+            do {
+                try keychain.save(key: KeychainKey.serverURL, value: serverURL.absoluteString)
+                try keychain.save(key: KeychainKey.accessToken, value: result.accessToken)
+                try keychain.save(key: KeychainKey.userId, value: result.user.id)
+                try keychain.save(key: KeychainKey.userName, value: result.user.name)
+            } catch {
+                for key in [KeychainKey.accessToken, KeychainKey.userId,
+                            KeychainKey.userName, KeychainKey.serverURL] {
+                    try? keychain.delete(key: key)
+                }
+                throw error
+            }
 
             currentUser = result.user
             token = result.accessToken

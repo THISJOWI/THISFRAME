@@ -114,6 +114,22 @@ public struct PlaybackDeviceProfile: Codable, Sendable, Equatable {
         self.subtitleProfiles = subtitleProfiles
     }
 
+    /// Copy with both bitrate ceilings lowered to `cap` (when set): the
+    /// top-level `MaxStreamingBitrate` alone was not enough — the profile's
+    /// own 140 Mbps ceilings contradicted it and the server could keep
+    /// answering with the untouched direct-play file.
+    public func capped(to cap: Int?) -> PlaybackDeviceProfile {
+        guard let cap else { return self }
+        return PlaybackDeviceProfile(
+            name: name,
+            maxStaticBitrate: min(maxStaticBitrate, cap),
+            maxStreamingBitrate: min(maxStreamingBitrate, cap),
+            directPlayProfiles: directPlayProfiles,
+            transcodingProfiles: transcodingProfiles,
+            subtitleProfiles: subtitleProfiles
+        )
+    }
+
     /// AVPlayer profile for the main player: direct play first (mp4/mov/mkv
     /// containers with codecs AVPlayer actually decodes), HLS h264+aac as the
     /// transcoding fallback. Subtitle delivery mirrors the hybrid strategy:

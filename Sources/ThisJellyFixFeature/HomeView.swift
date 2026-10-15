@@ -1,5 +1,8 @@
 import SwiftUI
 import ThisJellyFixCore
+#if os(iOS) || os(macOS)
+import ThisJellyFixDiscovery
+#endif
 
 struct HomeView: View {
     let libraryModel: LibraryModel
@@ -269,11 +272,14 @@ struct HomeView: View {
                         .font(.largeTitle.bold())
                     Spacer()
 
-                    #if os(iOS) || os(macOS)
-                    if let discovery, discovery.hasDownloadService {
-                        DownloadsButton(discovery: discovery)
-                    }
-                    #endif
+                    HomeActionPill(
+                        userName: userName,
+                        serverURL: serverURL,
+                        token: token,
+                        userId: userId,
+                        onLogout: onLogout,
+                        discovery: discovery
+                    )
                 }
                 .padding(.horizontal, MareaTheme.Spacing.xl)
 
@@ -344,7 +350,13 @@ struct HomeView: View {
                                 ? { libraryModel.imageURL(for: $0, wide: false) }
                                 : nil,
                             onPlayDirect: { item in directItem = item },
-                            onSeeAll: seeAllAction(for: row.title)
+                            onSeeAll: seeAllAction(for: row.title),
+                            // Manual refresh for "Seguir viendo" (P9): force the
+                            // authoritative fetch, keep old content meanwhile.
+                            onRefresh: row.title == "Estás viendo" ? {
+                                Task { await libraryModel.refreshResume(force: true) }
+                            } : nil,
+                            isRefreshing: row.title == "Estás viendo" && libraryModel.isRefreshingResume
                         )
 
                         // Trending sits right after "Estás viendo" so fresh
@@ -355,6 +367,29 @@ struct HomeView: View {
                         }
                         #endif
                     }
+
+                    // Local picks from YOUR library (P10): genre affinity over
+                    // favorites/watched/in-progress + rating tiebreak. Works
+                    // with no TMDB key, no network beyond Jellyfin itself.
+                    #if os(iOS) || os(macOS)
+                    let picks = LibraryRecommender.recommend(from: libraryModel.allItems)
+                    if !picks.isEmpty {
+                        RowSection(
+                            title: "Recomendado para ti",
+                            items: picks.map(\.item),
+                            badgeFor: {
+                                CardBadge.badge(
+                                    for: $0,
+                                    resumeItems: resumeIds,
+                                    verifiedNewSeasonIDs: libraryModel.verifiedNewSeasonIDs
+                                )
+                            },
+                            imageURL: { libraryModel.imageURL(for: $0, wide: false) },
+                            onPlayDirect: { item in directItem = item },
+                            subtitle: picks.first?.reason
+                        )
+                    }
+                    #endif
                 }
 
                 // "Para ti" shelves: homogeneous rows after the library.
