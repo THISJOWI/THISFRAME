@@ -727,11 +727,10 @@ final class PlayerViewModel {
         // Warn instead of pretending the receiver follows along.
         let wasExternallyActive = engine.player.isExternalPlaybackActive
 
-        // El cambio de calidad NO debe perder el audio/sub elegidos: se
-        // re-piden con los mismos índices servidor del swap actual.
+        // El cambio de calidad preserva el audio servido (subs siempre -1:
+        // invariante anti-dobles; el overlay los re-descarga solo).
         guard let swapped = await fetchPlaybackSwap(
-            audioServerIndex: servedAudioServerIndex,
-            subtitleServerIndex: currentSubtitleServerIndex ?? -1
+            audioServerIndex: servedAudioServerIndex
         ) else { return }
         let delivery = swapped.url.absoluteString.contains(".m3u8") ? "transcode" : "direct"
         TJFLog("switchQuality: \(quality.label) cap=\(quality.maxBitrate.map(String.init) ?? "nil") delivery=\(delivery)")
@@ -933,13 +932,6 @@ final class PlayerViewModel {
         await switchAudio(toServerIndex: serverIdx)
     }
 
-    /// Índice SERVIDOR del subtítulo overlay seleccionado (para preservarlo
-    /// en re-fetches), o nil si están desactivados.
-    private var currentSubtitleServerIndex: Int? {
-        guard let idx = selectedExternalSubIndex, idx < externalSubServerIndices.count else { return nil }
-        return externalSubServerIndices[idx]
-    }
-
     /// Cambia a un audio solo-declarado-por-el-servidor: re-pide PlaybackInfo
     /// con `AudioStreamIndex` y re-monta en caliente (mismo patrón que
     /// `switchQuality`: posición, play/pausa y rate se preservan).
@@ -958,8 +950,7 @@ final class PlayerViewModel {
         let rate = playbackRate
         TJFLog("switchAudio: serverIndex=\(serverIndex) pos=\(String(format: "%.1f", position))")
         guard let swapped = await fetchPlaybackSwap(
-            audioServerIndex: serverIndex,
-            subtitleServerIndex: currentSubtitleServerIndex ?? -1
+            audioServerIndex: serverIndex
         ) else { return }
         await switchToEpisode(
             url: swapped.url,
@@ -983,12 +974,13 @@ final class PlayerViewModel {
         }
     }
 
-    /// Re-pide PlaybackInfo preservando la selección actual de audio/sub y
-    /// resuelve la URL reproducible. Comparte la maquinaria de `switchQuality`
-    /// y `switchAudio` para no duplicar el ladder de entrega.
+    /// Re-pide PlaybackInfo preservando el audio actual y resuelve la URL
+    /// reproducible. Comparte la maquinaria de `switchQuality` y
+    /// `switchAudio` para no duplicar el ladder de entrega.
+    /// Los subs van SIEMPRE con -1 (invariante anti-dobles: nada mux/quemado;
+    /// el overlay los re-descarga solo).
     private func fetchPlaybackSwap(
-        audioServerIndex: Int?,
-        subtitleServerIndex: Int?
+        audioServerIndex: Int?
     ) async -> (url: URL, playSessionId: String?, mediaStreams: [MediaStream])? {
         guard let userId, let serverURL, let token, let itemId else { return nil }
         do {
@@ -1000,7 +992,7 @@ final class PlayerViewModel {
                 itemId: itemId,
                 deviceProfile: .avPlayer.capped(to: quality.maxBitrate),
                 maxStreamingBitrate: quality.maxBitrate,
-                subtitleStreamIndex: subtitleServerIndex,
+                subtitleStreamIndex: -1,
                 audioStreamIndex: audioServerIndex
             )
             guard let source = info.mediaSources.first else {
@@ -1017,7 +1009,7 @@ final class PlayerViewModel {
                 return nil
             }
             let delivery = source.transcodingUrl != nil ? "transcode" : "direct"
-            TJFLog("fetchPlaybackSwap: delivery=\(delivery) audio=\(audioServerIndex.map(String.init) ?? "-") sub=\(subtitleServerIndex.map(String.init) ?? "-")")
+            TJFLog("fetchPlaybackSwap: delivery=\(delivery) audio=\(audioServerIndex.map(String.init) ?? "-")")
             return (url, info.playSessionId, source.mediaStreams)
         } catch {
             TJFLog("fetchPlaybackSwap failed: \(error)")
@@ -1571,17 +1563,11 @@ final class PlayerViewModel {
         externalSubsLoaded = true
         let gen = subtitleGeneration
 
-        // Single-renderer subtitles: EVERY text subtitle stream (embedded or
-        // external) is fetched as SRT and painted by the SwiftUI overlay, the
-        // only renderer with a background box. The native AVPlayer legible
-        // render — plain text, no background — is dropped from the picker
-        // whenever the overlay has tracks, so both can never show at once.
-        // Bitmap formats (PGS/VobSub/DVB) can't convert to SRT; they stay on
-        // the native path as the last-resort renderer.
-        let bitmapCodecs: Set<String> = ["pgssub", "hdmv_pgs_subtitle", "dvdsub", "vobsub", "dvb_subtitle", "xsub"]
+        // Bitmap (PGS/VobSub/DVB): sin texto convertible a SRT; fuera del
+        // overlay y con la nativa permanentemente apagada en fullscreen.
         let candidates = serverMediaStreams.filter { stream in
             guard stream.type == "Subtitle" else { return false }
-            return !bitmapCodecs.contains((stream.codec ?? "").lowercased())
+            return !PlaybackStreamPicker.bitmapCodecs.contains((stream.codec ?? "").lowercased())
         }
         guard !candidates.isEmpty else {
             TJFLog("extSubs: server declares none")
@@ -1749,12 +1735,12 @@ final class PlayerViewModel {
             )
             // The sidecar is new server-side: refresh ONLY the stream list
             // (keep the current URL + PlaySessionId — no re-prepare, no stop).
-            // Se preservan los índices actuales para no alterar la sesión.
+            // Subs siempre -1 (invariante anti-dobles); se preserva el audio.
             let info = try await JellyfinPlaybackClient().fetchPlaybackInfo(
                 userId: userId, serverURL: serverURL, token: token, itemId: itemId,
                 deviceProfile: .avPlayer.capped(to: selectedQuality.maxBitrate),
                 maxStreamingBitrate: selectedQuality.maxBitrate,
-                subtitleStreamIndex: currentSubtitleServerIndex ?? -1,
+                subtitleStreamIndex: -1,
                 audioStreamIndex: servedAudioServerIndex
             )
             guard let source = info.mediaSources.first else {
