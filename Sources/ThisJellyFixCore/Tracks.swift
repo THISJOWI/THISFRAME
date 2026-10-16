@@ -78,3 +78,38 @@ public struct SubtitleTrack: Identifiable, Sendable, Equatable {
         self.isDefault = isDefault
     }
 }
+
+/// Why a server-declared subtitle track has no playable overlay row (yet).
+public enum SubtitleUnavailabilityReason: Sendable, Equatable {
+    /// Text track whose SRT download/parse failed — tapping retries.
+    case downloadFailed
+    /// Image-based track (PGS/VobSub/DVB): the overlay can't render pixels.
+    /// Tapping asks the server to burn it in via transcode (hot-swap).
+    case bitmapRequiresTranscode
+}
+
+/// A server-declared subtitle track that isn't playable in the overlay.
+/// Shown in the picker so nothing silently disappears; every row is actionable.
+public struct UnavailableSubtitleTrack: Identifiable, Sendable, Equatable {
+    /// Server `MediaStream.index` — stable action key (never a positional id).
+    public let id: Int
+    public let name: String
+    public let languageName: String?
+    /// Uppercase codec for display (e.g. "PGS", "ASS").
+    public let codec: String?
+    public let reason: SubtitleUnavailabilityReason
+
+    public init(
+        id: Int,
+        name: String,
+        languageName: String? = nil,
+        codec: String? = nil,
+        reason: SubtitleUnavailabilityReason
+    ) {
+        self.id = id
+        self.name = name
+        self.languageName = languageName
+        self.codec = codec
+        self.reason = reason
+    }
+}

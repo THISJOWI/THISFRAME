@@ -1125,7 +1125,7 @@ private struct ControlsOverlay: View {
                 }
                 clusterButton(
                     "text.bubble",
-                    disabled: viewModel.availableSubtitleTracks.isEmpty
+                    disabled: viewModel.availableSubtitleTracks.isEmpty && viewModel.unavailableSubtitleTracks.isEmpty
                 ) {
                     viewModel.showSubtitlePicker = true
                 }
@@ -1496,7 +1496,8 @@ private struct SubtitlePickerSheet: View {
                     HStack {
                         Text("Desactivados")
                         Spacer()
-                        if viewModel.selectedSubtitleTrackIndex == nil {
+                        if viewModel.selectedSubtitleTrackIndex == nil
+                            && viewModel.burnedInSubtitleServerIndex == nil {
                             Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
                         }
                     }
@@ -1517,6 +1518,51 @@ private struct SubtitlePickerSheet: View {
                             Spacer()
                             if track.id == viewModel.selectedSubtitleTrackIndex {
                                 Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
+                            }
+                        }
+                    }
+                }
+
+                if !viewModel.unavailableSubtitleTracks.isEmpty {
+                    Section {
+                        Text("Estas pistas no están en el stream servido. Toca para cargarlas.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } header: {
+                        Text("Más subtítulos")
+                    }
+                    ForEach(viewModel.unavailableSubtitleTracks) { track in
+                        Button {
+                            Task {
+                                switch track.reason {
+                                case .downloadFailed:
+                                    await viewModel.retrySubtitleDownload(serverIndex: track.id)
+                                case .bitmapRequiresTranscode:
+                                    await viewModel.switchSubtitleBurnIn(serverIndex: track.id)
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(track.name)
+                                    if let lang = track.languageName {
+                                        Text(lang).font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    Text(track.reason == .bitmapRequiresTranscode
+                                        ? "\((track.codec ?? "IMG")) · requiere transcodificar"
+                                        : "Descarga fallida · toca para reintentar")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                if track.id == viewModel.burnedInSubtitleServerIndex {
+                                    Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
+                                } else {
+                                    Image(systemName: track.reason == .bitmapRequiresTranscode
+                                        ? "film.stack"
+                                        : "arrow.clockwise")
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }

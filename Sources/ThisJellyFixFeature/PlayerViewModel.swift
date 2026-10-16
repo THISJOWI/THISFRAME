@@ -69,6 +69,16 @@ final class PlayerViewModel {
     private var externalSubs: [(track: SubtitleTrack, cues: [SubtitleCue])] = []
     /// Index into `externalSubs` when a subtitle track is selected.
     private var selectedExternalSubIndex: Int?
+    /// Server-declared subtitle tracks without a playable overlay row:
+    /// failed text downloads (tap retries) and bitmap tracks (tap burns in
+    /// via transcode). Listed so nothing silently disappears.
+    var unavailableSubtitleTracks: [UnavailableSubtitleTrack] = []
+    /// Server indices of text tracks whose SRT download/parse failed.
+    var failedSubtitleServerIndices: Set<Int> = []
+    /// Server index of the bitmap subtitle currently burned into the served
+    /// stream (pixels, not a legible track — no doubles possible). Nil =
+    /// overlay stream (-1, the invariant).
+    var burnedInSubtitleServerIndex: Int?
     /// Text for the SwiftUI subtitle overlay (black background).
     var subtitleText: String?
 
@@ -727,35 +737,59 @@ final class PlayerViewModel {
         // Warn instead of pretending the receiver follows along.
         let wasExternallyActive = engine.player.isExternalPlaybackActive
 
-        // El cambio de calidad preserva el audio servido (subs siempre -1:
-        // invariante anti-dobles; el overlay los re-descarga solo).
+        // El cambio de calidad preserva audio servido y burn-in activo
+        // (subs -1 en caso contrario: invariante anti-dobles).
         guard let swapped = await fetchPlaybackSwap(
-            audioServerIndex: servedAudioServerIndex
+            audioServerIndex: servedAudioServerIndex,
+            subtitleServerIndex: burnedInSubtitleServerIndex,
+            burnInSubtitle: burnedInSubtitleServerIndex != nil
         ) else { return }
         let delivery = swapped.url.absoluteString.contains(".m3u8") ? "transcode" : "direct"
         TJFLog("switchQuality: \(quality.label) cap=\(quality.maxBitrate.map(String.init) ?? "nil") delivery=\(delivery)")
 
-        await switchToEpisode(
+        await hotSwapTo(
             url: swapped.url,
+            playSessionId: swapped.playSessionId,
+            mediaStreams: swapped.mediaStreams,
+            audioServerIndex: servedAudioServerIndex,
+            position: position,
+            wasPlaying: wasPlaying,
+            rate: rate
+        )
+        if wasExternallyActive {
+            airplayMessage = "AirPlay detenido por el cambio de calidad — vuelve a seleccionarlo"
+            TJFLog("airplay: quality swap ended external session — user must re-select")
+        }
+    }
+
+    /// Hot-swap en caliente preservando posición, play/pausa y rate.
+    /// `switchToEpisode` siempre deja playing: se restaura lo que había.
+    private func hotSwapTo(
+        url: URL,
+        playSessionId: String?,
+        mediaStreams: [MediaStream],
+        audioServerIndex: Int?,
+        position: Double,
+        wasPlaying: Bool,
+        rate: Float
+    ) async {
+        guard let userId, let serverURL, let token, let itemId else { return }
+        await switchToEpisode(
+            url: url,
             startPosition: position,
             itemId: itemId,
             serverURL: serverURL,
             token: token,
             userId: userId,
-            playSessionId: swapped.playSessionId,
-            mediaStreams: swapped.mediaStreams,
-            audioServerIndex: servedAudioServerIndex
+            playSessionId: playSessionId,
+            mediaStreams: mediaStreams,
+            audioServerIndex: audioServerIndex
         )
-        // switchToEpisode always plays: restore what the user had.
         if rate != 1.0 { await setPlaybackRate(rate) }
         if !wasPlaying {
             engine.pause()
             isPlaying = false
             userPaused = true
-        }
-        if wasExternallyActive {
-            airplayMessage = "AirPlay detenido por el cambio de calidad — vuelve a seleccionarlo"
-            TJFLog("airplay: quality swap ended external session — user must re-select")
         }
     }
 
@@ -793,6 +827,9 @@ final class PlayerViewModel {
         externalSubServerIndices = []
         selectedExternalSubIndex = nil
         subtitleText = nil
+        unavailableSubtitleTracks = []
+        failedSubtitleServerIndices = []
+        burnedInSubtitleServerIndex = nil
         showAudioPicker = false
         showSubtitlePicker = false
         showSpeedPicker = false
@@ -950,37 +987,95 @@ final class PlayerViewModel {
         let rate = playbackRate
         TJFLog("switchAudio: serverIndex=\(serverIndex) pos=\(String(format: "%.1f", position))")
         guard let swapped = await fetchPlaybackSwap(
-            audioServerIndex: serverIndex
+            audioServerIndex: serverIndex,
+            subtitleServerIndex: burnedInSubtitleServerIndex,
+            burnInSubtitle: burnedInSubtitleServerIndex != nil
         ) else { return }
-        await switchToEpisode(
+        await hotSwapTo(
             url: swapped.url,
-            startPosition: position,
-            itemId: itemId,
-            serverURL: serverURL,
-            token: token,
-            userId: userId,
             playSessionId: swapped.playSessionId,
             mediaStreams: swapped.mediaStreams,
-            audioServerIndex: serverIndex
+            audioServerIndex: serverIndex,
+            position: position,
+            wasPlaying: wasPlaying,
+            rate: rate
         )
-        if rate != 1.0 { await setPlaybackRate(rate) }
-        if !wasPlaying {
-            engine.pause()
-            isPlaying = false
-            userPaused = true
-        }
         if let row = availableAudioTracks.first(where: { $0.serverIndex == serverIndex }) {
             selectedAudioTrackIndex = row.id
         }
     }
 
+    /// Activa una pista bitmap (PGS/VobSub/DVB) quemándola en el vídeo vía
+    /// transcode: el overlay no renderiza píxeles. Hot-swap preservando
+    /// posición/estado (mismo patrón que `switchAudio`). Quemado = píxeles,
+    /// no pista legible: imposible el doble renderer.
+    func switchSubtitleBurnIn(serverIndex idx: Int) async {
+        guard !engineStopped, !Task.isCancelled else { return }
+        guard burnedInSubtitleServerIndex != idx else { return }
+        guard serverMediaStreams.contains(where: { $0.type == "Subtitle" && $0.index == idx }) else { return }
+        let position = currentTime
+        let wasPlaying = isPlaying
+        let rate = playbackRate
+        TJFLog("switchSubBurnIn: serverIndex=\(idx) pos=\(String(format: "%.1f", position))")
+        guard let swapped = await fetchPlaybackSwap(
+            audioServerIndex: servedAudioServerIndex,
+            subtitleServerIndex: idx,
+            burnInSubtitle: true
+        ) else { return }
+        await hotSwapTo(
+            url: swapped.url,
+            playSessionId: swapped.playSessionId,
+            mediaStreams: swapped.mediaStreams,
+            audioServerIndex: servedAudioServerIndex,
+            position: position,
+            wasPlaying: wasPlaying,
+            rate: rate
+        )
+        burnedInSubtitleServerIndex = idx
+        // Sin overlay encima de píxeles quemados (single renderer) y sin
+        // auto-pick que lo pise.
+        subtitleSelectionLocked = true
+        selectedExternalSubIndex = nil
+        selectedSubtitleTrackIndex = nil
+        subtitleText = nil
+        refreshSubtitleTimer()
+    }
+
+    /// Vuelve al stream overlay (-1, sin quemar) si hay un burn-in activo.
+    /// False = el swap falló, el llamante debe abortar su selección.
+    private func ensureOverlayStream() async -> Bool {
+        guard burnedInSubtitleServerIndex != nil else { return true }
+        guard !engineStopped, !Task.isCancelled else { return false }
+        let position = currentTime
+        let wasPlaying = isPlaying
+        let rate = playbackRate
+        TJFLog("subtitles: leaving burn-in, back to overlay stream")
+        guard let swapped = await fetchPlaybackSwap(
+            audioServerIndex: servedAudioServerIndex
+        ) else { return false }
+        await hotSwapTo(
+            url: swapped.url,
+            playSessionId: swapped.playSessionId,
+            mediaStreams: swapped.mediaStreams,
+            audioServerIndex: servedAudioServerIndex,
+            position: position,
+            wasPlaying: wasPlaying,
+            rate: rate
+        )
+        burnedInSubtitleServerIndex = nil
+        return true
+    }
+
     /// Re-pide PlaybackInfo preservando el audio actual y resuelve la URL
-    /// reproducible. Comparte la maquinaria de `switchQuality` y
-    /// `switchAudio` para no duplicar el ladder de entrega.
-    /// Los subs van SIEMPRE con -1 (invariante anti-dobles: nada mux/quemado;
-    /// el overlay los re-descarga solo).
+    /// reproducible. Comparte la maquinaria de `switchQuality`,
+    /// `switchAudio` y `switchSubtitleBurnIn` para no duplicar el ladder.
+    /// Los subs van con -1 salvo burn-in explícito (invariante anti-dobles:
+    /// nada mux/quemado salvo que el usuario lo pida; el overlay los
+    /// re-descarga solo).
     private func fetchPlaybackSwap(
-        audioServerIndex: Int?
+        audioServerIndex: Int?,
+        subtitleServerIndex: Int? = nil,
+        burnInSubtitle: Bool = false
     ) async -> (url: URL, playSessionId: String?, mediaStreams: [MediaStream])? {
         guard let userId, let serverURL, let token, let itemId else { return nil }
         do {
@@ -992,7 +1087,8 @@ final class PlayerViewModel {
                 itemId: itemId,
                 deviceProfile: .avPlayer.capped(to: quality.maxBitrate),
                 maxStreamingBitrate: quality.maxBitrate,
-                subtitleStreamIndex: -1,
+                subtitleStreamIndex: subtitleServerIndex ?? -1,
+                alwaysBurnInSubtitleWhenTranscoding: burnInSubtitle ? true : false,
                 audioStreamIndex: audioServerIndex
             )
             guard let source = info.mediaSources.first else {
@@ -1022,6 +1118,9 @@ final class PlayerViewModel {
         // dead engine (async picker tasks outliving the view could otherwise
         // flip state behind a floating PiP session).
         guard !engineStopped else { return }
+        // Saliendo de un burn-in: primero volver al stream overlay (-1);
+        // si ese swap falla, abortar para no mezclar estados.
+        guard await ensureOverlayStream() else { return }
         // Manual choice — including explicit "Desactivados" — wins over the
         // stored preference for the rest of this item. Never recreates the
         // player item: PiP wiring (same AVPlayer/AVPlayerLayer) is untouched.
@@ -1577,8 +1676,10 @@ final class PlayerViewModel {
         // picker vacío durante segundos tras cada cambio de episodio).
         // Cada pista lleva timeout propio; el padre publica una sola vez en
         // orden de servidor para que los ids del overlay sean estables.
-        let fetched: [(order: Int, stream: MediaStream, cues: [SubtitleCue])] = await withTaskGroup(
-            of: (Int, MediaStream, [SubtitleCue])?.self
+        // Los fallos de texto se indexan (reintento desde el picker) en vez
+        // de desaparecer en silencio.
+        let (fetched, failed): ([(order: Int, stream: MediaStream, cues: [SubtitleCue])], [Int]) = await withTaskGroup(
+            of: (Int, MediaStream, [SubtitleCue]?).self
         ) { group in
             for (i, stream) in candidates.enumerated() {
                 guard let idx = stream.index else { continue }
@@ -1586,37 +1687,27 @@ final class PlayerViewModel {
                     // Siempre SRT: el servidor convierte ASS/SSA/VTT al vuelo
                     // y SRTParser solo habla SRT (ahora también limpia
                     // restos de formato ASS).
-                    let urlString = "\(serverURL.absoluteString)/Videos/\(itemId)/\(itemId)/Subtitles/\(idx)/Stream.srt?api_key=\(token)"
-                    guard let url = URL(string: urlString) else { return nil }
-                    var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
-                    request.setValue("MediaBrowser Token=\"\(token)\"", forHTTPHeaderField: "Authorization")
-                    do {
-                        let (data, response) = try await URLSession.shared.data(for: request)
-                        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
-                            TJFLog("extSubs idx=\(idx) HTTP \(http.statusCode)")
-                            return nil
-                        }
-                        guard let text = String(data: data, encoding: .utf8)
-                            ?? String(data: data, encoding: .isoLatin1)
-                        else { return nil }
-                        let cues = SRTParser.parse(text)
-                        guard !cues.isEmpty else {
-                            TJFLog("extSubs idx=\(idx) parsed 0 cues — skipped")
-                            return nil
-                        }
-                        TJFLog("extSubs idx=\(idx) cues=\(cues.count)")
-                        return (i, stream, cues)
-                    } catch {
-                        TJFLog("extSubs idx=\(idx) failed: \(error.localizedDescription)")
-                        return nil
+                    guard let cues = await self.downloadSubtitleCues(serverIndex: idx) else {
+                        return (i, stream, nil)
                     }
+                    return (i, stream, cues)
                 }
             }
-            var collected: [(Int, MediaStream, [SubtitleCue])] = []
+            var loaded: [(Int, MediaStream, [SubtitleCue])] = []
+            var failed: [Int] = []
             for await result in group {
-                if let result { collected.append(result) }
+                if let cues = result.2 {
+                    loaded.append((result.0, result.1, cues))
+                } else if let idx = result.1.index {
+                    failed.append(idx)
+                }
             }
-            return collected.map { (order: $0.0, stream: $0.1, cues: $0.2) }
+            // Estado de fallos por generación: un reintento posterior parte
+            // de cero en vez de acumular índices obsoletos.
+            return (
+                loaded.map { (order: $0.0, stream: $0.1, cues: $0.2) },
+                failed
+            )
         }
         // Swap durante la descarga: el nuevo item tiene listas propias —
         // nunca publicar pistas del anterior.
@@ -1624,34 +1715,11 @@ final class PlayerViewModel {
             TJFLog("extSubs: stale results dropped after fetch (episode changed)")
             return
         }
+        failedSubtitleServerIndices = Set(failed)
         for entry in fetched.sorted(by: { $0.order < $1.order }) {
-            let (i, stream, cues) = (entry.order, entry.stream, entry.cues)
-            let display = TrackNaming.display(
-                rawName: stream.displayTitle ?? stream.title ?? "Subtítulo \(i + 1)",
-                languageCode: stream.language,
-                serverTitle: stream.displayTitle ?? stream.title,
-                index: i
-            )
-                // Surface server flags in the caption so same-language tracks
-                // are distinguishable (full vs forced vs SDH). Title stays
-                // untouched; flags never hide a track.
-                var captionParts: [String] = []
-                if let caption = display.caption, !caption.isEmpty { captionParts.append(caption) }
-                if stream.isForced == true { captionParts.append("Forzados") }
-                if stream.isHearingImpaired == true { captionParts.append("SDH") }
-                let track = SubtitleTrack(
-                    id: externalSubs.count,
-                    name: display.title,
-                    language: stream.language,
-                    languageName: captionParts.isEmpty ? nil : captionParts.joined(separator: " · "),
-                    isExternal: true,
-                    isForced: stream.isForced == true,
-                    isHearingImpaired: stream.isHearingImpaired == true,
-                    isDefault: stream.isDefault == true
-                )
-                externalSubs.append((track: track, cues: cues))
-                externalSubServerIndices.append(stream.index)
+            appendOverlayTrack(stream: entry.stream, order: entry.order, cues: entry.cues)
         }
+        refreshUnavailableSubtitleTracks()
         if !externalSubs.isEmpty {
             availableSubtitleTracks = displayExternalSubs()
             await applyLanguagePreferences()
@@ -1663,6 +1731,151 @@ final class PlayerViewModel {
             }
             #endif
         }
+    }
+
+    /// Descarga y parsea UNA pista de texto como SRT (el servidor convierte
+    /// ASS/SSA/VTT al vuelo). Nil = fallo reintentable (HTTP≠200, timeout,
+    /// ilegible, 0 cues); cada causa queda en log con su índice.
+    private func downloadSubtitleCues(serverIndex idx: Int) async -> [SubtitleCue]? {
+        guard reportingConfigured, let itemId, let serverURL, let token else { return nil }
+        let urlString = "\(serverURL.absoluteString)/Videos/\(itemId)/\(itemId)/Subtitles/\(idx)/Stream.srt?api_key=\(token)"
+        guard let url = URL(string: urlString) else { return nil }
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)
+        request.setValue("MediaBrowser Token=\"\(token)\"", forHTTPHeaderField: "Authorization")
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                TJFLog("extSubs idx=\(idx) HTTP \(http.statusCode)")
+                return nil
+            }
+            guard let text = String(data: data, encoding: .utf8)
+                ?? String(data: data, encoding: .isoLatin1)
+            else {
+                TJFLog("extSubs idx=\(idx) undecodable — retryable from picker")
+                return nil
+            }
+            let cues = SRTParser.parse(text)
+            guard !cues.isEmpty else {
+                TJFLog("extSubs idx=\(idx) parsed 0 cues — skipped")
+                return nil
+            }
+            TJFLog("extSubs idx=\(idx) cues=\(cues.count)")
+            return cues
+        } catch {
+            TJFLog("extSubs idx=\(idx) failed: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Construye la fila overlay de un stream servido y la añade manteniendo
+    /// el paralelo `externalSubServerIndices` (id posicional == posición).
+    private func appendOverlayTrack(stream: MediaStream, order: Int, cues: [SubtitleCue]) {
+        let display = TrackNaming.display(
+            rawName: stream.displayTitle ?? stream.title ?? "Subtítulo \(order + 1)",
+            languageCode: stream.language,
+            serverTitle: stream.displayTitle ?? stream.title,
+            index: order
+        )
+        // Surface server flags in the caption so same-language tracks
+        // are distinguishable (full vs forced vs SDH). Title stays
+        // untouched; flags never hide a track.
+        var captionParts: [String] = []
+        if let caption = display.caption, !caption.isEmpty { captionParts.append(caption) }
+        if stream.isForced == true { captionParts.append("Forzados") }
+        if stream.isHearingImpaired == true { captionParts.append("SDH") }
+        let track = SubtitleTrack(
+            id: externalSubs.count,
+            name: display.title,
+            language: stream.language,
+            languageName: captionParts.isEmpty ? nil : captionParts.joined(separator: " · "),
+            isExternal: true,
+            isForced: stream.isForced == true,
+            isHearingImpaired: stream.isHearingImpaired == true,
+            isDefault: stream.isDefault == true
+        )
+        externalSubs.append((track: track, cues: cues))
+        externalSubServerIndices.append(stream.index)
+    }
+
+    /// Clasifica las pistas de subtítulo declaradas sin fila overlay:
+    /// bitmap → burn-in vía transcode; texto fallido → reintento.
+    /// Las aún cargando se omiten (evita parpadeo). Pura → testeable.
+    static func classifyUnservedSubtitles(
+        serverStreams: [MediaStream],
+        loadedServerIndices: Set<Int>,
+        failedServerIndices: Set<Int>
+    ) -> [UnavailableSubtitleTrack] {
+        let subs = serverStreams.filter { $0.type == "Subtitle" }
+        var out: [UnavailableSubtitleTrack] = []
+        for (pos, stream) in subs.enumerated() {
+            guard let idx = stream.index, !loadedServerIndices.contains(idx) else { continue }
+            let display = TrackNaming.display(
+                rawName: stream.displayTitle ?? stream.title,
+                languageCode: stream.language,
+                serverTitle: stream.displayTitle ?? stream.title,
+                index: pos,
+                fallbackPrefix: "Subtítulo"
+            )
+            var captionParts: [String] = []
+            if let caption = display.caption, !caption.isEmpty { captionParts.append(caption) }
+            if stream.isForced == true { captionParts.append("Forzados") }
+            if stream.isHearingImpaired == true { captionParts.append("SDH") }
+            if PlaybackStreamPicker.bitmapCodecs.contains((stream.codec ?? "").lowercased()) {
+                captionParts.append((stream.codec ?? "IMG").uppercased())
+                out.append(UnavailableSubtitleTrack(
+                    id: idx,
+                    name: display.title,
+                    languageName: captionParts.joined(separator: " · "),
+                    codec: stream.codec?.uppercased(),
+                    reason: .bitmapRequiresTranscode
+                ))
+            } else if failedServerIndices.contains(idx) {
+                out.append(UnavailableSubtitleTrack(
+                    id: idx,
+                    name: display.title,
+                    languageName: captionParts.isEmpty ? nil : captionParts.joined(separator: " · "),
+                    codec: stream.codec?.uppercased(),
+                    reason: .downloadFailed
+                ))
+            }
+        }
+        return out.sorted { $0.id < $1.id }
+    }
+
+    /// Recalcula las filas no disponibles del picker. Internal para tests.
+    func refreshUnavailableSubtitleTracks() {
+        let loaded = Set(externalSubServerIndices.compactMap { $0 })
+        unavailableSubtitleTracks = Self.classifyUnservedSubtitles(
+            serverStreams: serverMediaStreams,
+            loadedServerIndices: loaded,
+            failedServerIndices: failedSubtitleServerIndices
+        )
+    }
+
+    /// Reintento manual de una pista de texto fallida: la añade al overlay
+    /// sin tocar playback. Sin carrera con `addExternal` (misma generación
+    /// o item distinto → aborta).
+    func retrySubtitleDownload(serverIndex idx: Int) async {
+        guard !engineStopped, reportingConfigured else { return }
+        guard !externalSubServerIndices.contains(where: { $0 == idx }) else {
+            refreshUnavailableSubtitleTracks()
+            return
+        }
+        guard let stream = serverMediaStreams.first(where: { $0.type == "Subtitle" && $0.index == idx }) else { return }
+        let gen = subtitleGeneration
+        guard let cues = await downloadSubtitleCues(serverIndex: idx) else {
+            failedSubtitleServerIndices.insert(idx)
+            refreshUnavailableSubtitleTracks()
+            return
+        }
+        guard gen == subtitleGeneration, !engineStopped else { return }
+        let order = serverMediaStreams.filter { $0.type == "Subtitle" }.firstIndex(where: { $0.index == idx })
+            ?? externalSubs.count
+        appendOverlayTrack(stream: stream, order: order, cues: cues)
+        failedSubtitleServerIndices.remove(idx)
+        availableSubtitleTracks = displayExternalSubs()
+        refreshUnavailableSubtitleTracks()
+        TJFLog("extSubs idx=\(idx) retry OK cues=\(cues.count)")
     }
 
     /// Late-arriving server streams for the CURRENT item (episode-swap prop
@@ -1677,7 +1890,10 @@ final class PlayerViewModel {
         TJFLog("refreshMediaStreams: \(serverMediaStreams.count) -> \(streams.count)")
         serverMediaStreams = streams
         // New streams for the same item: reload overlay tracks once.
+        // Limpia fallos/no-disponibles del estado anterior (se recalculan).
         externalSubsLoaded = false
+        failedSubtitleServerIndices = []
+        unavailableSubtitleTracks = []
         tracksLoaded = false
         trackLoadAttempts = 0
         Task { await addExternalSubtitlesIfNeeded() }
