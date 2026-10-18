@@ -761,7 +761,7 @@ struct DetailView: View {
     }
 
     private func playEpisode(_ episode: JellyfinEpisode) async {
-        streamTitle = episode.name
+        streamTitle = episode.displayTitle
         nextEpisode = nextEpisodeAfter(episode)
         previousEpisode = previousEpisodeBefore(episode)
         startedViaHandoff = false

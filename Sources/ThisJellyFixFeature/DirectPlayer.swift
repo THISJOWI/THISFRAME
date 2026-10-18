@@ -42,7 +42,7 @@ struct DirectPlayer: View {
         self.userId = userId
         self.onClosed = onClosed
         _currentItemId = State(initialValue: item.id)
-        _currentTitle = State(initialValue: item.name)
+        _currentTitle = State(initialValue: item.type == "Episode" ? item.episodeDisplayTitle : item.name)
         _currentStartPosition = State(initialValue: item.resumePositionSeconds)
     }
 
@@ -166,7 +166,7 @@ struct DirectPlayer: View {
     /// never unmounts — its onChange swaps the stream inside the player.
     private func play(_ episode: JellyfinEpisode) async {
         currentItemId = episode.id
-        currentTitle = episode.name
+        currentTitle = episode.displayTitle
         currentStartPosition = episode.resumePositionSeconds
 
         if let index = seasonEpisodes.firstIndex(where: { $0.id == episode.id }) {

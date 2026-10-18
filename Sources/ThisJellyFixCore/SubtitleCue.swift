@@ -66,6 +66,8 @@ public enum SRTParser {
     ///   `{hola}` se conservan),
     /// - `\N`/`\n` (saltos ASS) → salto de línea, `\h` → espacio,
     /// - demás códigos `\comando` o `\comando(params)` → eliminados.
+    /// - etiquetas HTML de formato (`<i>`, `<font>`, …) → eliminadas, dejando
+    ///   el diálogo; `<br>` se convierte en salto de línea.
     /// El texto visible no se filtra ni se reordena.
     static func sanitize(_ raw: String) -> String {
         var text = raw
@@ -91,11 +93,70 @@ public enum SRTParser {
                 withTemplate: ""
             )
         }
+        text = stripHTMLMarkup(text)
         // Normaliza líneas: recorta y colapsa vacías del borrado.
         let lines = text.components(separatedBy: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
         return lines.joined(separator: "\n")
+    }
+
+    private static func stripHTMLMarkup(_ raw: String) -> String {
+        var text = raw
+        if let lineBreakRegex = try? NSRegularExpression(
+            pattern: #"<br\s*/?>"#,
+            options: [.caseInsensitive]
+        ) {
+            text = lineBreakRegex.stringByReplacingMatches(
+                in: text,
+                range: NSRange(text.startIndex..., in: text),
+                withTemplate: "\n"
+            )
+        }
+        if let tagRegex = try? NSRegularExpression(
+            pattern: #"</?[A-Za-z][A-Za-z0-9]*(?:\s+[^<>]*?)?\s*/?>"#,
+            options: [.caseInsensitive]
+        ) {
+            text = tagRegex.stringByReplacingMatches(
+                in: text,
+                range: NSRange(text.startIndex..., in: text),
+                withTemplate: ""
+            )
+        }
+        return decodeHTMLEntities(in: text)
+    }
+
+    private static func decodeHTMLEntities(in raw: String) -> String {
+        let namedEntities = [
+            "amp": "&", "lt": "<", "gt": ">", "quot": "\"",
+            "apos": "'", "nbsp": " ", "ndash": "–", "mdash": "—",
+            "hellip": "…", "lsquo": "‘", "rsquo": "’",
+            "ldquo": "“", "rdquo": "”"
+        ]
+        guard let regex = try? NSRegularExpression(
+            pattern: #"&(#(?:x[0-9A-Fa-f]+|[0-9]+)|[A-Za-z]+);"#,
+            options: []
+        ) else { return raw }
+
+        let result = NSMutableString(string: raw)
+        for match in regex.matches(in: raw, range: NSRange(raw.startIndex..., in: raw)).reversed() {
+            guard let entityRange = Range(match.range(at: 1), in: raw) else { continue }
+            let entity = String(raw[entityRange])
+            let replacement: String?
+            if entity.hasPrefix("#x"), let value = UInt32(entity.dropFirst(2), radix: 16),
+               let scalar = UnicodeScalar(value) {
+                replacement = String(scalar)
+            } else if entity.hasPrefix("#"), let value = UInt32(entity.dropFirst()),
+                      let scalar = UnicodeScalar(value) {
+                replacement = String(scalar)
+            } else {
+                replacement = namedEntities[entity.lowercased()]
+            }
+            if let replacement {
+                result.replaceCharacters(in: match.range, with: replacement)
+            }
+        }
+        return result as String
     }
 
     /// `HH:MM:SS,mmm` or `HH:MM:SS.mmm` → seconds.

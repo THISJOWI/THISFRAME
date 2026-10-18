@@ -91,6 +91,17 @@ final class SRTParserTests: XCTestCase {
         XCTAssertEqual(cues[0].text, "Llaves {literales} y 100% texto")
     }
 
+    func testStripsHTMLFormattingAndDecodesEntities() throws {
+        let srt = """
+        1
+        00:00:01,000 --> 00:00:04,000
+        <i>Hola &amp; adiós</i><br><font color=\"white\">¿qué tal?</font>
+        """
+        let cues = SRTParser.parse(srt)
+        XCTAssertEqual(cues.count, 1)
+        XCTAssertEqual(cues[0].text, "Hola & adiós\n¿qué tal?")
+    }
+
     func testCueLookupBinarySearch() throws {
         let cues = [
             SubtitleCue(start: 0, end: 2, text: "a"),

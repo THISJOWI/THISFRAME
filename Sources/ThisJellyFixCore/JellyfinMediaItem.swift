@@ -131,6 +131,12 @@ public struct JellyfinMediaItem: Codable, Sendable, Equatable, Identifiable, Has
         return nil
     }
 
+    /// Episode title including its season/episode number for playback UI.
+    public var episodeDisplayTitle: String {
+        guard let label = episodeLabel else { return name }
+        return "\(label) · \(name)"
+    }
+
     /// Display name: series name + episode label for episodes, otherwise just name.
     public var displayName: String {
         if type == "Episode", let seriesName {
