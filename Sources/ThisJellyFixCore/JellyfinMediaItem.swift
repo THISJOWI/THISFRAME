@@ -114,8 +114,14 @@ public struct JellyfinMediaItem: Codable, Sendable, Equatable, Identifiable, Has
     }
 
     /// Episode label like "T1 E3" for episodes, nil for movies/series.
+    /// Season 0 items use "Especial N" (Jellyfin's convention for specials).
     public var episodeLabel: String? {
         guard type == "Episode" else { return nil }
+        // Season 0 = specials (Plex/TVDB convention mirrored by Jellyfin).
+        if parentIndexNumber == 0 {
+            if let e = indexNumber { return "Especial \(e)" }
+            return "Especial"
+        }
         if let s = parentIndexNumber, let e = indexNumber {
             return "T\(s) E\(e)"
         }
@@ -246,13 +252,32 @@ public struct JellyfinEpisode: Codable, Sendable, Equatable, Identifiable {
     }
 
     public var episodeLabel: String {
+        // Season 0 = specials in Jellyfin (Plex/TVDB convention).
+        // Show "Especial N" instead of "T0 E1" for a friendlier label.
+        if parentIndexNumber == 0 {
+            if let e = indexNumber {
+                return "Especial \(e)"
+            }
+            return "Especial"
+        }
         if let s = parentIndexNumber, let e = indexNumber {
             return "T\(s) E\(e)"
         }
         if let e = indexNumber {
             return "Episodio \(e)"
         }
+        // Fallback when there is truly no numbering metadata.
         return name
+    }
+
+    /// Episode label + name combined: "T1 E3 · Nombre del episodio".
+    /// Use this wherever you need to show the number and title together.
+    /// When no label is derivable (completely unnumbered), just returns `name`.
+    public var displayTitle: String {
+        let label = episodeLabel
+        // Avoid "Nombre · Nombre" when the fallback label IS the name.
+        guard label != name else { return name }
+        return "\(label) · \(name)"
     }
 
     public var durationMinutes: Int? {

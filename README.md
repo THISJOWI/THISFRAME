@@ -106,6 +106,31 @@ open thisjellyfix.xcodeproj
 
 Run the target matching your device/simulator (iOS, macOS, tvOS, visionOS).
 
+#### Build and run from Terminal
+
+The helper detects an available physical device first, then a simulator. If neither is
+available, it builds for the generic platform and opens Apple's Device Hub so you can
+pair/select a device or simulator. iPad uses the iOS target.
+
+```bash
+scripts/iphone.sh                  # iPhone físico o simulador iPhone
+scripts/ipad.sh                    # iPad físico o simulador iPad
+scripts/mac.sh                     # compilar y abrir en este Mac
+scripts/appletv.sh                 # Apple TV físico o simulador
+scripts/visionpro.sh               # Vision Pro físico o simulador
+
+scripts/iphone.sh build            # compilar sin instalar/abrir
+DEVICE_ID=<UDID> scripts/iphone.sh # elegir un iPhone emparejado concreto
+scripts/apple-app.sh hub           # abrir Device Hub
+```
+
+Los cinco lanzadores de plataforma comparten `scripts/apple-app.sh`, que contiene la
+lógica de detección, compilación, instalación y apertura.
+
+For physical devices, unlock and trust/pair the device with this Mac in Device Hub first.
+Signing must be configured in Xcode for the selected Apple account/team. To regenerate
+the Xcode project after changing `project.yml`, run `xcodegen` before the helper.
+
 SPM also works for the shared modules:
 
 ```bash

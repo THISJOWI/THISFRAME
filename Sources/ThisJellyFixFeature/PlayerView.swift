@@ -86,6 +86,17 @@ struct PlayerView: View {
     @State private var playbackTask: Task<Void, Never>?
     @State private var episodeSwapTask: Task<Void, Never>?
 
+    /// Subtitle size preference (UserDefaults key from SubtitleSizeSettings).
+    /// @AppStorage watches UserDefaults live — the overlay updates the moment
+    /// the user changes it in Settings without restarting playback.
+    @AppStorage(SubtitleSizeSettings.Key.relativeSize) private var subtitleSizeRaw: Double = 1.0
+
+    private var subtitleFontSize: CGFloat {
+        let base: CGFloat = 17
+        let multiplier = SubtitleSizeSettings.RelativeSize(rawValue: subtitleSizeRaw)?.rawValue ?? 1.0
+        return base * multiplier
+    }
+
     // MARK: - Fit / fill pinch
     @State private var isPinching = false
     @State private var lastPinchEnd: Date = .distantPast
@@ -341,8 +352,7 @@ struct PlayerView: View {
             .overlay(alignment: .bottom) {
                 if let text = viewModel.subtitleText {
                     Text(text)
-                        .font(.title3)
-                        .fontWeight(.semibold)
+                        .font(.system(size: subtitleFontSize, weight: .semibold))
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 24)

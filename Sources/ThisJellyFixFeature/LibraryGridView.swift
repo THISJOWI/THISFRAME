@@ -91,6 +91,12 @@ struct LibraryGridView: View {
             .padding(.vertical, MareaTheme.Spacing.md)
         }
         .background(MareaTheme.Colors.background)
+        .refreshable {
+            items = []
+            nextStartIndex = nil
+            hasMore = true
+            await loadFirstPage()
+        }
         .navigationTitle(title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
@@ -120,6 +126,21 @@ struct LibraryGridView: View {
             nextStartIndex = (nextStartIndex ?? 0) + page.count
             isLoadingPage = false
         }
+    }
+
+    private func loadFirstPage() async {
+        guard !isLoadingPage else { return }
+        isLoadingPage = true
+        defer { isLoadingPage = false }
+        let page = await model.fetchPage(
+            parentId: parentId,
+            includeTypes: includeTypes,
+            limit: pageSize,
+            startIndex: nil
+        )
+        items = page
+        hasMore = page.count == pageSize
+        nextStartIndex = page.count
     }
 }
 #endif

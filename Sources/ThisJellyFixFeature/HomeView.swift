@@ -344,12 +344,6 @@ struct HomeView: View {
                                 : nil,
                             onPlayDirect: { item in directItem = item },
                             onSeeAll: seeAllAction(for: row.title),
-                            // Manual refresh for "Seguir viendo" (P9): force the
-                            // authoritative fetch, keep old content meanwhile.
-                            onRefresh: row.title == "Estás viendo" ? {
-                                Task { await libraryModel.refreshResume(force: true) }
-                            } : nil,
-                            isRefreshing: row.title == "Estás viendo" && libraryModel.isRefreshingResume
                         )
 
                         // Trending sits right after "Estás viendo" so fresh

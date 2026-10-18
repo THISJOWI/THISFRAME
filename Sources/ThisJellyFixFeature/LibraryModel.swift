@@ -158,11 +158,7 @@ final class LibraryModel {
         let token = self.token
 
         await withTaskGroup(of: Void.self) { group in
-            group.addTask { await self.loadRow("Estás viendo") {
-                try await client.fetchResumeItems(
-                    userId: userId, serverURL: serverURL, token: token, limit: 20
-                )
-            } }
+            group.addTask { await self.loadResumeAndNextUpRow() }
             group.addTask { await self.loadNewEpisodesRow() }
             group.addTask { await self.loadRow("Últimos agregados") {
                 try await client.fetchItems(
@@ -203,6 +199,62 @@ final class LibraryModel {
         } else if !rows.isEmpty {
             SpotlightIndexer.shared.index(allItems, serverURL: serverURL)
             await verifyNewSeasons()
+        }
+    }
+
+    /// Loads "Estás viendo" by merging /Items/Resume with /Shows/NextUp.
+    ///
+    /// Resume items carry an in-progress position — they come first.
+    /// NextUp items represent the *next* unwatched episode for a series where
+    /// the viewer just finished the previous one (so /Items/Resume shows
+    /// nothing for that series). They are appended after, deduplicated by
+    /// series so a series already in the resume list isn't doubled.
+    private func loadResumeAndNextUpRow() async {
+        do {
+            // Both requests run in parallel — the merge waits for both.
+            async let resumeFetch = libraryClient.fetchResumeItems(
+                userId: userId, serverURL: serverURL, token: token, limit: 20
+            )
+            async let nextUpFetch = libraryClient.fetchNextUp(
+                userId: userId, serverURL: serverURL, token: token, limit: 20
+            )
+            let resumeItems = try await resumeFetch
+            // Resume is the primary source. If NextUp is unavailable (older
+            // server, transient endpoint failure), keep its authoritative
+            // progress row visible instead of dropping the whole section.
+            let nextUpItems = (try? await nextUpFetch) ?? []
+
+            // Build the merged list: resume items first (preserve order), then
+            // NextUp items whose series are not already represented in resume.
+            // Items are keyed by their own id for resume; by seriesName for NextUp
+            // (the NextUp DTO carries SeriesName but not the series id in this
+            // endpoint — deduplicate on that instead of risking a missing field).
+            var seen = Set<String>()
+            var merged: [JellyfinMediaItem] = []
+            for item in resumeItems {
+                seen.insert(item.id)
+                // For episodes: also mark the series as represented so NextUp
+                // doesn't add a second card for the same show.
+                if let sn = item.seriesName { seen.insert("series:\(sn)") }
+                merged.append(item)
+            }
+            for item in nextUpItems {
+                // Skip if the exact episode is already in the resume list.
+                guard !seen.contains(item.id) else { continue }
+                // Skip if the same series is already shown (don't double-up).
+                if let sn = item.seriesName {
+                    guard !seen.contains("series:\(sn)") else { continue }
+                    seen.insert("series:\(sn)")
+                }
+                seen.insert(item.id)
+                merged.append(item)
+            }
+
+            TJFLog("loadResumeAndNextUpRow: resume=\(resumeItems.count) nextUp=\(nextUpItems.count) merged=\(merged.count)")
+            lastResumeRefresh = Date()
+            publish(ContentRow(title: "Estás viendo", items: merged))
+        } catch {
+            noteFetchFailure(error, context: "Estás viendo row", surfaceMessage: false)
         }
     }
 
@@ -324,23 +376,50 @@ final class LibraryModel {
         // Stamp before the request so concurrent NON-forced triggers don't stack.
         lastResumeRefresh = stampedAt
         do {
-            let resumeItems = try await libraryClient.fetchResumeItems(
+            // Run Resume and NextUp in parallel; merge as in loadResumeAndNextUpRow.
+            async let resumeFetch = libraryClient.fetchResumeItems(
                 userId: userId, serverURL: serverURL, token: token, limit: 20
             )
+            async let nextUpFetch = libraryClient.fetchNextUp(
+                userId: userId, serverURL: serverURL, token: token, limit: 20
+            )
+            let resumeItems = try await resumeFetch
+            // A NextUp failure should not hide Resume items during refresh.
+            let nextUpItems = (try? await nextUpFetch) ?? []
+
             // Stamp again on success: a slow/stale response must not count as
             // "fresh data" for the next request within the cooldown window.
             lastResumeRefresh = Date()
-            TJFLog("refreshResume items=\(resumeItems.count) force=\(force) ids=\(resumeItems.prefix(8).map { "\($0.id):\($0.type):\(Int(($0.userData?.playbackPositionTicks ?? 0) / 10_000_000))s" }.joined(separator: ","))")
+
+            var seen = Set<String>()
+            var merged: [JellyfinMediaItem] = []
+            for item in resumeItems {
+                seen.insert(item.id)
+                if let sn = item.seriesName { seen.insert("series:\(sn)") }
+                merged.append(item)
+            }
+            for item in nextUpItems {
+                guard !seen.contains(item.id) else { continue }
+                if let sn = item.seriesName {
+                    guard !seen.contains("series:\(sn)") else { continue }
+                    seen.insert("series:\(sn)")
+                }
+                seen.insert(item.id)
+                merged.append(item)
+            }
+
+            TJFLog("refreshResume resume=\(resumeItems.count) nextUp=\(nextUpItems.count) merged=\(merged.count) force=\(force)")
             if let idx = rows.firstIndex(where: { $0.title == "Estás viendo" }) {
-                if resumeItems.isEmpty {
+                if merged.isEmpty {
                     rows.remove(at: idx)
                 } else {
-                    rows[idx] = ContentRow(title: "Estás viendo", items: resumeItems)
+                    rows[idx] = ContentRow(title: "Estás viendo", items: merged)
                 }
-            } else if !resumeItems.isEmpty {
-                rows.insert(ContentRow(title: "Estás viendo", items: resumeItems), at: 0)
+            } else if !merged.isEmpty {
+                rows.insert(ContentRow(title: "Estás viendo", items: merged), at: 0)
             }
         } catch {
+
             // A failed request must NOT burn the cooldown: the pre-stamp above
             // exists only to coalesce concurrent triggers, and leaving it set
             // after an error silently dropped the next natural refresh —

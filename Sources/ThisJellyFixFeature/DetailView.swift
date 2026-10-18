@@ -1086,11 +1086,11 @@ private struct EpisodeRow: View {
             // episode title reports its unwrapped width, the HStack grows past
             // the screen and the vertical ScrollView becomes pannable sideways.
             VStack(alignment: .leading, spacing: 4) {
-                Text(episode.episodeLabel)
-                    .font(.caption)
-                    .foregroundStyle(MareaTheme.Colors.accent)
-
-                Text(episode.name)
+                // "T1 E3 · Nombre del episodio" — number and title together so
+                // the viewer never has to read two lines to get the full story.
+                // episodeLabel falls back to "Especial N" for season-0 items and
+                // to the raw name when numbering metadata is absent.
+                Text(episode.displayTitle)
                     .font(.subheadline.weight(.medium))
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)

@@ -40,6 +40,10 @@ public protocol JellyfinLibraryProviding: Sendable {
     func fetchSeasons(userId: String, serverURL: URL, token: String, seriesId: String) async throws -> [JellyfinSeason]
     func fetchEpisodes(userId: String, serverURL: URL, token: String, seriesId: String, seasonId: String) async throws -> [JellyfinEpisode]
     func fetchResumeItems(userId: String, serverURL: URL, token: String, limit: Int) async throws -> [JellyfinMediaItem]
+    /// Next unwatched episode per series (GET /Shows/NextUp). Returns episodes
+    /// whose parent series has progress or was recently watched — used to keep
+    /// a series visible in "Estás viendo" after the previous episode finishes.
+    func fetchNextUp(userId: String, serverURL: URL, token: String, limit: Int) async throws -> [JellyfinMediaItem]
 }
 
 public extension JellyfinLibraryProviding {
@@ -51,7 +55,14 @@ public extension JellyfinLibraryProviding {
             orderBy: orderBy, filters: filters, startIndex: nil
         )
     }
+
+    /// Default no-op so test stubs that only implement the old protocol shape
+    /// still compile without needing to add fetchNextUp.
+    func fetchNextUp(userId: String, serverURL: URL, token: String, limit: Int) async throws -> [JellyfinMediaItem] {
+        return []
+    }
 }
+
 
 public struct JellyfinLibraryClient: JellyfinLibraryProviding {
     private let session: any JellyfinNetworkSession
@@ -200,6 +211,32 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
         let response = try JSONDecoder().decode(JellyfinItemsResponse.self, from: data)
         return response.items
     }
+
+    public func fetchNextUp(userId: String, serverURL: URL, token: String, limit: Int) async throws -> [JellyfinMediaItem] {
+        var components = URLComponents(
+            url: serverURL.appendingPathComponent("Shows/NextUp"),
+            resolvingAgainstBaseURL: false
+        )!
+        components.queryItems = [
+            URLQueryItem(name: "UserId", value: userId),
+            URLQueryItem(name: "Limit", value: String(limit)),
+            URLQueryItem(name: "Fields", value: "Overview,UserData"),
+            // Don't disable: include series where the user already started
+            // an episode so the series stays in "Estás viendo".
+            URLQueryItem(name: "EnableResumable", value: "true"),
+            URLQueryItem(name: "EnableRewatching", value: "false"),
+        ]
+        let data = try await fetchData(
+            from: components.url!, token: token,
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
+        if let raw = String(data: data, encoding: .utf8) {
+            TJFLog("nextUp raw (\(raw.count)b): \(raw.prefix(400))")
+        }
+        let response = try JSONDecoder().decode(JellyfinItemsResponse.self, from: data)
+        return response.items
+    }
+
 
     // MARK: - Private
 

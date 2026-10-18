@@ -10,6 +10,7 @@ struct SettingsView: View {
         ScrollView {
             VStack(spacing: 16) {
                 SkipSettingsSection()
+                SubtitleSizeSettingsSection()
                 LanguageSettingsSection()
                 #if os(iOS) || os(macOS)
                 IntegrationsSection()
@@ -163,5 +164,61 @@ private struct LanguageSettingsSection: View {
             return "\(name) (sistema)"
         }
         return name
+    }
+}
+
+// MARK: - Subtitle Size Settings
+
+private struct SubtitleSizeSettingsSection: View {
+    /// The raw Double value (e.g. 1.0, 1.35) stored via @AppStorage.
+    /// Bridged to SubtitleSizeSettings.RelativeSize in the picker.
+    @AppStorage(SubtitleSizeSettings.Key.relativeSize) private var rawSize: Double = 1.0
+
+    private var selectedSize: SubtitleSizeSettings.RelativeSize {
+        SubtitleSizeSettings.RelativeSize(rawValue: rawSize) ?? .medium
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Subtítulos")
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Tamaño del texto")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                // Segmented picker — four clear choices without a drop-down.
+                Picker("Tamaño", selection: Binding(
+                    get: { selectedSize },
+                    set: { rawSize = $0.rawValue }
+                )) {
+                    ForEach(SubtitleSizeSettings.RelativeSize.allCases, id: \.self) { size in
+                        Text(size.label).tag(size)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
+            // Live preview so the user can judge the size at a glance.
+            HStack {
+                Spacer()
+                Text("Vista previa de subtítulo")
+                    .font(.system(size: 17 * selectedSize.rawValue, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 6))
+                Spacer()
+            }
+            .padding(.top, 4)
+
+            Text("El tamaño se aplica inmediatamente al overlay de subtítulos del reproductor.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(16)
+        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 24)
     }
 }
