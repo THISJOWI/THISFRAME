@@ -93,7 +93,9 @@ struct PlayerView: View {
 
     private var subtitleFontSize: CGFloat {
         let base: CGFloat = 17
-        let multiplier = SubtitleSizeSettings.RelativeSize(rawValue: subtitleSizeRaw)?.rawValue ?? 1.0
+        let multiplier = CGFloat(
+            SubtitleSizeSettings.RelativeSize(rawValue: subtitleSizeRaw)?.rawValue ?? 1.0
+        )
         return base * multiplier
     }
 

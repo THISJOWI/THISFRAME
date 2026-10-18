@@ -15,7 +15,7 @@ public struct SubtitleSizeSettings: Sendable, Equatable {
     // MARK: - Preset sizes
 
     /// Named size presets the user can pick in Settings.
-    public enum RelativeSize: Double, CaseIterable, Sendable, Codable {
+    public enum RelativeSize: Double, CaseIterable, Sendable, Codable, Hashable {
         case small  = 0.75
         case medium = 1.0
         case large  = 1.35

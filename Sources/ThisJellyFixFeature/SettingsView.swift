@@ -204,7 +204,7 @@ private struct SubtitleSizeSettingsSection: View {
             HStack {
                 Spacer()
                 Text("Vista previa de subtítulo")
-                    .font(.system(size: 17 * selectedSize.rawValue, weight: .semibold))
+                    .font(.system(size: CGFloat(17 * selectedSize.rawValue), weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
