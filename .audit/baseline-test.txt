@@ -1,0 +1,61 @@
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testServerTitleStripsCodecToken]' passed (0.000 seconds).
+Test Suite 'TrackNamingTests' passed at 2026-10-18 11:07:35.362.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+Test Suite 'VideoInfoChipsTests' started at 2026-10-18 11:07:35.362.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testAllChipsPresentForFullVideoStream]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testAllChipsPresentForFullVideoStream]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testBitrateAliasDecodesLowercaseKey]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testBitrateAliasDecodesLowercaseKey]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testFractionalFrameRateKeepsDecimals]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testFractionalFrameRateKeepsDecimals]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testMissingValuesProduceNoChips]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testMissingValuesProduceNoChips]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testPartialValuesKeepOnlyAvailableChips]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testPartialValuesKeepOnlyAvailableChips]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testSizeFormattingBoundaries]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testSizeFormattingBoundaries]' passed (0.000 seconds).
+Test Suite 'VideoInfoChipsTests' passed at 2026-10-18 11:07:35.364.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'ThisJellyFixCoreTests.xctest' passed at 2026-10-18 11:07:35.364.
+	 Executed 232 tests, with 0 failures (0 unexpected) in 0.077 (0.096) seconds
+Test Suite 'All tests' passed at 2026-10-18 11:07:35.364.
+	 Executed 232 tests, with 0 failures (0 unexpected) in 0.077 (0.098) seconds
+[TJF 2026-10-18T09:07:35Z] handoff: playbackActive=true browsingYields=true
+[TJF 2026-10-18T09:07:35Z] handoff: playbackActive=false browsingYields=false
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=1 browsingYields=false
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=2 browsingYields=false
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=1 browsingYields=false
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=1 browsingYields=false
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=1 browsingYields=false
+[TJF 2026-10-18T09:07:35Z] handoff: playbackActive=true browsingYields=true
+[TJF 2026-10-18T09:07:35Z] handoff: playbackActive=false browsingYields=false
+[TJF 2026-10-18T09:07:35Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:07:35Z] handoff: playbackActive=true browsingYields=true
+[TJF 2026-10-18T09:07:35Z] handoff: playbackActive=false browsingYields=false
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+Note: Some test targets reported failures:
+  - ThisJellyFixFeatureTests (XCTest)
+TEST_EXIT=0

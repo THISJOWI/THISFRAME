@@ -1,0 +1,67 @@
+Building for debugging...
+[Computing dependencies]
+[1 / 1]
+Build complete! (0,69 s)
+error: Process '/Applications/Xcode.app/Contents/Developer/usr/bin/xctest -XCTest ThisJellyFixFeatureTests.AuthModelTests/testRestoreSessionInvalidTokenClearsKeychainAndReturnsFalse,ThisJellyFixFeatureTests.AuthModelTests/testRestoreSessionValidTokenPopulatesUserAndReturnsTrue,ThisJellyFixFeatureTests.CardBadgeTests/testEpisodeAddedTodayGetsNewEpisodeBadge,ThisJellyFixFeatureTests.CardBadgeTests/testEpisodeAddedYesterdayGetsRecentlyAddedNotNewToday,ThisJellyFixFeatureTests.CardBadgeTests/testFutureDateGetsNoBadge,ThisJellyFixFeatureTests.CardBadgeTests/testMovieAddedBeyondWindowGetsNoBadge,ThisJellyFixFeatureTests.CardBadgeTests/testMovieAddedWithinWindowGetsRecentlyAddedBadge,ThisJellyFixFeatureTests.CardBadgeTests/testResumeItemGetsNextEpisodeBadge,ThisJellyFixFeatureTests.CardBadgeTests/testResumeTakesPrecedenceOverNovelty,ThisJellyFixFeatureTests.CardBadgeTests/testSeriesWithOldDateGetsNoBadge,ThisJellyFixFeatureTests.CardBadgeTests/testSeriesWithoutDatesGetsNoBadge,ThisJellyFixFeatureTests.CardBadgeTests/testVerifiedNewSeasonGetsBadge,ThisJellyFixFeatureTests.LibraryModelCategoryTests/testCategoryChipsEmptyWithoutViews,ThisJellyFixFeatureTests.LibraryModelCategoryTests/testCategoryChipsFromServerViews,ThisJellyFixFeatureTests.LibraryModelPaginationTests/testFetchPagePassesStartIndexToClient,ThisJellyFixFeatureTests.LibraryModelPaginationTests/testFetchPageWithStartIndexPaginates,ThisJellyFixFeatureTests.MareaThemeTests/testAccentMatchesBadgeRed,ThisJellyFixFeatureTests.MareaThemeTests/testBackgroundIsPureBlack,ThisJellyFixFeatureTests.MareaThemeTests/testRadii,ThisJellyFixFeatureTests.MareaThemeTests/testSpacingScale,ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests/testSelectAudioMarksServedRowWithoutEngineCall,ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests/testUnionFallsBackToEngineWithoutServerMetadata,ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests/testUnionMapsServedTrackToEngineOption,ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests/testUnionPositionalWhenCountsAgree,ThisJellyFixFeatureTests.PlayerViewModelControlTests/testPlayNextNowDoesNothingWhenUnwired,ThisJellyFixFeatureTests.PlayerViewModelControlTests/testPlayNextNowIgnoresCreditsGuard,ThisJellyFixFeatureTests.PlayerViewModelControlTests/testPlayPreviousEpisodeDoesNothingWhenUnwired,ThisJellyFixFeatureTests.PlayerViewModelControlTests/testSelectSubtitleTrackRoutesExclusivelyToOverlay,ThisJellyFixFeatureTests.PlayerViewModelControlTests/testTickFractionsDropsZeroDuration,ThisJellyFixFeatureTests.PlayerViewModelControlTests/testTickFractionsNormalizesToDuration,ThisJellyFixFeatureTests.PlayerViewModelControlTests/testTickFractionsSkipsStartAtZeroAndPastTheEnd,ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests/testLoadReadsServerFlag,ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests/testToggleRollsBackOnFailure,ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests/testToggleSetsFavoriteOnServer,ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests/testToggleUnsetsFavorite,ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests/testToggleWithoutServerFlagRefusesBlindFlip,ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests/testConcurrentChecksFetchSessionsOnlyOnce,ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests/testNoTakeoverWhenAnotherUserPlaysTheItem,ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests/testNoTakeoverWhenNoOtherDevicePlaysTheItem,ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests/testNoTakeoverWhileThisSessionStartedFromHandoff,ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests/testTakeoverFiresWhenOtherDevicePlaysSameItem,ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests/testBitmapListedForBurnIn,ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests/testFailedTextListedForRetry,ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests/testIndexlessStreamsSkipped,ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests/testLoadedTracksOmitted,ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests/testLoadingTracksNotListed,ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests/testNonSubtitleStreamsIgnored,ThisJellyFixFeatureTests.ServerConnectionModelTests/testConnectDuplicateDoesNotDuplicate,ThisJellyFixFeatureTests.ServerConnectionModelTests/testConnectPersistsServer,ThisJellyFixFeatureTests.ServerConnectionModelTests/testDisconnectKeepsListButClearsCurrent,ThisJellyFixFeatureTests.ServerConnectionModelTests/testLegacyMigration,ThisJellyFixFeatureTests.ServerConnectionModelTests/testMalformedURLDoesNotCorruptExisting,ThisJellyFixFeatureTests.ServerConnectionModelTests/testRemoveKeepsRest /Users/joel/Workspace/projects/thisjellyfix/.build/out/Products/Debug/ThisJellyFixFeatureTests.xctest' exited with unexpected signal code 11
+Test Suite 'Selected tests' started at 2026-10-18 11:08:13.384.
+Test Suite 'ThisJellyFixPlaybackTests.xctest' started at 2026-10-18 11:08:13.386.
+Test Suite 'ThisJellyFixPlaybackTests.xctest' passed at 2026-10-18 11:08:13.386.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-18 11:08:13.386.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+Test Suite 'Selected tests' started at 2026-10-18 11:08:13.539.
+Test Suite 'ThisJellyFixNetworkingTests.xctest' started at 2026-10-18 11:08:13.541.
+Test Suite 'ThisJellyFixNetworkingTests.xctest' passed at 2026-10-18 11:08:13.541.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-18 11:08:13.541.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+Test Suite 'Selected tests' started at 2026-10-18 11:08:13.678.
+Test Suite 'ThisJellyFixFeatureTests.xctest' started at 2026-10-18 11:08:13.680.
+Test Suite 'AuthModelTests' started at 2026-10-18 11:08:13.680.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionInvalidTokenClearsKeychainAndReturnsFalse]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionInvalidTokenClearsKeychainAndReturnsFalse]' passed (0.007 seconds).
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionValidTokenPopulatesUserAndReturnsTrue]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionValidTokenPopulatesUserAndReturnsTrue]' passed (0.001 seconds).
+Test Suite 'AuthModelTests' passed at 2026-10-18 11:08:13.689.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Suite 'CardBadgeTests' started at 2026-10-18 11:08:13.689.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testEpisodeAddedTodayGetsNewEpisodeBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testEpisodeAddedTodayGetsNewEpisodeBadge]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testEpisodeAddedYesterdayGetsRecentlyAddedNotNewToday]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testEpisodeAddedYesterdayGetsRecentlyAddedNotNewToday]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testFutureDateGetsNoBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testFutureDateGetsNoBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testMovieAddedBeyondWindowGetsNoBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testMovieAddedBeyondWindowGetsNoBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testMovieAddedWithinWindowGetsRecentlyAddedBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testMovieAddedWithinWindowGetsRecentlyAddedBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testResumeItemGetsNextEpisodeBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testResumeItemGetsNextEpisodeBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testResumeTakesPrecedenceOverNovelty]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testResumeTakesPrecedenceOverNovelty]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testSeriesWithOldDateGetsNoBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testSeriesWithOldDateGetsNoBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testSeriesWithoutDatesGetsNoBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testSeriesWithoutDatesGetsNoBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testVerifiedNewSeasonGetsBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testVerifiedNewSeasonGetsBadge]' passed (0.001 seconds).
+Test Suite 'CardBadgeTests' passed at 2026-10-18 11:08:13.694.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'LibraryModelCategoryTests' started at 2026-10-18 11:08:13.694.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testCategoryChipsEmptyWithoutViews]' started.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testCategoryChipsEmptyWithoutViews]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testCategoryChipsFromServerViews]' started.
+Test Suite 'Selected tests' started at 2026-10-18 11:08:14.240.
+Test Suite 'ThisJellyFixDiscoveryTests.xctest' started at 2026-10-18 11:08:14.241.
+Test Suite 'ThisJellyFixDiscoveryTests.xctest' passed at 2026-10-18 11:08:14.241.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-18 11:08:14.242.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'Selected tests' started at 2026-10-18 11:08:14.390.
+Test Suite 'ThisJellyFixCoreTests.xctest' started at 2026-10-18 11:08:14.392.
+Test Suite 'ThisJellyFixCoreTests.xctest' passed at 2026-10-18 11:08:14.392.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-18 11:08:14.392.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Note: Some test targets reported failures:
+  - ThisJellyFixFeatureTests (XCTest)

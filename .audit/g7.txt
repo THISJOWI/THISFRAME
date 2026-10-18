@@ -1,0 +1,1595 @@
+Building for debugging...
+[Computing dependencies]
+[1 / 1]
+Build complete! (0,71 s)
+Test Suite 'All tests' started at 2026-10-18 11:32:09.341.
+Test Suite 'ThisJellyFixPlaybackTests.xctest' started at 2026-10-18 11:32:09.342.
+Test Suite 'AVPlaybackEngineTests' started at 2026-10-18 11:32:09.342.
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testInitialState]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testInitialState]' passed (0.047 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testNativeLegibleSubtitlesDisabledByDefault]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testNativeLegibleSubtitlesDisabledByDefault]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testPrepareWithBadURLFailsWithCallback]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testPrepareWithBadURLFailsWithCallback]' passed (0.064 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testSatisfiesProtocolSeam]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testSatisfiesProtocolSeam]' passed (0.011 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testSetVideoFillChangesGravity]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testSetVideoFillChangesGravity]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testStopClearsItemAndNotifiesIdle]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testStopClearsItemAndNotifiesIdle]' passed (0.007 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testTransportCallsAreSafeBeforePrepare]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AVPlaybackEngineTests testTransportCallsAreSafeBeforePrepare]' passed (0.002 seconds).
+Test Suite 'AVPlaybackEngineTests' passed at 2026-10-18 11:32:09.478.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.134 (0.136) seconds
+Test Suite 'AirPlayRouteStateTests' started at 2026-10-18 11:32:09.478.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testExternalActiveWithoutSelectionStillActivates]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testExternalActiveWithoutSelectionStillActivates]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testExternalPlaybackActiveEntersActive]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testExternalPlaybackActiveEntersActive]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testItemReplacedDuringConnectFailsExplicitly]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testItemReplacedDuringConnectFailsExplicitly]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testItemReplacedOutsideConnectKeepsPhase]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testItemReplacedOutsideConnectKeepsPhase]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testResetClearsFailed]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testResetClearsFailed]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRetryingAfterFailureStartsFreshConnecting]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRetryingAfterFailureStartsFreshConnecting]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRouteDeselectedOutsideConnectingKeepsPhase]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRouteDeselectedOutsideConnectingKeepsPhase]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRouteDeselectedWhileConnectingReturnsToIdle]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRouteDeselectedWhileConnectingReturnsToIdle]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRouteLostWhileActiveReturnsToIdle]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRouteLostWhileActiveReturnsToIdle]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRouteSelectedEntersConnecting]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testRouteSelectedEntersConnecting]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testStartsIdle]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testStartsIdle]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testTimeoutFailsOnlyWhileConnecting]' started.
+Test Case '-[ThisJellyFixPlaybackTests.AirPlayRouteStateTests testTimeoutFailsOnlyWhileConnecting]' passed (0.000 seconds).
+Test Suite 'AirPlayRouteStateTests' passed at 2026-10-18 11:32:09.481.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'ThisJellyFixPlaybackTests.xctest' passed at 2026-10-18 11:32:09.481.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.136 (0.139) seconds
+Test Suite 'All tests' passed at 2026-10-18 11:32:09.481.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.136 (0.141) seconds
+[TJF 2026-10-18T09:32:09Z] prepare: ext=m3u8 path=/definitely-not-here.m3u8
+[TJF 2026-10-18T09:32:09Z] prepare: item attached in 15 ms
+[TJF 2026-10-18T09:32:09Z] tracks load failed: Error Domain=NSURLErrorDomain Code=-1004 "No se ha podido establecer conexión con el servidor." UserInfo={NSUnderlyingError=0x77cd304330 {Error Domain=NSURLErrorDomain Code=-1004 "No se ha podido establecer conexión con el servidor." UserInfo={NSDescription=No se ha podido establecer conexión con el servidor.}}, NSErrorFailingURLStringKey=https://127.0.0.1:1/definitely-not-here.m3u8, NSErrorFailingURLKey=https://127.0.0.1:1/definitely-not-here.m3u8, NSURL=https://127.0.0.1:1/definitely-not-here.m3u8, AVErrorFailedDependenciesKey=(
+    MediaSelectionArray,
+    ExtendedMediaSelectionArray,
+    LocalizedMSODisplayNames,
+    CustomMediaSelectionScheme
+), NSLocalizedDescription=No se ha podido establecer conexión con el servidor.}
+[TJF 2026-10-18T09:32:09Z] AVPlayer item failed: No se ha podido establecer conexión con el servidor.
+[TJF 2026-10-18T09:32:09Z] prepare: ext=m3u8 path=/item.m3u8
+[TJF 2026-10-18T09:32:09Z] prepare: item attached in 1 ms
+[TJF 2026-10-18T09:32:09Z] tracks load failed: Error Domain=NSURLErrorDomain Code=-1004 "No se ha podido establecer conexión con el servidor." UserInfo={NSUnderlyingError=0x77cd3044b0 {Error Domain=NSURLErrorDomain Code=-1004 "No se ha podido establecer conexión con el servidor." UserInfo={NSDescription=No se ha podido establecer conexión con el servidor.}}, NSErrorFailingURLStringKey=https://127.0.0.1:1/item.m3u8, NSErrorFailingURLKey=https://127.0.0.1:1/item.m3u8, NSURL=https://127.0.0.1:1/item.m3u8, AVErrorFailedDependenciesKey=(
+    MediaSelectionArray,
+    ExtendedMediaSelectionArray,
+    LocalizedMSODisplayNames,
+    CustomMediaSelectionScheme
+), NSLocalizedDescription=No se ha podido establecer conexión con el servidor.}
+Test Suite 'All tests' started at 2026-10-18 11:32:09.640.
+Test Suite 'ThisJellyFixNetworkingTests.xctest' started at 2026-10-18 11:32:09.641.
+Test Suite 'JellyfinAuthClientTests' started at 2026-10-18 11:32:09.641.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testInvalidCredentialsThrows]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testInvalidCredentialsThrows]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testNetworkErrorThrows]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testNetworkErrorThrows]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testRequestContainsCorrectHeaders]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testRequestContainsCorrectHeaders]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testSuccessfulAuthentication]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testSuccessfulAuthentication]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testValidateTokenInvalidTokenThrows]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testValidateTokenInvalidTokenThrows]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testValidateTokenReturnsUser]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testValidateTokenReturnsUser]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testValidateTokenServerErrorThrows]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinAuthClientTests testValidateTokenServerErrorThrows]' passed (0.001 seconds).
+Test Suite 'JellyfinAuthClientTests' passed at 2026-10-18 11:32:09.648.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.006 (0.007) seconds
+Test Suite 'JellyfinLibraryClientTests' started at 2026-10-18 11:32:09.648.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testAuthHeaderContainsToken]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testAuthHeaderContainsToken]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testFetchItemsPaginationAddsStartIndex]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testFetchItemsPaginationAddsStartIndex]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testFetchItems]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testFetchItems]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testFetchItemsWithoutStartIndexOmitsQueryParam]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testFetchItemsWithoutStartIndexOmitsQueryParam]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testFetchViews]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinLibraryClientTests testFetchViews]' passed (0.000 seconds).
+Test Suite 'JellyfinLibraryClientTests' passed at 2026-10-18 11:32:09.652.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'JellyfinPlaybackClientTests' started at 2026-10-18 11:32:09.652.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testAlwaysBurnInSubtitleDefaultsToFalse]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testAlwaysBurnInSubtitleDefaultsToFalse]' passed (0.006 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testAudioStreamIndexIsSentWhenProvided]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testAudioStreamIndexIsSentWhenProvided]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testAudioStreamIndexOmittedByDefault]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testAudioStreamIndexOmittedByDefault]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testMaxStreamingBitrateIsSentInBody]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testMaxStreamingBitrateIsSentInBody]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testNilSubtitleOptionsOptOut]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testNilSubtitleOptionsOptOut]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testNoCapSendsNoMaxStreamingBitrate]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testNoCapSendsNoMaxStreamingBitrate]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testSubtitleStreamIndexDefaultsToMinusOne]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPlaybackClientTests testSubtitleStreamIndexDefaultsToMinusOne]' passed (0.002 seconds).
+Test Suite 'JellyfinPlaybackClientTests' passed at 2026-10-18 11:32:09.670.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.017 (0.018) seconds
+Test Suite 'JellyfinPublicInfoTests' started at 2026-10-18 11:32:09.670.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPublicInfoTests testDecodesJellyfinPublicInfo]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinPublicInfoTests testDecodesJellyfinPublicInfo]' passed (0.001 seconds).
+Test Suite 'JellyfinPublicInfoTests' passed at 2026-10-18 11:32:09.671.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'JellyfinSegmentClientTests' started at 2026-10-18 11:32:09.671.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testAuthHeaderSent]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testAuthHeaderSent]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testBothSourcesUnavailableReturnsEmpty]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testBothSourcesUnavailableReturnsEmpty]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testMalformedSegmentsJSONFallsBackToChapters]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testMalformedSegmentsJSONFallsBackToChapters]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testMediaSegmentsEmptyFallsBackToChapters]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testMediaSegmentsEmptyFallsBackToChapters]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testMediaSegmentsNotFoundFallsBackToChapters]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testMediaSegmentsNotFoundFallsBackToChapters]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testMediaSegmentsSuccess]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testMediaSegmentsSuccess]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testNumericSegmentTypeAccepted]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testNumericSegmentTypeAccepted]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testUnauthorizedThrows]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSegmentClientTests testUnauthorizedThrows]' passed (0.001 seconds).
+Test Suite 'JellyfinSegmentClientTests' passed at 2026-10-18 11:32:09.683.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.011 (0.012) seconds
+Test Suite 'JellyfinSessionClientTests' started at 2026-10-18 11:32:09.683.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSessionClientTests testAuthHeaderSent]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSessionClientTests testAuthHeaderSent]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSessionClientTests testTakeoverSourceDetectsOtherDevicePlayingSameItem]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSessionClientTests testTakeoverSourceDetectsOtherDevicePlayingSameItem]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSessionClientTests testTakeoverSourceIgnoresOwnSessionOtherItemsAndPausedPeers]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSessionClientTests testTakeoverSourceIgnoresOwnSessionOtherItemsAndPausedPeers]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSessionClientTests testUnauthorizedThrows]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSessionClientTests testUnauthorizedThrows]' passed (0.000 seconds).
+Test Suite 'JellyfinSessionClientTests' passed at 2026-10-18 11:32:09.685.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'JellyfinSubtitleClientTests' started at 2026-10-18 11:32:09.685.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testDownloadFailureThrows]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testDownloadFailureThrows]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testDownloadPostsVerifiedPath]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testDownloadPostsVerifiedPath]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testOrdinaryLanguageIsUnchanged]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testOrdinaryLanguageIsUnchanged]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testPathTraversalInLanguageIsEscaped]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testPathTraversalInLanguageIsEscaped]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testRemoteSubtitleDisplayName]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testRemoteSubtitleDisplayName]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testSearchEmptyLanguageThrows]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testSearchEmptyLanguageThrows]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testSearchHitsVerifiedPathAndDecodes]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testSearchHitsVerifiedPathAndDecodes]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testSearchServerErrorMapsStatus]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testSearchServerErrorMapsStatus]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testSubtitleIdContainingSlashIsEscaped]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinSubtitleClientTests testSubtitleIdContainingSlashIsEscaped]' passed (0.000 seconds).
+Test Suite 'JellyfinSubtitleClientTests' passed at 2026-10-18 11:32:09.691.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'JellyfinUserActionClientTests' started at 2026-10-18 11:32:09.691.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testAuthHeaderCarriesToken]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testAuthHeaderCarriesToken]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testDisableFavoriteUsesDelete]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testDisableFavoriteUsesDelete]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testEnableFavoriteUsesPostOnFavoriteItemsRoute]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testEnableFavoriteUsesPostOnFavoriteItemsRoute]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testNotFoundThrowsSoTheUiCanRollBack]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testNotFoundThrowsSoTheUiCanRollBack]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testPlayedTogglesUsePlayedItemsRoute]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testPlayedTogglesUsePlayedItemsRoute]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testUnauthorizedStatusThrows]' started.
+Test Case '-[ThisJellyFixNetworkingTests.JellyfinUserActionClientTests testUnauthorizedStatusThrows]' passed (0.001 seconds).
+Test Suite 'JellyfinUserActionClientTests' passed at 2026-10-18 11:32:09.699.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.008 (0.008) seconds
+Test Suite 'PlaybackPlanResolverTests' started at 2026-10-18 11:32:09.699.
+Test Case '-[ThisJellyFixNetworkingTests.PlaybackPlanResolverTests testMatchNeedsSingleRoundtrip]' started.
+Test Case '-[ThisJellyFixNetworkingTests.PlaybackPlanResolverTests testMatchNeedsSingleRoundtrip]' passed (0.006 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.PlaybackPlanResolverTests testMismatchRefetchesWithAudioIndexAndMinusOneSubtitle]' started.
+Test Case '-[ThisJellyFixNetworkingTests.PlaybackPlanResolverTests testMismatchRefetchesWithAudioIndexAndMinusOneSubtitle]' passed (0.005 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.PlaybackPlanResolverTests testSourcelessRefinementReportsTheAudioActuallyServed]' started.
+Test Case '-[ThisJellyFixNetworkingTests.PlaybackPlanResolverTests testSourcelessRefinementReportsTheAudioActuallyServed]' passed (0.004 seconds).
+Test Suite 'PlaybackPlanResolverTests' passed at 2026-10-18 11:32:09.715.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.015 (0.016) seconds
+Test Suite 'StreamURLResolverTests' started at 2026-10-18 11:32:09.715.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testDoesNotDuplicateExistingApiKeyVariants]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testDoesNotDuplicateExistingApiKeyVariants]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testDoesNotPercentEncodeQuerySeparator]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testDoesNotPercentEncodeQuerySeparator]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testForeignHostPathAndQueryArePreservedOnTheServer]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testForeignHostPathAndQueryArePreservedOnTheServer]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testKeepsAbsoluteUrlAndAddsApiKey]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testKeepsAbsoluteUrlAndAddsApiKey]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testNeverSendsTokenToAForeignHost]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testNeverSendsTokenToAForeignHost]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testPlaybackURLFallsBackToStaticStreamWhenNothingProvided]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testPlaybackURLFallsBackToStaticStreamWhenNothingProvided]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testPlaybackURLFallsBackToTranscodingUrlWhenRelative]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testPlaybackURLFallsBackToTranscodingUrlWhenRelative]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testPlaybackURLPrefersDirectStreamUrlAndAuthenticates]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testPlaybackURLPrefersDirectStreamUrlAndAuthenticates]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testResolvesRelativePathAgainstServer]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testResolvesRelativePathAgainstServer]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testReturnsNilForUnparseableString]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testReturnsNilForUnparseableString]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSameHostAndPortIsAccepted]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSameHostAndPortIsAccepted]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSameHostOnADifferentPortIsTreatedAsForeign]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSameHostOnADifferentPortIsTreatedAsForeign]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testServerTrailingSlashIsNotDoubled]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testServerTrailingSlashIsNotDoubled]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSourcePlaybackURLFallsBackToStaticWhenEmpty]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSourcePlaybackURLFallsBackToStaticWhenEmpty]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSourcePlaybackURLPicksMp4Direct]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSourcePlaybackURLPicksMp4Direct]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSourcePlaybackURLSkipsUnplayableDirectForHls]' started.
+Test Case '-[ThisJellyFixNetworkingTests.StreamURLResolverTests testSourcePlaybackURLSkipsUnplayableDirectForHls]' passed (0.000 seconds).
+Test Suite 'StreamURLResolverTests' passed at 2026-10-18 11:32:09.721.
+	 Executed 16 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Suite 'ThisJellyFixNetworkingTests.xctest' passed at 2026-10-18 11:32:09.721.
+	 Executed 66 tests, with 0 failures (0 unexpected) in 0.071 (0.079) seconds
+Test Suite 'All tests' passed at 2026-10-18 11:32:09.721.
+	 Executed 66 tests, with 0 failures (0 unexpected) in 0.071 (0.081) seconds
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"MediaSources":[{"Id":"src1","Name":"video","Path":"/v.mp4","Protocol":"Http","Container":"mp4"}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"MediaSources":[{"Id":"src1","Name":"video","Path":"/v.mp4","Protocol":"Http","Container":"mp4"}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"MediaSources":[{"Id":"src1","Name":"video","Path":"/v.mp4","Protocol":"Http","Container":"mp4"}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"MediaSources":[{"Id":"src1","Name":"video","Path":"/v.mp4","Protocol":"Http","Container":"mp4"}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"MediaSources":[{"Id":"src1","Name":"video","Path":"/v.mp4","Protocol":"Http","Container":"mp4"}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"MediaSources":[{"Id":"src1","Name":"video","Path":"/v.mp4","Protocol":"Http","Container":"mp4"}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"MediaSources":[{"Id":"src1","Name":"video","Path":"/v.mp4","Protocol":"Http","Container":"mp4"}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] segments: none found
+[TJF 2026-10-18T09:32:09Z] segments: none found
+[TJF 2026-10-18T09:32:09Z] segments: mediaSegments failed: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'o' in expected null value around line 1, column 2." UserInfo={NSDebugDescription=Unexpected character 'o' in expected null value around line 1, column 2., NSJSONSerializationErrorIndex=1}
+[TJF 2026-10-18T09:32:09Z] segments: chapters fallback count=1
+[TJF 2026-10-18T09:32:09Z] segments: chapters fallback count=1
+[TJF 2026-10-18T09:32:09Z] segments: chapters fallback count=2
+[TJF 2026-10-18T09:32:09Z] segments: mediaSegments count=3
+[TJF 2026-10-18T09:32:09Z] segments: mediaSegments count=1
+[TJF 2026-10-18T09:32:09Z] subsearch: downloaded subtitleId=sub1 item=item-1
+[TJF 2026-10-18T09:32:09Z] subsearch: item=item-1 lang=spa results=1
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserFavoriteItems/i9
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserFavoriteItems/i9 status=200
+[TJF 2026-10-18T09:32:09Z] [UserAction] DELETE UserFavoriteItems/i9
+[TJF 2026-10-18T09:32:09Z] [UserAction] DELETE UserFavoriteItems/i9 status=204
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserFavoriteItems/i9
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserFavoriteItems/i9 status=200
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserFavoriteItems/i9
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserFavoriteItems/i9 status=404
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserPlayedItems/i9
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserPlayedItems/i9 status=200
+[TJF 2026-10-18T09:32:09Z] [UserAction] DELETE UserPlayedItems/i9
+[TJF 2026-10-18T09:32:09Z] [UserAction] DELETE UserPlayedItems/i9 status=204
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserPlayedItems/i9
+[TJF 2026-10-18T09:32:09Z] [UserAction] POST UserPlayedItems/i9 status=401
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"PlaySessionId":"ps1","MediaSources":[{"Id":"src1","Name":"video","MediaStreams":[{"Type":"Audio","Language":"es","Index":1,"IsDefault":true},{"Type":"Audio","Language":"de","Index":2},{"Type":"Subtitle","Language":"es","Index":3,"Codec":"ass"},{"Type":"Subtitle","Language":"es","Index":4,"Codec":"srt"}]}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"PlaySessionId":"ps1","MediaSources":[{"Id":"src1","Name":"video","MediaStreams":[{"Type":"Audio","Language":"de","Index":1,"IsDefault":true},{"Type":"Audio","Language":"es","Index":2},{"Type":"Subtitle","Language":"es","Index":3,"Codec":"ass"},{"Type":"Subtitle","Language":"es","Index":4,"Codec":"srt"}]}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] plan: pre-resolving audio=2 item=i
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"PlaySessionId":"ps1","MediaSources":[{"Id":"src1","Name":"video","MediaStreams":[{"Type":"Audio","Language":"de","Index":1,"IsDefault":true},{"Type":"Audio","Language":"es","Index":2},{"Type":"Subtitle","Language":"es","Index":3,"Codec":"ass"},{"Type":"Subtitle","Language":"es","Index":4,"Codec":"srt"}]}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"PlaySessionId":"ps1","MediaSources":[{"Id":"src1","Name":"video","MediaStreams":[{"Type":"Audio","Language":"de","Index":1,"IsDefault":true},{"Type":"Audio","Language":"es","Index":2},{"Type":"Subtitle","Language":"es","Index":3,"Codec":"ass"},{"Type":"Subtitle","Language":"es","Index":4,"Codec":"srt"}]}]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=1
+[TJF 2026-10-18T09:32:09Z] plan: pre-resolving audio=2 item=i
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] status=200 body={"PlaySessionId":"ps1","MediaSources":[]}
+[TJF 2026-10-18T09:32:09Z] [PlaybackClient] decoded mediaSources=0
+[TJF 2026-10-18T09:32:09Z] plan: refined answer sourceless — falling back to base plan
+Test Suite 'All tests' started at 2026-10-18 11:32:09.901.
+Test Suite 'ThisJellyFixFeatureTests.xctest' started at 2026-10-18 11:32:09.902.
+Test Suite 'AuthModelTests' started at 2026-10-18 11:32:09.902.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoredSessionIsValidatedEvenWhenAlreadyAuthenticated]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoredSessionIsValidatedEvenWhenAlreadyAuthenticated]' passed (0.006 seconds).
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoredSessionIsValidatedOnlyOnce]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoredSessionIsValidatedOnlyOnce]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionClearsTokenOnForbidden]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionClearsTokenOnForbidden]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionInvalidTokenClearsKeychainAndReturnsFalse]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionInvalidTokenClearsKeychainAndReturnsFalse]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionKeepsTokenOnServerError]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionKeepsTokenOnServerError]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionKeepsTokenWhenServerUnreachable]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionKeepsTokenWhenServerUnreachable]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionValidTokenPopulatesUserAndReturnsTrue]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testRestoreSessionValidTokenPopulatesUserAndReturnsTrue]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testTokenRejectionClassification]' started.
+Test Case '-[ThisJellyFixFeatureTests.AuthModelTests testTokenRejectionClassification]' passed (0.000 seconds).
+Test Suite 'AuthModelTests' passed at 2026-10-18 11:32:09.914.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.010 (0.012) seconds
+Test Suite 'CardBadgeTests' started at 2026-10-18 11:32:09.914.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testEpisodeAddedTodayGetsNewEpisodeBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testEpisodeAddedTodayGetsNewEpisodeBadge]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testEpisodeAddedYesterdayGetsRecentlyAddedNotNewToday]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testEpisodeAddedYesterdayGetsRecentlyAddedNotNewToday]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testFutureDateGetsNoBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testFutureDateGetsNoBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testMovieAddedBeyondWindowGetsNoBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testMovieAddedBeyondWindowGetsNoBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testMovieAddedWithinWindowGetsRecentlyAddedBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testMovieAddedWithinWindowGetsRecentlyAddedBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testResumeItemGetsNextEpisodeBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testResumeItemGetsNextEpisodeBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testResumeTakesPrecedenceOverNovelty]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testResumeTakesPrecedenceOverNovelty]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testSeriesWithOldDateGetsNoBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testSeriesWithOldDateGetsNoBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testSeriesWithoutDatesGetsNoBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testSeriesWithoutDatesGetsNoBadge]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testVerifiedNewSeasonGetsBadge]' started.
+Test Case '-[ThisJellyFixFeatureTests.CardBadgeTests testVerifiedNewSeasonGetsBadge]' passed (0.000 seconds).
+Test Suite 'CardBadgeTests' passed at 2026-10-18 11:32:09.918.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'LibraryModelCategoryTests' started at 2026-10-18 11:32:09.918.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testCategoryChipsEmptyWithoutViews]' started.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testCategoryChipsEmptyWithoutViews]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testCategoryChipsFromServerViews]' started.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testCategoryChipsFromServerViews]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testConcurrentLoadKeepsStubStateIntact]' started.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testConcurrentLoadKeepsStubStateIntact]' passed (0.053 seconds).
+Test Suite 'LibraryModelCategoryTests' passed at 2026-10-18 11:32:09.976.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.058 (0.058) seconds
+Test Suite 'LibraryModelPaginationTests' started at 2026-10-18 11:32:09.976.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelPaginationTests testFailedPageIsDistinguishableFromTheEndOfTheCollection]' started.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelPaginationTests testFailedPageIsDistinguishableFromTheEndOfTheCollection]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelPaginationTests testFetchPagePassesStartIndexToClient]' started.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelPaginationTests testFetchPagePassesStartIndexToClient]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelPaginationTests testFetchPageWithStartIndexPaginates]' started.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelPaginationTests testFetchPageWithStartIndexPaginates]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelPaginationTests testSuccessfulPageClearsTheFailureFlag]' started.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelPaginationTests testSuccessfulPageClearsTheFailureFlag]' passed (0.000 seconds).
+Test Suite 'LibraryModelPaginationTests' passed at 2026-10-18 11:32:09.979.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'MareaThemeTests' started at 2026-10-18 11:32:09.979.
+Test Case '-[ThisJellyFixFeatureTests.MareaThemeTests testAccentMatchesBadgeRed]' started.
+Test Case '-[ThisJellyFixFeatureTests.MareaThemeTests testAccentMatchesBadgeRed]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.MareaThemeTests testBackgroundIsPureBlack]' started.
+Test Case '-[ThisJellyFixFeatureTests.MareaThemeTests testBackgroundIsPureBlack]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.MareaThemeTests testRadii]' started.
+Test Case '-[ThisJellyFixFeatureTests.MareaThemeTests testRadii]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.MareaThemeTests testSpacingScale]' started.
+Test Case '-[ThisJellyFixFeatureTests.MareaThemeTests testSpacingScale]' passed (0.000 seconds).
+Test Suite 'MareaThemeTests' passed at 2026-10-18 11:32:09.980.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'PlayerViewModelAudioUnionTests' started at 2026-10-18 11:32:09.980.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests testSelectAudioMarksServedRowWithoutEngineCall]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests testSelectAudioMarksServedRowWithoutEngineCall]' passed (0.057 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests testUnionFallsBackToEngineWithoutServerMetadata]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests testUnionFallsBackToEngineWithoutServerMetadata]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests testUnionMapsServedTrackToEngineOption]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests testUnionMapsServedTrackToEngineOption]' passed (0.014 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests testUnionPositionalWhenCountsAgree]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelAudioUnionTests testUnionPositionalWhenCountsAgree]' passed (0.005 seconds).
+Test Suite 'PlayerViewModelAudioUnionTests' passed at 2026-10-18 11:32:10.060.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.080 (0.080) seconds
+Test Suite 'PlayerViewModelControlTests' started at 2026-10-18 11:32:10.060.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testAttachToGlobalControllersClaimsLockScreenHandlers]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testAttachToGlobalControllersClaimsLockScreenHandlers]' passed (0.015 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testConstructingViewModelDoesNotHijackLockScreenHandlers]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testConstructingViewModelDoesNotHijackLockScreenHandlers]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testGenerationGuardDoesNotBlockFreshPrepare]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testGenerationGuardDoesNotBlockFreshPrepare]' passed (0.007 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testPlayNextNowDoesNothingWhenUnwired]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testPlayNextNowDoesNothingWhenUnwired]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testPlayNextNowIgnoresCreditsGuard]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testPlayNextNowIgnoresCreditsGuard]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testPlayPreviousEpisodeDoesNothingWhenUnwired]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testPlayPreviousEpisodeDoesNothingWhenUnwired]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testRelativeSeekClampsToKnownDuration]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testRelativeSeekClampsToKnownDuration]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testRelativeSeekDoesNotCollapseToZeroWhenDurationUnknown]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testRelativeSeekDoesNotCollapseToZeroWhenDurationUnknown]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testSelectSubtitleTrackRoutesExclusivelyToOverlay]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testSelectSubtitleTrackRoutesExclusivelyToOverlay]' passed (0.007 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testSwapAbortsWhenTeardownBumpsGeneration]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testSwapAbortsWhenTeardownBumpsGeneration]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTeardownBumpsSessionGeneration]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTeardownBumpsSessionGeneration]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTickConversionSurvivesHostileServerValues]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTickConversionSurvivesHostileServerValues]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTickFractionsDropsZeroDuration]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTickFractionsDropsZeroDuration]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTickFractionsNormalizesToDuration]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTickFractionsNormalizesToDuration]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTickFractionsSkipsStartAtZeroAndPastTheEnd]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelControlTests testTickFractionsSkipsStartAtZeroAndPastTheEnd]' passed (0.000 seconds).
+Test Suite 'PlayerViewModelControlTests' passed at 2026-10-18 11:32:10.103.
+	 Executed 15 tests, with 0 failures (0 unexpected) in 0.041 (0.043) seconds
+Test Suite 'PlayerViewModelFavoriteTests' started at 2026-10-18 11:32:10.103.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testLoadReadsServerFlag]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testLoadReadsServerFlag]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testToggleRollsBackOnFailure]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testToggleRollsBackOnFailure]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testToggleSetsFavoriteOnServer]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testToggleSetsFavoriteOnServer]' passed (0.007 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testToggleUnsetsFavorite]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testToggleUnsetsFavorite]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testToggleWithoutServerFlagRefusesBlindFlip]' started.
+[TJF 2026-10-18T09:32:09Z] restoreSession: token validation failed — Usuario o contraseña incorrectos.
+[TJF 2026-10-18T09:32:09Z] restoreSession: token validation failed — Error del servidor (código 403).
+[TJF 2026-10-18T09:32:09Z] restoreSession: token validation failed — Usuario o contraseña incorrectos.
+[TJF 2026-10-18T09:32:09Z] restoreSession: token validation failed — Error del servidor (código 503).
+[TJF 2026-10-18T09:32:09Z] restoreSession: token validation failed — Error de red: offline
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: Estás viendo items=0
+[TJF 2026-10-18T09:32:09Z] load: Últimos agregados items=0
+[TJF 2026-10-18T09:32:09Z] load: Películas items=0
+[TJF 2026-10-18T09:32:09Z] load: Series items=0
+[TJF 2026-10-18T09:32:09Z] load: Visto recientemente items=0
+[TJF 2026-10-18T09:32:09Z] load: Nuevos episodios total=0 today=0
+[TJF 2026-10-18T09:32:09Z] load: fetchPage FAILED: No se ha podido completar la operación. (Error de NSURLErrorDomain -1001.)
+[TJF 2026-10-18T09:32:10Z] configureMediaStreams total=0 extSubs=0
+[TJF 2026-10-18T09:32:10Z] configureMediaStreams total=2 extSubs=0
+[TJF 2026-10-18T09:32:10Z] configureMediaStreams total=2 extSubs=0
+[TJF 2026-10-18T09:32:10Z] reportStopped SKIPPED: userId=false serverURL=false token=*** itemId=false
+[TJF 2026-10-18T09:32:10Z] prepare: ext=m3u8 path=/stream.m3u8
+[TJF 2026-10-18T09:32:10Z] prepare: item attached in 2 ms
+[TJF 2026-10-18T09:32:10Z] subtitles: apply skipped — no legible group desired=Optional(-1)
+[TJF 2026-10-18T09:32:10Z] subtitles select id=0 name=Español
+[TJF 2026-10-18T09:32:10Z] subtitles: apply skipped — no legible group desired=Optional(-1)
+[TJF 2026-10-18T09:32:10Z] reportStopped SKIPPED: userId=false serverURL=false token=*** itemId=false
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] favorite: toggle failed — Error del servidor (código 500).
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelFavoriteTests testToggleWithoutServerFlagRefusesBlindFlip]' passed (0.003 seconds).
+Test Suite 'PlayerViewModelFavoriteTests' passed at 2026-10-18 11:32:10.122.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.018 (0.019) seconds
+Test Suite 'PlayerViewModelHandoffTakeoverTests' started at 2026-10-18 11:32:10.122.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testConcurrentChecksFetchSessionsOnlyOnce]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testConcurrentChecksFetchSessionsOnlyOnce]' passed (0.217 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testNoTakeoverWhenAnotherUserPlaysTheItem]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testNoTakeoverWhenAnotherUserPlaysTheItem]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testNoTakeoverWhenNoOtherDevicePlaysTheItem]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testNoTakeoverWhenNoOtherDevicePlaysTheItem]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testNoTakeoverWhileThisSessionStartedFromHandoff]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testNoTakeoverWhileThisSessionStartedFromHandoff]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testTakeoverFiresWhenOtherDevicePlaysSameItem]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelHandoffTakeoverTests testTakeoverFiresWhenOtherDevicePlaysSameItem]' passed (0.003 seconds).
+Test Suite 'PlayerViewModelHandoffTakeoverTests' passed at 2026-10-18 11:32:10.348.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.226 (0.226) seconds
+Test Suite 'PlayerViewModelSegmentsTests' started at 2026-10-18 11:32:10.348.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSegmentsTests testMarkersAreStoredWhenTheItemStillMatches]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSegmentsTests testMarkersAreStoredWhenTheItemStillMatches]' passed (0.012 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSegmentsTests testResponseForSupersededItemIsDiscarded]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSegmentsTests testResponseForSupersededItemIsDiscarded]' passed (0.088 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSegmentsTests testSecondCallDuringInFlightRequestIsDropped]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSegmentsTests testSecondCallDuringInFlightRequestIsDropped]' passed (0.132 seconds).
+Test Suite 'PlayerViewModelSegmentsTests' passed at 2026-10-18 11:32:10.580.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.232 (0.232) seconds
+Test Suite 'PlayerViewModelSubtitleAvailabilityTests' started at 2026-10-18 11:32:10.581.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testBitmapListedForBurnIn]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testBitmapListedForBurnIn]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testFailedTextListedForRetry]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testFailedTextListedForRetry]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testIndexlessStreamsSkipped]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testIndexlessStreamsSkipped]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testLoadedTracksOmitted]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testLoadedTracksOmitted]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testLoadingTracksNotListed]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testLoadingTracksNotListed]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testNonSubtitleStreamsIgnored]' started.
+Test Case '-[ThisJellyFixFeatureTests.PlayerViewModelSubtitleAvailabilityTests testNonSubtitleStreamsIgnored]' passed (0.000 seconds).
+Test Suite 'PlayerViewModelSubtitleAvailabilityTests' passed at 2026-10-18 11:32:10.583.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'ServerConnectionModelTests' started at 2026-10-18 11:32:10.583.
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testConnectDuplicateDoesNotDuplicate]' started.
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testConnectDuplicateDoesNotDuplicate]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testConnectPersistsServer]' started.
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testConnectPersistsServer]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testDisconnectKeepsListButClearsCurrent]' started.
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testDisconnectKeepsListButClearsCurrent]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testLegacyMigration]' started.
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testLegacyMigration]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testMalformedURLDoesNotCorruptExisting]' started.
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testMalformedURLDoesNotCorruptExisting]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testRemoveKeepsRest]' started.
+Test Case '-[ThisJellyFixFeatureTests.ServerConnectionModelTests testRemoveKeepsRest]' passed (0.001 seconds).
+Test Suite 'ServerConnectionModelTests' passed at 2026-10-18 11:32:10.588.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'ThisJellyFixFeatureTests.xctest' passed at 2026-10-18 11:32:10.588.
+	 Executed 73 tests, with 0 failures (0 unexpected) in 0.677 (0.686) seconds
+Test Suite 'All tests' passed at 2026-10-18 11:32:10.588.
+	 Executed 73 tests, with 0 failures (0 unexpected) in 0.677 (0.687) seconds
+playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] favorite: initial load failed — Sesión expirada. Inicia sesión de nuevo.
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] tracks load failed: Error Domain=NSURLErrorDomain Code=-1100 "No se ha encontrado la URL solicitada en este servidor." UserInfo={NSUnderlyingError=0x79ff314cc0 {Error Domain=CoreMediaErrorDomain Code=-12938 "No se ha podido completar la operación. (Error de CoreMediaErrorDomain -12938: HTTP 404: File Not Found)" UserInfo={NSDescription=No se ha podido completar la operación. (Error de CoreMediaErrorDomain -12938: HTTP 404: File Not Found)}}, NSErrorFailingURLStringKey=https://example.com/stream.m3u8, NSErrorFailingURLKey=https://example.com/stream.m3u8, NSURL=https://example.com/stream.m3u8, AVErrorFailedDependenciesKey=(
+    MediaSelectionArray,
+    ExtendedMediaSelectionArray,
+    LocalizedMSODisplayNames,
+    CustomMediaSelectionScheme
+), NSLocalizedDescription=No se ha encontrado la URL solicitada en este servidor.}
+[TJF 2026-10-18T09:32:10Z] handoff takeover: 'Salón' (deviceId=other-tv) now plays item=item-1 — this device goes dark
+[TJF 2026-10-18T09:32:10Z] reportStopped SKIPPED: position=0 (preserves saved resume)
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:1 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] handoff takeover: 'Salón' (deviceId=other-tv) now plays item=item-1 — this device goes dark
+[TJF 2026-10-18T09:32:10Z] reportStopped SKIPPED: position=0 (preserves saved resume)
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:8096 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:8096 user=u1 tokenLen=3 playSessionId=nil
+[TJF 2026-10-18T09:32:10Z] segments: discarding response for a superseded item
+[TJF 2026-10-18T09:32:10Z] configureReporting OK itemId=item-1 server=http://localhost:8096 user=u1 tokenLen=3 playSessionId=nil
+Test Suite 'All tests' started at 2026-10-18 11:32:10.753.
+Test Suite 'ThisJellyFixDiscoveryTests.xctest' started at 2026-10-18 11:32:10.754.
+Test Suite 'ArrClientTests' started at 2026-10-18 11:32:10.754.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testAppTransportSecurityIsCalledOut]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testAppTransportSecurityIsCalledOut]' passed (0.007 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testBaseURLWithSubpathIsPreserved]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testBaseURLWithSubpathIsPreserved]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testConnectionRefusedSurfacesSystemDetailAndLocalNetworkHint]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testConnectionRefusedSurfacesSystemDetailAndLocalNetworkHint]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrAddMovieCanSearchImmediately]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrAddMovieCanSearchImmediately]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrAddMovieSendsDefaultsWithoutSearch]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrAddMovieSendsDefaultsWithoutSearch]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrLookupByTmdbId]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrLookupByTmdbId]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrQualityProfiles]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrQualityProfiles]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrRootFolders]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrRootFolders]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrTriggerSearchPostsMoviesSearchCommand]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRadarrTriggerSearchPostsMoviesSearchCommand]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRemoteHostConnectionFailureHasNoLocalNetworkHint]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testRemoteHostConnectionFailureHasNoLocalNetworkHint]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testServerErrorSurfacesServerMessage]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testServerErrorSurfacesServerMessage]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testServerErrorWithoutBodyKeepsCodeOnly]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testServerErrorWithoutBodyKeepsCodeOnly]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testSonarrAddSeriesSendsMonitoredSeasons]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testSonarrAddSeriesSendsMonitoredSeasons]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testSonarrLookupByTmdbId]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testSonarrLookupByTmdbId]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testSonarrQualityProfiles]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testSonarrQualityProfiles]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testSonarrTriggerSearchPostsSeriesSearchCommand]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testSonarrTriggerSearchPostsSeriesSearchCommand]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testUnauthorizedThrows]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.ArrClientTests testUnauthorizedThrows]' passed (0.001 seconds).
+Test Suite 'ArrClientTests' passed at 2026-10-18 11:32:10.772.
+	 Executed 17 tests, with 0 failures (0 unexpected) in 0.015 (0.017) seconds
+Test Suite 'CatalogRecommenderTests' started at 2026-10-18 11:32:10.772.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testBuildRowsFiltersLibraryTitlesFromForYou]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testBuildRowsFiltersLibraryTitlesFromForYou]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testBuildRowsSkipsEmptyRows]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testBuildRowsSkipsEmptyRows]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testBuildRowsSplitsTrendingByKind]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testBuildRowsSplitsTrendingByKind]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testDedupeByTmdbIdKeepsFirst]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testDedupeByTmdbIdKeepsFirst]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testDedupeIgnoresEntriesWithoutTmdbId]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testDedupeIgnoresEntriesWithoutTmdbId]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testForYouRowsGroupSeriesMoviesAndAnimeSeparately]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testForYouRowsGroupSeriesMoviesAndAnimeSeparately]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testItemsAlreadyInLibraryAreMarked]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testItemsAlreadyInLibraryAreMarked]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testMarkIsCaseInsensitive]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testMarkIsCaseInsensitive]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testNothingConfiguredYieldsNoRows]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testNothingConfiguredYieldsNoRows]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testTrendingSeriesRowKeepsOwnedTitles]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.CatalogRecommenderTests testTrendingSeriesRowKeepsOwnedTitles]' passed (0.000 seconds).
+Test Suite 'CatalogRecommenderTests' passed at 2026-10-18 11:32:10.775.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'DiscoveryLoaderTests' started at 2026-10-18 11:32:10.775.
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testLoadRowsSurvivesProviderFailure]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testLoadRowsSurvivesProviderFailure]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testLoadRowsUsesTrendingPlusRecommendationsFromLibrary]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testLoadRowsUsesTrendingPlusRecommendationsFromLibrary]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testLoadRowsWithoutProviderReturnsEmpty]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testLoadRowsWithoutProviderReturnsEmpty]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testRecommendationsPreferMovieSourcesForMovies]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testRecommendationsPreferMovieSourcesForMovies]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testSearchMergesLibraryAndCatalogWithoutDuplicates]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testSearchMergesLibraryAndCatalogWithoutDuplicates]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testSearchWithoutProviderReturnsEmpty]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DiscoveryLoaderTests testSearchWithoutProviderReturnsEmpty]' passed (0.105 seconds).
+Test Suite 'DiscoveryLoaderTests' passed at 2026-10-18 11:32:10.883.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.108 (0.108) seconds
+Test Suite 'DownloadCoordinatorTests' started at 2026-10-18 11:32:10.883.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testBatchMarkAvailableIsCaseInsensitive]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testBatchMarkAvailableIsCaseInsensitive]' passed (0.006 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testBatchMarkAvailableMatchesPerItemBehaviour]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testBatchMarkAvailableMatchesPerItemBehaviour]' passed (0.004 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testCancelPersistsRemovalAcrossRestart]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testCancelPersistsRemovalAcrossRestart]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testCancelRightAfterSubmitDeletesFromService]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testCancelRightAfterSubmitDeletesFromService]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testCompletedHistorySurvivesRefresh]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testCompletedHistorySurvivesRefresh]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testDismissFinishedEntryNeverDeletesFromTheService]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testDismissFinishedEntryNeverDeletesFromTheService]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testDownloadStateRoundTripsThroughJSON]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testDownloadStateRoundTripsThroughJSON]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testFailedSubmitMarksEntryFailed]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testFailedSubmitMarksEntryFailed]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testHistorySurvivesNewCoordinatorInstance]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testHistorySurvivesNewCoordinatorInstance]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testInterruptedSubmitHydratesAsFailed]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testInterruptedSubmitHydratesAsFailed]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testMarkAvailableFlipsCompletedEntry]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testMarkAvailableFlipsCompletedEntry]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshFailureKeepsPreviousList]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshFailureKeepsPreviousList]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshFetchesBothConfiguredServices]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshFetchesBothConfiguredServices]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshKeepsLocalEntryNotYetInRemoteQueue]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshKeepsLocalEntryNotYetInRemoteQueue]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshReplacesSubmittingEntryWithRemoteProgress]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshReplacesSubmittingEntryWithRemoteProgress]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshSwallowsErrorsIntoEntrylessResult]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRefreshSwallowsErrorsIntoEntrylessResult]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRemoveEntriesDeletesRemoteIdNotQueueRecordId]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRemoveEntriesDeletesRemoteIdNotQueueRecordId]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRemoveFallsBackToLookupWhenRemoteIdMissing]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRemoveFallsBackToLookupWhenRemoteIdMissing]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRemoveMatchingSonarrEntryDeletesSeries]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testRemoveMatchingSonarrEntryDeletesSeries]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitMovieCreatesLocalEntryInSubmittingState]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitMovieCreatesLocalEntryInSubmittingState]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitMovieTriggersManualSearchAfterAdd]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitMovieTriggersManualSearchAfterAdd]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitMovieWithoutConfigThrowsMissingService]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitMovieWithoutConfigThrowsMissingService]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitMovieWithoutSearchNowSkipsManualSearch]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitMovieWithoutSearchNowSkipsManualSearch]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitSeriesLooksUpThenGoesToSonarr]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitSeriesLooksUpThenGoesToSonarr]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitSeriesTriggersManualSearchAfterAdd]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitSeriesTriggersManualSearchAfterAdd]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitSeriesWithNoLookupResultThrows]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testSubmitSeriesWithNoLookupResultThrows]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testTriggerSearchFailureKeepsSubmitSuccessful]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadCoordinatorTests testTriggerSearchFailureKeepsSubmitSuccessful]' passed (0.002 seconds).
+Test Suite 'DownloadCoordinatorTests' passed at 2026-10-18 11:32:10.946.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.060 (0.063) seconds
+Test Suite 'DownloadQueueTests' started at 2026-10-18 11:32:10.946.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testEmptyQueue]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testEmptyQueue]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testQueuePrefersEmbeddedMovieIdOverTopLevel]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testQueuePrefersEmbeddedMovieIdOverTopLevel]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testRadarrQueueMapsProgressAndStatus]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testRadarrQueueMapsProgressAndStatus]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testSonarrQueueUsesSeriesTitle]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testSonarrQueueUsesSeriesTitle]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testStatusMappingCoversCommonCases]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testStatusMappingCoversCommonCases]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testUnreachableServicePropagatesError]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.DownloadQueueTests testUnreachableServicePropagatesError]' passed (0.001 seconds).
+Test Suite 'DownloadQueueTests' passed at 2026-10-18 11:32:10.949.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'LibraryRecommenderTests' started at 2026-10-18 11:32:10.949.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testAllWatchedYieldsNoRows]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testAllWatchedYieldsNoRows]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testDeterministicOrder]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testDeterministicOrder]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testEmptyLibraryYieldsNoRows]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testEmptyLibraryYieldsNoRows]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testExcludesWatchedInProgressAndFavorites]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testExcludesWatchedInProgressAndFavorites]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testFavoritesWeighMoreThanWatched]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testFavoritesWeighMoreThanWatched]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testGenreAffinityOrdersCandidates]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testGenreAffinityOrdersCandidates]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testLimitIsRespected]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testLimitIsRespected]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testNoSignalsFallsBackToTopRated]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testNoSignalsFallsBackToTopRated]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testReasonNamesARealWitness]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.LibraryRecommenderTests testReasonNamesARealWitness]' passed (0.000 seconds).
+Test Suite 'LibraryRecommenderTests' passed at 2026-10-18 11:32:10.952.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'TMDBMetadataProviderTests' started at 2026-10-18 11:32:10.952.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testJapaneseAnimationIsFlaggedAsAnime]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testJapaneseAnimationIsFlaggedAsAnime]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testRecommendationsForMovieHitMovieEndpoint]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testRecommendationsForMovieHitMovieEndpoint]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testRecommendationsForSeriesHitTvEndpoint]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testRecommendationsForSeriesHitTvEndpoint]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testRecommendationsMapItemsWithoutMediaType]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testRecommendationsMapItemsWithoutMediaType]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testSearchMapsResults]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testSearchMapsResults]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testSearchQueriesMultiEndpoint]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testSearchQueriesMultiEndpoint]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testServerErrorThrowsServerError]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testServerErrorThrowsServerError]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testTrendingMoviesHitsMovieEndpointAndMaps]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testTrendingMoviesHitsMovieEndpointAndMaps]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testTrendingSeriesHitsTvEndpointAndMaps]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testTrendingSeriesHitsTvEndpointAndMaps]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testUnauthorizedStatusThrowsUnauthorized]' started.
+Test Case '-[ThisJellyFixDiscoveryTests.TMDBMetadataProviderTests testUnauthorizedStatusThrowsUnauthorized]' passed (0.000 seconds).
+Test Suite 'TMDBMetadataProviderTests' passed at 2026-10-18 11:32:10.956.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+Test Suite 'ThisJellyFixDiscoveryTests.xctest' passed at 2026-10-18 11:32:10.956.
+	 Executed 85 tests, with 0 failures (0 unexpected) in 0.193 (0.201) seconds
+Test Suite 'All tests' passed at 2026-10-18 11:32:10.956.
+	 Executed 85 tests, with 0 failures (0 unexpected) in 0.193 (0.203) seconds
+[TJF 2026-10-18T09:32:10Z] Radarr GET qualityprofile unreachable: Error Domain=NSURLErrorDomain Code=-1022 "(null)"
+[TJF 2026-10-18T09:32:10Z] Sonarr GET qualityprofile unreachable: Error Domain=NSURLErrorDomain Code=-1004 "(null)"
+[TJF 2026-10-18T09:32:10Z] Radarr GET qualityprofile unreachable: Error Domain=NSURLErrorDomain Code=-1001 "(null)"
+[TJF 2026-10-18T09:32:10Z] Sonarr GET qualityprofile status=400 message=Invalid seasons value
+[TJF 2026-10-18T09:32:10Z] Radarr GET qualityprofile status=500 message=-
+[TJF 2026-10-18T09:32:10Z] Radarr GET qualityprofile status=401
+[TJF 2026-10-18T09:32:10Z] discovery: serverError(500)
+[TJF 2026-10-18T09:32:10Z] discovery: serverError(500)
+[TJF 2026-10-18T09:32:10Z] discovery: unauthorized
+[TJF 2026-10-18T09:32:10Z] Radarr manual search failed: unreachable
+[TJF 2026-10-18T09:32:10Z] Sonarr GET queue unreachable: Error Domain=NSURLErrorDomain Code=-1004 "(null)"
+Test Suite 'All tests' started at 2026-10-18 11:32:11.103.
+Test Suite 'ThisJellyFixCoreTests.xctest' started at 2026-10-18 11:32:11.105.
+Test Suite 'AVPlayerCapabilityTests' started at 2026-10-18 11:32:11.105.
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testAbsoluteURLResolvedAsIs]' started.
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testAbsoluteURLResolvedAsIs]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testAvPlayerProfileForcesHlsWhenDirectRejected]' started.
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testAvPlayerProfileForcesHlsWhenDirectRejected]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testDirectPlayMp4H264]' started.
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testDirectPlayMp4H264]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testMkvNeedsRemuxNotDirectPlay]' started.
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testMkvNeedsRemuxNotDirectPlay]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testUnknownAudioCodecFallsToHls]' started.
+Test Case '-[ThisJellyFixCoreTests.AVPlayerCapabilityTests testUnknownAudioCodecFallsToHls]' passed (0.000 seconds).
+Test Suite 'AVPlayerCapabilityTests' passed at 2026-10-18 11:32:11.108.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'CastContentTypeTests' started at 2026-10-18 11:32:11.108.
+Test Case '-[ThisJellyFixCoreTests.CastContentTypeTests testExtensionlessFallsBackToMP4]' started.
+Test Case '-[ThisJellyFixCoreTests.CastContentTypeTests testExtensionlessFallsBackToMP4]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastContentTypeTests testHLSPlaylistDetected]' started.
+Test Case '-[ThisJellyFixCoreTests.CastContentTypeTests testHLSPlaylistDetected]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastContentTypeTests testM4VDetectedCaseInsensitive]' started.
+Test Case '-[ThisJellyFixCoreTests.CastContentTypeTests testM4VDetectedCaseInsensitive]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastContentTypeTests testMP4Detected]' started.
+Test Case '-[ThisJellyFixCoreTests.CastContentTypeTests testMP4Detected]' passed (0.000 seconds).
+Test Suite 'CastContentTypeTests' passed at 2026-10-18 11:32:11.109.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'CastSessionStateTests' started at 2026-10-18 11:32:11.109.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testAcknowledgeFailureClearsToIdle]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testAcknowledgeFailureClearsToIdle]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testConnectSequenceHappyPath]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testConnectSequenceHappyPath]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testDiscoveryMovesToDiscovering]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testDiscoveryMovesToDiscovering]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testDiscoveryWhileConnectedKeepsSession]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testDiscoveryWhileConnectedKeepsSession]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testFailureWhileConnecting]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testFailureWhileConnecting]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testInitialStateIsIdle]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testInitialStateIsIdle]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testLateFailureDoesNotKillLiveSession]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testLateFailureDoesNotKillLiveSession]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testLateStartAfterConnectedDoesNotDowngrade]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testLateStartAfterConnectedDoesNotDowngrade]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testResetClearsEverything]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testResetClearsEverything]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testSessionEndedReturnsToIdle]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testSessionEndedReturnsToIdle]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testSessionStartedWithDifferentNameIgnored]' started.
+Test Case '-[ThisJellyFixCoreTests.CastSessionStateTests testSessionStartedWithDifferentNameIgnored]' passed (0.000 seconds).
+Test Suite 'CastSessionStateTests' passed at 2026-10-18 11:32:11.112.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'CastStreamPreflightTests' started at 2026-10-18 11:32:11.112.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testApiKeyVariantsRecognized]' started.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testApiKeyVariantsRecognized]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testHTTPSAfterIsOK]' started.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testHTTPSAfterIsOK]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testLanHTTPWithApiKeyIsOK]' started.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testLanHTTPWithApiKeyIsOK]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testLocalhostRejected]' started.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testLocalhostRejected]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testLoopbackIPIPv4Rejected]' started.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testLoopbackIPIPv4Rejected]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testMissingApiKeyRejected]' started.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testMissingApiKeyRejected]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testMissingHostRejected]' started.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testMissingHostRejected]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testNonHTTPSchemeRejected]' started.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testNonHTTPSchemeRejected]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testReasonNeverContainsToken]' started.
+Test Case '-[ThisJellyFixCoreTests.CastStreamPreflightTests testReasonNeverContainsToken]' passed (0.000 seconds).
+Test Suite 'CastStreamPreflightTests' passed at 2026-10-18 11:32:11.114.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'CatalogItemTests' started at 2026-10-18 11:32:11.114.
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testIdentifiableAndEquatableByContent]' started.
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testIdentifiableAndEquatableByContent]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testIsInLibraryFollowsJellyfinId]' started.
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testIsInLibraryFollowsJellyfinId]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testMatchesLibraryItemByTmdbId]' started.
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testMatchesLibraryItemByTmdbId]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testMatchIsCaseInsensitiveOnProviderValue]' started.
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testMatchIsCaseInsensitiveOnProviderValue]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testMovieRoutesToRadarrAndSeriesToSonarr]' started.
+Test Case '-[ThisJellyFixCoreTests.CatalogItemTests testMovieRoutesToRadarrAndSeriesToSonarr]' passed (0.000 seconds).
+Test Suite 'CatalogItemTests' passed at 2026-10-18 11:32:11.116.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'ChapterClassifierTests' started at 2026-10-18 11:32:11.116.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testCaseAndDiacriticInsensitive]' started.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testCaseAndDiacriticInsensitive]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testCreditsNames]' started.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testCreditsNames]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testIntroNames]' started.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testIntroNames]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testIrrelevantNamesReturnNil]' started.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testIrrelevantNamesReturnNil]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testMarkersSortedByStart]' started.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testMarkersSortedByStart]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testMarkersUseNextChapterAsEnd]' started.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testMarkersUseNextChapterAsEnd]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testRecapNames]' started.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testRecapNames]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testUnknownNamesProduceNoMarkers]' started.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testUnknownNamesProduceNoMarkers]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testUnnamedChaptersIgnored]' started.
+Test Case '-[ThisJellyFixCoreTests.ChapterClassifierTests testUnnamedChaptersIgnored]' passed (0.000 seconds).
+Test Suite 'ChapterClassifierTests' passed at 2026-10-18 11:32:11.118.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'DeviceIdentifierTests' started at 2026-10-18 11:32:11.118.
+Test Case '-[ThisJellyFixCoreTests.DeviceIdentifierTests testFailedKeychainWriteStillYieldsOneStableId]' started.
+Test Case '-[ThisJellyFixCoreTests.DeviceIdentifierTests testFailedKeychainWriteStillYieldsOneStableId]' passed (0.008 seconds).
+Test Case '-[ThisJellyFixCoreTests.DeviceIdentifierTests testIdIsValidUUID]' started.
+Test Case '-[ThisJellyFixCoreTests.DeviceIdentifierTests testIdIsValidUUID]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.DeviceIdentifierTests testReturnsSameIdAcrossCalls]' started.
+Test Case '-[ThisJellyFixCoreTests.DeviceIdentifierTests testReturnsSameIdAcrossCalls]' passed (0.000 seconds).
+Test Suite 'DeviceIdentifierTests' passed at 2026-10-18 11:32:11.127.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.008 (0.009) seconds
+Test Suite 'HandoffActivityTests' started at 2026-10-18 11:32:11.127.
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testBuiltActivityCarriesEverythingTheClosureMustCopy]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testBuiltActivityCarriesEverythingTheClosureMustCopy]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testDetailActivityCarriesPayloadAndTarget]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testDetailActivityCarriesPayloadAndTarget]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testPlayingActivityCarriesFullPayload]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testPlayingActivityCarriesFullPayload]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testPlayingActivityDeclaresRequiredKeysAndTarget]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testPlayingActivityDeclaresRequiredKeysAndTarget]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testPlayingActivityRequiresPositionAndUser]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffActivityTests testPlayingActivityRequiresPositionAndUser]' passed (0.000 seconds).
+Test Suite 'HandoffActivityTests' passed at 2026-10-18 11:32:11.129.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'HandoffCenterTests' started at 2026-10-18 11:32:11.129.
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testBrowsingYieldsAgainAfterPlaybackStops]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testBrowsingYieldsAgainAfterPlaybackStops]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testBrowsingYieldsWhileAnyDetailIsTop]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testBrowsingYieldsWhileAnyDetailIsTop]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testDetailFlagClampsAtZero]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testDetailFlagClampsAtZero]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testPlaybackAndDetailBothYieldToPlaying]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testPlaybackAndDetailBothYieldToPlaying]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testPlaybackOwnsHandoffOnlyWhileActive]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffCenterTests testPlaybackOwnsHandoffOnlyWhileActive]' passed (0.000 seconds).
+Test Suite 'HandoffCenterTests' passed at 2026-10-18 11:32:11.133.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'HandoffResolverTests' started at 2026-10-18 11:32:11.133.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testEffectiveStartUsesHandoffWhenFurther]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testEffectiveStartUsesHandoffWhenFurther]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testEffectiveStartUsesServerResumeWhenFurther]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testEffectiveStartUsesServerResumeWhenFurther]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testEffectiveStartWithNoHandoffPositionUsesServerResume]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testEffectiveStartWithNoHandoffPositionUsesServerResume]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testEffectiveStartWithNothingIsZero]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testEffectiveStartWithNothingIsZero]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testExpiredIntentIsConsumedNotNavigated]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testExpiredIntentIsConsumedNotNavigated]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testFreshIntentKeepsWaitingWhileLibraryLoads]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testFreshIntentKeepsWaitingWhileLibraryLoads]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testIntentRoundTripsPositionAndServer]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testIntentRoundTripsPositionAndServer]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testIntentWithinWindowStillNavigates]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testIntentWithinWindowStillNavigates]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testKeepsWaitingWhileLibraryNotLoaded]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testKeepsWaitingWhileLibraryNotLoaded]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testNavigatesWhenLibraryLoadedAndItemExists]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testNavigatesWhenLibraryLoadedAndItemExists]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testNoIntentIsIdle]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testNoIntentIsIdle]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testNotFoundOnlyAfterLibraryLoaded]' started.
+Test Case '-[ThisJellyFixCoreTests.HandoffResolverTests testNotFoundOnlyAfterLibraryLoaded]' passed (0.000 seconds).
+Test Suite 'HandoffResolverTests' passed at 2026-10-18 11:32:11.135.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'InfoPlistNetworkPermissionTests' started at 2026-10-18 11:32:11.135.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testBothPlistsDeclareAllHandoffActivityTypes]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testBothPlistsDeclareAllHandoffActivityTypes]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSAllowsPlainHTTPOnTheLocalNetwork]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSAllowsPlainHTTPOnTheLocalNetwork]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSBonjourServicesHaveNoTrailingDot]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSBonjourServicesHaveNoTrailingDot]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSDeclaresBonjourServicesForLocalNetworkPrompt]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSDeclaresBonjourServicesForLocalNetworkPrompt]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSDeclaresLocalNetworkUsageDescription]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSDeclaresLocalNetworkUsageDescription]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSDeclaresSingleSceneApplication]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testIOSDeclaresSingleSceneApplication]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testMacOSBonjourServicesHaveNoTrailingDot]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testMacOSBonjourServicesHaveNoTrailingDot]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testMacOSDeclaresBonjourServicesForLocalNetworkPrompt]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testMacOSDeclaresBonjourServicesForLocalNetworkPrompt]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testMacOSDeclaresLocalNetworkUsageDescription]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testMacOSDeclaresLocalNetworkUsageDescription]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testMacOSSandboxAllowsOutgoingConnections]' started.
+Test Case '-[ThisJellyFixCoreTests.InfoPlistNetworkPermissionTests testMacOSSandboxAllowsOutgoingConnections]' passed (0.000 seconds).
+Test Suite 'InfoPlistNetworkPermissionTests' passed at 2026-10-18 11:32:11.139.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'IntegrationConfigTests' started at 2026-10-18 11:32:11.139.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testClearingTmdbKeyRemovesSecret]' started.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testClearingTmdbKeyRemovesSecret]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testEmptyByDefault]' started.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testEmptyByDefault]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testRadarrURLStoredInDefaults]' started.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testRadarrURLStoredInDefaults]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testResetClearsEverything]' started.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testResetClearsEverything]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testServiceIsConfiguredOnlyWithURLAndKey]' started.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testServiceIsConfiguredOnlyWithURLAndKey]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testServiceKeysAreIndependent]' started.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testServiceKeysAreIndependent]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testSonarrIsConfigured]' started.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testSonarrIsConfigured]' passed (0.003 seconds).
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testTmdbApiKeyRoundTrip]' started.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testTmdbApiKeyRoundTrip]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testURLNormalizationAcceptsTrailingSlashAndMissingScheme]' started.
+Test Case '-[ThisJellyFixCoreTests.IntegrationConfigTests testURLNormalizationAcceptsTrailingSlashAndMissingScheme]' passed (0.002 seconds).
+Test Suite 'IntegrationConfigTests' passed at 2026-10-18 11:32:11.153.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.013 (0.014) seconds
+Test Suite 'JellyfinItemDetailBackdropTests' started at 2026-10-18 11:32:11.153.
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailBackdropTests testEmptyBackdropImageTagsIsNoBackdrop]' started.
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailBackdropTests testEmptyBackdropImageTagsIsNoBackdrop]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailBackdropTests testMovieBackdropImageTagCountsAsBackdrop]' started.
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailBackdropTests testMovieBackdropImageTagCountsAsBackdrop]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailBackdropTests testNoImageTagsAtAllIsNoBackdrop]' started.
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailBackdropTests testNoImageTagsAtAllIsNoBackdrop]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailBackdropTests testSeriesBackdropImageTagsCountAsBackdrop]' started.
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailBackdropTests testSeriesBackdropImageTagsCountAsBackdrop]' passed (0.000 seconds).
+Test Suite 'JellyfinItemDetailBackdropTests' passed at 2026-10-18 11:32:11.154.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'JellyfinItemDetailUserDataTests' started at 2026-10-18 11:32:11.154.
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailUserDataTests testDecodesFavoriteAndPlayedState]' started.
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailUserDataTests testDecodesFavoriteAndPlayedState]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailUserDataTests testMissingUserDataDefaultsToFalse]' started.
+Test Case '-[ThisJellyFixCoreTests.JellyfinItemDetailUserDataTests testMissingUserDataDefaultsToFalse]' passed (0.000 seconds).
+Test Suite 'JellyfinItemDetailUserDataTests' passed at 2026-10-18 11:32:11.155.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'KeychainStoreTests' started at 2026-10-18 11:32:11.155.
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testDeleteAllRemovesAllValues]' started.
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testDeleteAllRemovesAllValues]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testDeleteNonexistentKeyDoesNotThrow]' started.
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testDeleteNonexistentKeyDoesNotThrow]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testDeleteRemovesValue]' started.
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testDeleteRemovesValue]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testEntitlementsDeclareRealKeychainGroups]' started.
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testEntitlementsDeclareRealKeychainGroups]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testOverwriteExistingValue]' started.
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testOverwriteExistingValue]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testQueryUsesDefaultAccessGroupNotAppGroup]' started.
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testQueryUsesDefaultAccessGroupNotAppGroup]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testReadReturnsNilForMissingKey]' started.
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testReadReturnsNilForMissingKey]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testSaveAndRead]' started.
+Test Case '-[ThisJellyFixCoreTests.KeychainStoreTests testSaveAndRead]' passed (0.000 seconds).
+Test Suite 'KeychainStoreTests' passed at 2026-10-18 11:32:11.158.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'LanguagePreferencesTests' started at 2026-10-18 11:32:11.158.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testBaseLanguageCodeNormalization]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testBaseLanguageCodeNormalization]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testBaseMatchesRegionVariant]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testBaseMatchesRegionVariant]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testCaseInsensitive]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testCaseInsensitive]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testDifferentLanguagesDoNotMatch]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testDifferentLanguagesDoNotMatch]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testEmptyPreferenceNeverMatches]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testEmptyPreferenceNeverMatches]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testEnglishNameMatchesPreferredEnglish]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testEnglishNameMatchesPreferredEnglish]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testExactMatch]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testExactMatch]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNilPreferenceNeverMatches]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNilPreferenceNeverMatches]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNilPreferenceReturnsNil]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNilPreferenceReturnsNil]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNilTrackLanguageDoesNotMatch]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNilTrackLanguageDoesNotMatch]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNoMatchReturnsNil]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNoMatchReturnsNil]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNoPreferenceConstantSelectsNothing]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNoPreferenceConstantSelectsNothing]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNoPreferenceWhenUnset]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testNoPreferenceWhenUnset]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testRegionalizedNameMatchesBaseCode]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testRegionalizedNameMatchesBaseCode]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testRegionVariantMatchesBase]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testRegionVariantMatchesBase]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testRoundTripPersistence]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testRoundTripPersistence]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSelectsFirstMatchingTrack]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSelectsFirstMatchingTrack]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSelectsTrackByLanguageNameWhenCodeMissing]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSelectsTrackByLanguageNameWhenCodeMissing]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSpanishNameMatchesPreferredSpanish]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSpanishNameMatchesPreferredSpanish]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSystemDefaultSelectsMatchingTrack]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSystemDefaultSelectsMatchingTrack]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSystemLanguageDefault]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testSystemLanguageDefault]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testTrackNameMatchesPreferredName]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testTrackNameMatchesPreferredName]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testUnknownLanguageMarkersDoNotMatch]' started.
+Test Case '-[ThisJellyFixCoreTests.LanguagePreferencesTests testUnknownLanguageMarkersDoNotMatch]' passed (0.000 seconds).
+Test Suite 'LanguagePreferencesTests' passed at 2026-10-18 11:32:11.167.
+	 Executed 23 tests, with 0 failures (0 unexpected) in 0.007 (0.009) seconds
+Test Suite 'LoggingCategoryTests' started at 2026-10-18 11:32:11.167.
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testAirPlayMessagesRouteToAirPlay]' started.
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testAirPlayMessagesRouteToAirPlay]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testHandoffMessagesRouteToHandoff]' started.
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testHandoffMessagesRouteToHandoff]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testNetworkMessagesRouteToNetwork]' started.
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testNetworkMessagesRouteToNetwork]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testPlaybackMessagesRouteToPlayback]' started.
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testPlaybackMessagesRouteToPlayback]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testUnknownMessagesRouteToGeneral]' started.
+Test Case '-[ThisJellyFixCoreTests.LoggingCategoryTests testUnknownMessagesRouteToGeneral]' passed (0.000 seconds).
+Test Suite 'LoggingCategoryTests' passed at 2026-10-18 11:32:11.168.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'MediaSourceStreamDecodingTests' started at 2026-10-18 11:32:11.168.
+Test Case '-[ThisJellyFixCoreTests.MediaSourceStreamDecodingTests testMediaStreamMissingRequiredTypeIsSkipped]' started.
+Test Case '-[ThisJellyFixCoreTests.MediaSourceStreamDecodingTests testMediaStreamMissingRequiredTypeIsSkipped]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.MediaSourceStreamDecodingTests testMissingMediaStreamsKeyYieldsEmptyList]' started.
+Test Case '-[ThisJellyFixCoreTests.MediaSourceStreamDecodingTests testMissingMediaStreamsKeyYieldsEmptyList]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.MediaSourceStreamDecodingTests testOneMalformedStreamDoesNotDiscardTheOthers]' started.
+Test Case '-[ThisJellyFixCoreTests.MediaSourceStreamDecodingTests testOneMalformedStreamDoesNotDiscardTheOthers]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.MediaSourceStreamDecodingTests testWellFormedStreamsStillDecodeCompletely]' started.
+Test Case '-[ThisJellyFixCoreTests.MediaSourceStreamDecodingTests testWellFormedStreamsStillDecodeCompletely]' passed (0.000 seconds).
+Test Suite 'MediaSourceStreamDecodingTests' passed at 2026-10-18 11:32:11.170.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'NoveltyClassifierTests' started at 2026-10-18 11:32:11.170.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testAllOldSeasonsAreNotVerified]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testAllOldSeasonsAreNotVerified]' passed (0.002 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testBulkImportIsNotVerifiedNewSeason]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testBulkImportIsNotVerifiedNewSeason]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testCandidateNeedsOldSeriesAndRecentAddition]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testCandidateNeedsOldSeriesAndRecentAddition]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testEstablishedSeriesWithRecentSeasonIsVerified]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testEstablishedSeriesWithRecentSeasonIsVerified]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testFutureDateIsNotNovelty]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testFutureDateIsNotNovelty]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testMissingSeasonDatesFailVerification]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testMissingSeasonDatesFailVerification]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testParsesPlainTimestamp]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testParsesPlainTimestamp]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testParsesSevenDigitFraction]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testParsesSevenDigitFraction]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testRecentSeriesIsNotCandidate]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testRecentSeriesIsNotCandidate]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testRejectsNilEmptyGarbage]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testRejectsNilEmptyGarbage]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testSeriesWithoutDatesIsNotCandidate]' started.
+Test Case '-[ThisJellyFixCoreTests.NoveltyClassifierTests testSeriesWithoutDatesIsNotCandidate]' passed (0.000 seconds).
+Test Suite 'NoveltyClassifierTests' passed at 2026-10-18 11:32:11.178.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.007 (0.008) seconds
+Test Suite 'PiPHandoffPolicyTests' started at 2026-10-18 11:32:11.178.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testEngineLieStillHandsOff]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testEngineLieStillHandsOff]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testErrorStateNeverHandsOff]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testErrorStateNeverHandsOff]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testFinalSecondsCountAsFinished]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testFinalSecondsCountAsFinished]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testFinishedItemNeverHandsOff]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testFinishedItemNeverHandsOff]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testLiveOrUnknownDurationHandsOffMidStream]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testLiveOrUnknownDurationHandsOffMidStream]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testPausedAtStartNeverHandsOff]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testPausedAtStartNeverHandsOff]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testPlayingFlagStillRefusesFinishedItem]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testPlayingFlagStillRefusesFinishedItem]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testPlayingItemHandsOff]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testPlayingItemHandsOff]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testStoppedEngineNeverHandsOff]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testStoppedEngineNeverHandsOff]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testUserPausedBeatsStaleEngineReport]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testUserPausedBeatsStaleEngineReport]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testUserPausedNeverHandsOff]' started.
+Test Case '-[ThisJellyFixCoreTests.PiPHandoffPolicyTests testUserPausedNeverHandsOff]' passed (0.000 seconds).
+Test Suite 'PiPHandoffPolicyTests' passed at 2026-10-18 11:32:11.180.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'PlaybackDeviceProfileTests' started at 2026-10-18 11:32:11.180.
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testAvPlayerProfileDirectPlaysOnlyAVPlayerSafeContainers]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testAvPlayerProfileDirectPlaysOnlyAVPlayerSafeContainers]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testAvPlayerProfileHybridSubtitleDelivery]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testAvPlayerProfileHybridSubtitleDelivery]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testCappedLowersBothCeilings]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testCappedLowersBothCeilings]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testCappedNeverRaisesCeilings]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testCappedNeverRaisesCeilings]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testCappedNilKeepsProfile]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testCappedNilKeepsProfile]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testPipHLSProfileEncodesHlsOnlyTranscoding]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testPipHLSProfileEncodesHlsOnlyTranscoding]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testPipHLSProfileHasSubtitleDeliveryProfiles]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackDeviceProfileTests testPipHLSProfileHasSubtitleDeliveryProfiles]' passed (0.000 seconds).
+Test Suite 'PlaybackDeviceProfileTests' passed at 2026-10-18 11:32:11.184.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'PlaybackStreamPickerTests' started at 2026-10-18 11:32:11.184.
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testAudioNilWhenPreferredIsServerDefault]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testAudioNilWhenPreferredIsServerDefault]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testAudioNilWithoutMatch]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testAudioNilWithoutMatch]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testAudioNilWithoutPreference]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testAudioNilWithoutPreference]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testAudioReturnsIndexWhenPreferredDiffersFromDefault]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testAudioReturnsIndexWhenPreferredDiffersFromDefault]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testDefaultAudioFallsBackToFirst]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testDefaultAudioFallsBackToFirst]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testDefaultAudioPrefersFlaggedTrack]' started.
+Test Case '-[ThisJellyFixCoreTests.PlaybackStreamPickerTests testDefaultAudioPrefersFlaggedTrack]' passed (0.000 seconds).
+Test Suite 'PlaybackStreamPickerTests' passed at 2026-10-18 11:32:11.185.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'ProviderIdsTests' started at 2026-10-18 11:32:11.185.
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testDecodesProviderIds]' started.
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testDecodesProviderIds]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testItemStaysCodableRoundTrip]' started.
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testItemStaysCodableRoundTrip]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testMissingProviderIdsIsEmpty]' started.
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testMissingProviderIdsIsEmpty]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testProviderIdsAreCaseInsensitive]' started.
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testProviderIdsAreCaseInsensitive]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testUnknownProviderKeyReturnsNil]' started.
+Test Case '-[ThisJellyFixCoreTests.ProviderIdsTests testUnknownProviderKeyReturnsNil]' passed (0.000 seconds).
+Test Suite 'ProviderIdsTests' passed at 2026-10-18 11:32:11.187.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'SRTParserTests' started at 2026-10-18 11:32:11.187.
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testConvertsASSLineBreaksAndHardSpaces]' started.
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testConvertsASSLineBreaksAndHardSpaces]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testCueLookupBinarySearch]' started.
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testCueLookupBinarySearch]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testKeepsPlainSRTUntouched]' started.
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testKeepsPlainSRTUntouched]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testParsesDotMillisecondsAndCRLF]' started.
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testParsesDotMillisecondsAndCRLF]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testParsesSimpleCue]' started.
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testParsesSimpleCue]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testSkipsMalformedBlocks]' started.
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testSkipsMalformedBlocks]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testStripsASSOverrideBlocks]' started.
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testStripsASSOverrideBlocks]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testStripsInlineASSStyleCodes]' started.
+Test Case '-[ThisJellyFixCoreTests.SRTParserTests testStripsInlineASSStyleCodes]' passed (0.000 seconds).
+Test Suite 'SRTParserTests' passed at 2026-10-18 11:32:11.189.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'SavedServersStoreTests' started at 2026-10-18 11:32:11.189.
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testDedupeKeyIgnoresCaseAndTrailingSlash]' started.
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testDedupeKeyIgnoresCaseAndTrailingSlash]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testLoadEmptyWhenNothingStored]' started.
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testLoadEmptyWhenNothingStored]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testMigrateDoesNotDuplicate]' started.
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testMigrateDoesNotDuplicate]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testMigrateLegacySingleURL]' started.
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testMigrateLegacySingleURL]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testSaveLoadRoundtrip]' started.
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testSaveLoadRoundtrip]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testUpsertDedupesByNormalizedURL]' started.
+Test Case '-[ThisJellyFixCoreTests.SavedServersStoreTests testUpsertDedupesByNormalizedURL]' passed (0.000 seconds).
+Test Suite 'SavedServersStoreTests' passed at 2026-10-18 11:32:11.192.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'SegmentDetectorTests' started at 2026-10-18 11:32:11.192.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testAutoSkipDisabledNeverTriggers]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testAutoSkipDisabledNeverTriggers]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testAutoSkipTriggersAfterDelay]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testAutoSkipTriggersAfterDelay]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testCountdownResetsWhenSwitchingSegments]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testCountdownResetsWhenSwitchingSegments]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testDisabledTypeInSettingsHidden]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testDisabledTypeInSettingsHidden]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testInsideSegmentShowsButtonWithCountdown]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testInsideSegmentShowsButtonWithCountdown]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testInvalidMarkersIgnored]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testInvalidMarkersIgnored]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testManualSkipDismissesUntilLeavingSegment]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testManualSkipDismissesUntilLeavingSegment]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testMarkSkippedSuppressesReveal]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testMarkSkippedSuppressesReveal]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testOutsideAnySegmentReturnsNone]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testOutsideAnySegmentReturnsNone]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testTriggerSkipThenMarkKeepsHidden]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testTriggerSkipThenMarkKeepsHidden]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testZeroDeltaFreezesCountdown]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentDetectorTests testZeroDeltaFreezesCountdown]' passed (0.000 seconds).
+Test Suite 'SegmentDetectorTests' passed at 2026-10-18 11:32:11.194.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'SegmentMarkerTests' started at 2026-10-18 11:32:11.194.
+Test Case '-[ThisJellyFixCoreTests.SegmentMarkerTests testContainsOpenEnded]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentMarkerTests testContainsOpenEnded]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentMarkerTests testContainsRange]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentMarkerTests testContainsRange]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentMarkerTests testStableIdentity]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentMarkerTests testStableIdentity]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SegmentMarkerTests testValidity]' started.
+Test Case '-[ThisJellyFixCoreTests.SegmentMarkerTests testValidity]' passed (0.000 seconds).
+Test Suite 'SegmentMarkerTests' passed at 2026-10-18 11:32:11.195.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'ServerAddressTests' started at 2026-10-18 11:32:11.195.
+Test Case '-[ThisJellyFixCoreTests.ServerAddressTests testAddsHTTPSWhenSchemeIsOmitted]' started.
+Test Case '-[ThisJellyFixCoreTests.ServerAddressTests testAddsHTTPSWhenSchemeIsOmitted]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ServerAddressTests testPreservesLocalHTTPURL]' started.
+Test Case '-[ThisJellyFixCoreTests.ServerAddressTests testPreservesLocalHTTPURL]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.ServerAddressTests testRejectsUnsupportedScheme]' started.
+Test Case '-[ThisJellyFixCoreTests.ServerAddressTests testRejectsUnsupportedScheme]' passed (0.000 seconds).
+Test Suite 'ServerAddressTests' passed at 2026-10-18 11:32:11.196.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'StreamQualityTests' started at 2026-10-18 11:32:11.196.
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testAutoHasNoBitrateCap]' started.
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testAutoHasNoBitrateCap]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testCappedOptionsDecreaseMonotonically]' started.
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testCappedOptionsDecreaseMonotonically]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testDefaultsKeyIsSingleSourceOfTruth]' started.
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testDefaultsKeyIsSingleSourceOfTruth]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testDetailsDescribeBitrateCeilings]' started.
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testDetailsDescribeBitrateCeilings]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testLabelsAreSpanishAndUnique]' started.
+Test Case '-[ThisJellyFixCoreTests.StreamQualityTests testLabelsAreSpanishAndUnique]' passed (0.000 seconds).
+Test Suite 'StreamQualityTests' passed at 2026-10-18 11:32:11.198.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'SubtitleSelectionTests' started at 2026-10-18 11:32:11.198.
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testDecodesHearingImpairedFlag]' started.
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testDecodesHearingImpairedFlag]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testForcedOnlyLanguageStillSelectable]' started.
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testForcedOnlyLanguageStillSelectable]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testIgnoresNonSubtitleStreams]' started.
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testIgnoresNonSubtitleStreams]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testNilPreferenceReturnsNil]' started.
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testNilPreferenceReturnsNil]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testNoMatchReturnsNil]' started.
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testNoMatchReturnsNil]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testPrefersDefaultAmongEquals]' started.
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testPrefersDefaultAmongEquals]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testPrefersFullOverForcedSameLanguage]' started.
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testPrefersFullOverForcedSameLanguage]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testPrefersNonSDHOverSDHSameLanguage]' started.
+Test Case '-[ThisJellyFixCoreTests.SubtitleSelectionTests testPrefersNonSDHOverSDHSameLanguage]' passed (0.000 seconds).
+Test Suite 'SubtitleSelectionTests' passed at 2026-10-18 11:32:11.200.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'TrackNamingTests' started at 2026-10-18 11:32:11.200.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testAudioBareTrackWithLanguage]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testAudioBareTrackWithLanguage]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testAudioFallbackPrefix]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testAudioFallbackPrefix]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testBareTrackWithNoMetadataFallsBackToNumber]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testBareTrackWithNoMetadataFallsBackToNumber]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testBareTrackWithServerLanguage]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testBareTrackWithServerLanguage]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testChannelLayoutGoesToCaption]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testChannelLayoutGoesToCaption]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testChannelLayoutWithoutLanguageBecomesTitle]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testChannelLayoutWithoutLanguageBecomesTitle]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testCleanTrackName]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testCleanTrackName]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testDescriptiveServerTitleWinsWithLanguageCaption]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testDescriptiveServerTitleWinsWithLanguageCaption]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testDistinctSegmentsAreKept]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testDistinctSegmentsAreKept]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testLanguageDisplayNameVariants]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testLanguageDisplayNameVariants]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testRedundantNameWithLanguageShowsLanguageAndGroup]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testRedundantNameWithLanguageShowsLanguageAndGroup]' passed (0.001 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testSecondLanguageRow]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testSecondLanguageRow]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testServerTitleStripsCodecToken]' started.
+Test Case '-[ThisJellyFixCoreTests.TrackNamingTests testServerTitleStripsCodecToken]' passed (0.000 seconds).
+Test Suite 'TrackNamingTests' passed at 2026-10-18 11:32:11.204.
+	 Executed 13 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'VideoInfoChipsTests' started at 2026-10-18 11:32:11.204.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testAllChipsPresentForFullVideoStream]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testAllChipsPresentForFullVideoStream]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testBitrateAliasDecodesLowercaseKey]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testBitrateAliasDecodesLowercaseKey]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testFractionalFrameRateKeepsDecimals]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testFractionalFrameRateKeepsDecimals]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testMissingValuesProduceNoChips]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testMissingValuesProduceNoChips]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testPartialValuesKeepOnlyAvailableChips]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testPartialValuesKeepOnlyAvailableChips]' passed (0.000 seconds).
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testSizeFormattingBoundaries]' started.
+Test Case '-[ThisJellyFixCoreTests.VideoInfoChipsTests testSizeFormattingBoundaries]' passed (0.000 seconds).
+Test Suite 'VideoInfoChipsTests' passed at 2026-10-18 11:32:11.206.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'ThisJellyFixCoreTests.xctest' passed at 2026-10-18 11:32:11.206.
+	 Executed 237 tests, with 0 failures (0 unexpected) in 0.081 (0.101) seconds
+Test Suite 'All tests' passed at 2026-10-18 11:32:11.206.
+	 Executed 237 tests, with 0 failures (0 unexpected) in 0.081 (0.103) seconds
+[TJF 2026-10-18T09:32:11Z] deviceId: keychain write failed (No se ha podido completar la operación. (Error de ThisJellyFixCoreTests.(unknown context at $1059c6190).FailingKeychainStore.Unavailable 1.)) — using a per-process id
+[TJF 2026-10-18T09:32:11Z] deviceId: keychain write failed (No se ha podido completar la operación. (Error de ThisJellyFixCoreTests.(unknown context at $1059c6190).FailingKeychainStore.Unavailable 1.)) — using a per-process id
+[TJF 2026-10-18T09:32:11Z] deviceId: keychain write failed (No se ha podido completar la operación. (Error de ThisJellyFixCoreTests.(unknown context at $1059c6190).FailingKeychainStore.Unavailable 1.)) — using a per-process id
+[TJF 2026-10-18T09:32:11Z] deviceId: keychain write failed (No se ha podido completar la operación. (Error de ThisJellyFixCoreTests.(unknown context at $1059c6190).FailingKeychainStore.Unavailable 1.)) — using a per-process id
+[TJF 2026-10-18T09:32:11Z] deviceId: keychain write failed (No se ha podido completar la operación. (Error de ThisJellyFixCoreTests.(unknown context at $1059c6190).FailingKeychainStore.Unavailable 1.)) — using a per-process id
+[TJF 2026-10-18T09:32:11Z] handoff: playbackActive=true browsingYields=true
+[TJF 2026-10-18T09:32:11Z] handoff: playbackActive=false browsingYields=false
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=1 browsingYields=false
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=2 browsingYields=false
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=1 browsingYields=false
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=1 browsingYields=false
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=1 browsingYields=false
+[TJF 2026-10-18T09:32:11Z] handoff: playbackActive=true browsingYields=true
+[TJF 2026-10-18T09:32:11Z] handoff: playbackActive=false browsingYields=false
+[TJF 2026-10-18T09:32:11Z] handoff: detailActiveCount=0 browsingYields=true
+[TJF 2026-10-18T09:32:11Z] handoff: playbackActive=true browsingYields=true
+[TJF 2026-10-18T09:32:11Z] handoff: playbackActive=false browsingYields=false
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

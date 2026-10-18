@@ -1,0 +1,35 @@
+Building for debugging...
+[Computing dependencies]
+[1 / 1]
+Build complete! (0,63 s)
+error: Process '/Applications/Xcode.app/Contents/Developer/usr/bin/xctest -XCTest ThisJellyFixFeatureTests.LibraryModelCategoryTests/testCategoryChipsFromServerViews /Users/joel/Workspace/projects/thisjellyfix/.build/out/Products/Debug/ThisJellyFixFeatureTests.xctest' exited with unexpected signal code 11
+Test Suite 'Selected tests' started at 2026-10-18 11:08:44.489.
+Test Suite 'ThisJellyFixPlaybackTests.xctest' started at 2026-10-18 11:08:44.491.
+Test Suite 'ThisJellyFixPlaybackTests.xctest' passed at 2026-10-18 11:08:44.491.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-18 11:08:44.491.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+Test Suite 'Selected tests' started at 2026-10-18 11:08:44.631.
+Test Suite 'ThisJellyFixNetworkingTests.xctest' started at 2026-10-18 11:08:44.633.
+Test Suite 'ThisJellyFixNetworkingTests.xctest' passed at 2026-10-18 11:08:44.633.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-18 11:08:44.633.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+Test Suite 'Selected tests' started at 2026-10-18 11:08:44.757.
+Test Suite 'ThisJellyFixFeatureTests.xctest' started at 2026-10-18 11:08:44.758.
+Test Suite 'LibraryModelCategoryTests' started at 2026-10-18 11:08:44.758.
+Test Case '-[ThisJellyFixFeatureTests.LibraryModelCategoryTests testCategoryChipsFromServerViews]' started.
+Test Suite 'Selected tests' started at 2026-10-18 11:08:45.279.
+Test Suite 'ThisJellyFixDiscoveryTests.xctest' started at 2026-10-18 11:08:45.280.
+Test Suite 'ThisJellyFixDiscoveryTests.xctest' passed at 2026-10-18 11:08:45.280.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-18 11:08:45.280.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+Test Suite 'Selected tests' started at 2026-10-18 11:08:45.421.
+Test Suite 'ThisJellyFixCoreTests.xctest' started at 2026-10-18 11:08:45.422.
+Test Suite 'ThisJellyFixCoreTests.xctest' passed at 2026-10-18 11:08:45.422.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
+Test Suite 'Selected tests' passed at 2026-10-18 11:08:45.423.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds
+Note: Some test targets reported failures:
+  - ThisJellyFixFeatureTests (XCTest)
