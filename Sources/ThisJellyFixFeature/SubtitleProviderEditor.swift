@@ -186,19 +186,22 @@ struct SubtitleProviderEditor: View {
         }
 
         do {
-            if !trimmedKey.isEmpty || descriptor?.requiresAPIKey == true {
-                try store.setAPIKey(trimmedKey, for: providerID)
-            }
+            // The provider is stored first: if the key cannot be written,
+            // the provider shows up as "missing its key" and the user can
+            // fix it, instead of leaving a secret nobody can reach.
             let languageCode = language.isEmpty ? nil : language
             if isNew {
-                _ = try store.add(providerID, language: languageCode)
+                _ = try store.add(providerID, isEnabled: isEnabled, language: languageCode)
             } else if var config = store.config(for: providerID) {
                 config.isEnabled = isEnabled
                 config.language = languageCode
                 try store.update(config)
             } else {
                 // The provider was removed while the form was open.
-                _ = try store.add(providerID, language: languageCode)
+                _ = try store.add(providerID, isEnabled: isEnabled, language: languageCode)
+            }
+            if !trimmedKey.isEmpty || descriptor?.requiresAPIKey == true {
+                try store.setAPIKey(trimmedKey, for: providerID)
             }
             onSaved()
         } catch {

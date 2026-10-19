@@ -21,6 +21,9 @@ struct SubtitleProvidersSection: View {
 
     @State private var mode: Mode = .list
     @State private var configs: [SubtitleProviderConfig] = []
+    /// Why the last change could not be stored. A silently reverted switch
+    /// is worse than a message.
+    @State private var errorMessage: String?
 
     private let store = SubtitleProviderStore()
 
@@ -81,6 +84,13 @@ struct SubtitleProvidersSection: View {
         Text("Los proveedores del servidor se configuran en el panel web de Jellyfin. Los que añade la app se consultan directamente con tu API key, que se guarda en el Keychain del dispositivo.")
             .font(.caption)
             .foregroundStyle(.secondary)
+
+        if let errorMessage {
+            Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
+                .font(.caption)
+                .foregroundStyle(.red)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func providerRow(_ config: SubtitleProviderConfig) -> some View {
@@ -100,7 +110,13 @@ struct SubtitleProvidersSection: View {
                 Toggle("Usar en las búsquedas", isOn: Binding(
                     get: { config.isEnabled },
                     set: { newValue in
-                        try? store.setEnabled(newValue, for: config.id)
+                        do {
+                            try store.setEnabled(newValue, for: config.id)
+                            errorMessage = nil
+                        } catch {
+                            errorMessage = (error as? LocalizedError)?.errorDescription
+                                ?? error.localizedDescription
+                        }
                         reload()
                     }
                 ))
@@ -117,7 +133,13 @@ struct SubtitleProvidersSection: View {
 
                 if descriptor?.isRemovable == true {
                     Button("Eliminar", role: .destructive) {
-                        try? store.remove(config.id)
+                        do {
+                            try store.remove(config.id)
+                            errorMessage = nil
+                        } catch {
+                            errorMessage = (error as? LocalizedError)?.errorDescription
+                                ?? error.localizedDescription
+                        }
                         reload()
                     }
                     .font(.caption)

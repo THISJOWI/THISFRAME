@@ -73,7 +73,9 @@ public enum JellyfinArtwork {
     ///
     /// A 16:9 frame prefers a real landscape image (`Thumb`, then
     /// `Backdrop`) and only falls back to the portrait `Primary`, which the
-    /// server then crops to 16:9. A 2:3 poster always wants `Primary`.
+    /// server then crops to 16:9. A 2:3 poster wants the `Primary` and
+    /// nothing else: cropping a 16:9 backdrop into a poster frame would
+    /// leave a sliver.
     static func preferredImageType(
         shape: MediaCardLayout.Shape,
         availableTypes: [String]
@@ -86,9 +88,7 @@ public enum JellyfinArtwork {
             if has("Primary") { return "Primary" }
             return nil
         case .poster:
-            if has("Primary") { return "Primary" }
-            if has("Backdrop") { return "Backdrop" }
-            return nil
+            return has("Primary") ? "Primary" : nil
         }
     }
 

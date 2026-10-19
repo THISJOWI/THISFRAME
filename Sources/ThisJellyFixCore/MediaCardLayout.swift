@@ -41,20 +41,4 @@ public enum MediaCardLayout {
         guard width > 0 else { return 0 }
         return (width / shape.aspectRatio).rounded()
     }
-
-    /// Artwork box for a card of `width`.
-    public static func size(forWidth width: CGFloat, shape: Shape) -> CGSize {
-        CGSize(width: width, height: height(forWidth: width, shape: shape))
-    }
-
-    /// Width a card ends up with inside a container of `availableWidth`.
-    ///
-    /// `fixed` ignores the container (rows scroll); `flexible` takes the
-    /// offered width, so a card can never be wider than its column.
-    public static func width(for width: Width, availableWidth: CGFloat) -> CGFloat {
-        switch width {
-        case .fixed(let value): return value
-        case .flexible: return max(0, availableWidth)
-        }
-    }
 }

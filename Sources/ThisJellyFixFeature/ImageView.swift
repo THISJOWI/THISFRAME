@@ -241,7 +241,7 @@ private struct MareaImageSizing: ViewModifier {
             // take the width the container offers.
             content
                 .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.card))
         } else if isFlexible {
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -249,7 +249,7 @@ private struct MareaImageSizing: ViewModifier {
         } else {
             content
                 .frame(width: width, height: height)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.card))
         }
     }
 }

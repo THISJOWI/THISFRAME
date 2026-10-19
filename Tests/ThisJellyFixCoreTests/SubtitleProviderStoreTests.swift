@@ -61,6 +61,15 @@ final class SubtitleProviderStoreTests: XCTestCase {
         XCTAssertEqual(store.config(for: .openSubtitles)?.language, "es")
     }
 
+    /// The switch in the form must be honoured: a provider the user turned
+    /// off must not be stored as enabled.
+    func testAddKeepsTheEnabledFlag() throws {
+        let config = try store.add(.openSubtitles, isEnabled: false)
+        XCTAssertFalse(config.isEnabled)
+        XCTAssertEqual(store.config(for: .openSubtitles)?.isEnabled, false)
+        XCTAssertFalse(store.effectiveConfigs().first { $0.id == .openSubtitles }?.isEnabled == true)
+    }
+
     // MARK: - Updating
 
     func testUpdateChangesTheStoredConfig() throws {

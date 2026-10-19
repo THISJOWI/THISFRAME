@@ -20,9 +20,24 @@ Fecha: 2026-10-19 · Rama: `main` · Decisiones confirmadas por el usuario.
 Un registro único de proveedores con dos familias:
 1. **Proveedor del servidor** (`jellyfinServer`): sin credenciales, usa el flujo actual
    (`JellyfinSubtitleClient.searchRemoteSubtitles` / `downloadRemoteSubtitle`). Intocable.
+   Su interruptor de Ajustes **sí** se respeta en el reproductor.
 2. **Proveedores en la app** (p. ej. `openSubtitles`): la app consulta la API externa con la
    API key del usuario (Keychain), descarga el `.srt` y lo **sube al servidor** con
    `POST /Videos/{itemId}/Subtitles`; después reutiliza la lógica existente de refresco + selección.
+
+### Contrato de OpenSubtitles.com (verificado contra su cliente de referencia oficial
+`opensubtitles/mcp.opensubtitles.com`, no de memoria)
+- `GET /api/v1/subtitles` con los parámetros **ordenados alfabéticamente** y en minúsculas
+  (el gateway responde 301 si no lo están): `query`, `imdb_id`, `tmdb_id`, `parent_imdb_id`,
+  `parent_tmdb_id`, **`season_number`**, **`episode_number`**, `languages`.
+  Los ids van canónicos: sin prefijo `tt` y sin ceros a la izquierda.
+- La respuesta anida todo bajo **`attributes`** (`language`, `release`, `download_count`,
+  `ratings`, `files[].file_id/file_name`, `hearing_impaired`, `ai_translated`…). La forma plana
+  se acepta como respaldo.
+- La descarga es **`POST /api/v1/download?file_id=N`** (el `file_id` del resultado), no
+  `GET /api/v1/subtitles/{id}/download`: un subtítulo puede empaquetar varios ficheros.
+- El `User-Agent` es **obligatorio** (sin él el gateway responde `kong-user-agent-block`).
+
 
 ### Ficheros
 - `Sources/ThisJellyFixCore/SubtitleProvider.swift` — catálogo, descriptor, config, errores.
@@ -64,11 +79,12 @@ Un registro único de proveedores con dos familias:
 | Comprobación | Resultado |
 |---|---|
 | `swift build` (SPM, macOS host) | ✅ Build complete |
-| `swift test` (SPM) | ✅ 5 suites, 0 fallos (266 core + red + feature + discovery + playback) |
+| `swift test` (SPM) | ✅ 264 tests, 0 fallos (5 suites) |
 | `xcodebuild thisjellyfix-iOS` (simulador) | ✅ BUILD SUCCEEDED |
 | `xcodebuild thisjellyfix-macOS` | ✅ BUILD SUCCEEDED |
 | `xcodebuild thisjellyfix-tvOS` | ✅ BUILD SUCCEEDED |
 | `xcodebuild thisjellyfix-visionOS` | ❌ FALLA **preexistente** (verificada también en `HEAD` limpio): `AVPlayer.isExternalPlaybackActive` no existe en visionOS (`PlayerViewModel.swift:738/760`). No está relacionada con estos cambios. |
+| `swift test` (repeticiones) | ⚠️ 1 de cada ~4 ejecuciones el proceso de `ThisJellyFixFeatureTests` muere con signal 11. **Preexistente**: reproducido también en `14e5373` (1 de 8 ejecuciones). Es la suite que instancia `AVPlayer` contra `127.0.0.1:1`. |
 
 ### Mediciones empíricas del layout (SwiftUI real, `NSHostingView`)
 Reproduciendo la rejilla de Búsqueda (`LazyVGrid(.adaptive(minimum: 120))` en 337 pt):

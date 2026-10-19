@@ -188,6 +188,9 @@ struct PlayerView: View {
         viewModel.configureMediaStreams(mediaStreams)
         viewModel.noteServedAudioServerIndex(audioServerIndex)
         viewModel.configureNowPlaying(title: title)
+        // Fallback for the subtitle search: the series name for an episode,
+        // the item's own title otherwise.
+        viewModel.subtitleSearchTitle = subtitle ?? title
         wireNextEpisode()
         // Server favorite flag for the heart button (fills in when it lands).
         Task { await viewModel.loadFavoriteState() }

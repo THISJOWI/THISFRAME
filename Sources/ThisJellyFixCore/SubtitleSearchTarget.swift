@@ -16,25 +16,37 @@ public struct SubtitleSearchTarget: Sendable, Equatable {
     public var season: Int?
     /// Episode number for episodes.
     public var episode: Int?
+    /// Imdb id of the series an episode belongs to. The provider wants the
+    /// *parent* id for an episode, not the episode's own.
+    public var parentImdbId: String?
+    /// TMDB id of the series an episode belongs to.
+    public var parentTmdbId: String?
 
     public init(
         title: String? = nil,
         imdbId: String? = nil,
         tmdbId: String? = nil,
         season: Int? = nil,
-        episode: Int? = nil
+        episode: Int? = nil,
+        parentImdbId: String? = nil,
+        parentTmdbId: String? = nil
     ) {
         self.title = title
         self.imdbId = imdbId
         self.tmdbId = tmdbId
         self.season = season
         self.episode = episode
+        self.parentImdbId = parentImdbId
+        self.parentTmdbId = parentTmdbId
     }
 
     /// True when there is something to search for.
     public var isEmpty: Bool {
         let hasTitle = !(title?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
-        let hasId = !(imdbId?.isEmpty ?? true) || !(tmdbId?.isEmpty ?? true)
+        let hasId = !(imdbId?.isEmpty ?? true)
+            || !(tmdbId?.isEmpty ?? true)
+            || !(parentImdbId?.isEmpty ?? true)
+            || !(parentTmdbId?.isEmpty ?? true)
         return !hasTitle && !hasId
     }
 }

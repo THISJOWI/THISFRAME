@@ -34,6 +34,10 @@ public struct SubtitleSearchResult: Identifiable, Sendable, Equatable {
     public let isHashMatch: Bool
     /// True when the subtitle was machine translated.
     public let isMachineTranslated: Bool
+    /// True when the subtitle only carries forced dialogue.
+    public let isForced: Bool
+    /// True when the subtitle is designed for hearing-impaired viewers.
+    public let isHearingImpaired: Bool
     /// How to obtain the file.
     public let handle: Handle
 
@@ -47,6 +51,8 @@ public struct SubtitleSearchResult: Identifiable, Sendable, Equatable {
         communityRating: Float? = nil,
         isHashMatch: Bool = false,
         isMachineTranslated: Bool = false,
+        isForced: Bool = false,
+        isHearingImpaired: Bool = false,
         handle: Handle
     ) {
         self.id = id
@@ -58,6 +64,8 @@ public struct SubtitleSearchResult: Identifiable, Sendable, Equatable {
         self.communityRating = communityRating
         self.isHashMatch = isHashMatch
         self.isMachineTranslated = isMachineTranslated
+        self.isForced = isForced
+        self.isHearingImpaired = isHearingImpaired
         self.handle = handle
     }
 
@@ -67,6 +75,8 @@ public struct SubtitleSearchResult: Identifiable, Sendable, Equatable {
         let title = name.trimmingCharacters(in: .whitespacesAndNewlines)
         parts.append(title.isEmpty ? (format?.uppercased() ?? "Subtítulo") : title)
         parts.append("· \(providerName)")
+        if isForced { parts.append("· Forzados") }
+        if isHearingImpaired { parts.append("· SDH") }
         if let communityRating {
             parts.append(String(format: "· ★%.1f", communityRating))
         }

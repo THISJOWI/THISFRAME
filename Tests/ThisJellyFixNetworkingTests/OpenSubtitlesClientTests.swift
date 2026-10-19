@@ -3,34 +3,52 @@ import XCTest
 import ThisJellyFixCore
 
 /// The app-side provider: a real client for the OpenSubtitles.com API.
+///
+/// The shapes below are the ones the provider really answers with (its own
+/// reference client was the source): the search payload nests everything
+/// under `attributes`, and the download is a POST with the `file_id` in the
+/// query string.
 final class OpenSubtitlesClientTests: XCTestCase {
     private let baseURL = URL(string: "https://api.opensubtitles.com")!
 
+    /// The real shape of `GET /api/v1/subtitles`.
     private let searchJSON = """
     {
       "total_count": 2,
+      "total_pages": 1,
+      "per_page": 20,
       "page": 1,
       "data": [
         {
-          "id": "5512345",
+          "id": "8520224",
           "type": "subtitle",
-          "language": "Spanish",
-          "language_code": "spa",
-          "language_name": "Spanish",
-          "hearing_impaired": false,
-          "forced": false,
-          "ai_translated": false,
-          "release": "The Movie (1999)",
-          "download_count": 421,
-          "rating": 4.6,
-          "files": [ { "file_id": 987, "file_name": "The.Movie.spa.srt", "file_size": 1234 } ]
+          "attributes": {
+            "subtitle_id": "8520224",
+            "language": "es",
+            "download_count": 147,
+            "hearing_impaired": false,
+            "ai_translated": false,
+            "machine_translated": false,
+            "release": "The Movie (1999)",
+            "ratings": 4.6,
+            "files": [ { "file_id": 987, "file_name": "The.Movie.es.srt" } ],
+            "feature_details": {
+              "title": "The Movie",
+              "imdb_id": 111161,
+              "season_number": 1,
+              "episode_number": 3
+            }
+          }
         },
         {
           "id": 778899,
-          "language_code": "eng",
-          "release": "The Movie (1999) Director's Cut",
-          "ai_translated": true,
-          "files": []
+          "type": "subtitle",
+          "attributes": {
+            "subtitle_id": "778899",
+            "language": "en",
+            "ai_translated": true,
+            "files": []
+          }
         }
       ]
     }
@@ -55,7 +73,7 @@ final class OpenSubtitlesClientTests: XCTestCase {
         let components = try XCTUnwrap(URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false))
         XCTAssertEqual(components.path, "/api/v1/subtitles")
         let items = Dictionary(uniqueKeysWithValues: (components.queryItems ?? []).map { ($0.name, $0.value) })
-        XCTAssertEqual(items["query"], "The Movie")
+        XCTAssertEqual(items["query"], "the movie")
         // The canonical form: the zero-padded id would make the provider's
         // gateway answer with a 301 that rewrites the value.
         XCTAssertEqual(items["imdb_id"], "111161")
@@ -65,30 +83,7 @@ final class OpenSubtitlesClientTests: XCTestCase {
         XCTAssertFalse((request.value(forHTTPHeaderField: "User-Agent") ?? "").isEmpty)
     }
 
-    func testSearchDecodesTheResults() async throws {
-        let session = ScriptedNetworkSession(responses: [
-            .init(data: Data(searchJSON.utf8), statusCode: 200)
-        ])
-        let client = OpenSubtitlesClient(apiKey: "k", session: session, baseURL: baseURL)
-
-        let results = try await client.search(OpenSubtitlesClient.SearchQuery(title: "The Movie"))
-
-        XCTAssertEqual(results.count, 2)
-        XCTAssertEqual(results[0].subtitleId, "5512345")
-        XCTAssertEqual(results[0].fileId, 987)
-        XCTAssertEqual(results[0].fileName, "The.Movie.spa.srt")
-        XCTAssertEqual(results[0].languageCode, "spa")
-        XCTAssertEqual(results[0].downloadCount, 421)
-        XCTAssertEqual(results[0].rating, 4.6)
-        XCTAssertFalse(results[0].machineTranslated)
-        // A numeric id must decode too — the API is not consistent.
-        XCTAssertEqual(results[1].subtitleId, "778899")
-        XCTAssertTrue(results[1].machineTranslated)
-    }
-
-    /// The provider's gateway answers 301 when the query string is not
-    /// canonical. The client must send the canonical form directly so the
-    /// request (and the API key) is not split in two.
+    /// The provider's gateway redirects when the query string is not sorted.
     func testQueryParametersAreSentSorted() async throws {
         let session = ScriptedNetworkSession(responses: [
             .init(data: Data(searchJSON.utf8), statusCode: 200)
@@ -98,8 +93,8 @@ final class OpenSubtitlesClientTests: XCTestCase {
         _ = try await client.search(OpenSubtitlesClient.SearchQuery(
             title: "The Movie",
             imdbId: "tt0111161",
-            season: 1,
-            episode: 3,
+            seasonNumber: 1,
+            episodeNumber: 3,
             language: "es"
         ))
 
@@ -107,37 +102,73 @@ final class OpenSubtitlesClientTests: XCTestCase {
         let components = try XCTUnwrap(URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false))
         let names = (components.queryItems ?? []).map(\.name)
         XCTAssertEqual(names, names.sorted(), "query parameters must be sorted alphabetically")
-        XCTAssertEqual(names, ["episode", "imdb_id", "languages", "query", "season"])
     }
 
-    /// The zero-padded Imdb id is rewritten by the gateway with a 301; the
-    /// canonical (bare digits) form goes straight through.
-    func testImdbIdIsSentInItsCanonicalForm() async throws {
+    /// The provider spells the episode filters `season_number` /
+    /// `episode_number`; anything else is silently ignored and the search
+    /// returns the whole series.
+    func testEpisodeFiltersUseTheProviderNames() async throws {
         let session = ScriptedNetworkSession(responses: [
             .init(data: Data(searchJSON.utf8), statusCode: 200)
         ])
         let client = OpenSubtitlesClient(apiKey: "k", session: session, baseURL: baseURL)
 
         _ = try await client.search(OpenSubtitlesClient.SearchQuery(
-            title: "The Movie",
-            imdbId: "tt0111161"
+            title: "The Series",
+            parentImdbId: "tt0111161",
+            seasonNumber: 3,
+            episodeNumber: 7
         ))
 
         let request = try XCTUnwrap(session.capturedRequests.first)
         let components = try XCTUnwrap(URLComponents(url: try XCTUnwrap(request.url), resolvingAgainstBaseURL: false))
         let items = Dictionary(uniqueKeysWithValues: (components.queryItems ?? []).map { ($0.name, $0.value) })
-        XCTAssertEqual(items["imdb_id"], "111161")
+        XCTAssertEqual(items["season_number"], "3")
+        XCTAssertEqual(items["episode_number"], "7")
+        XCTAssertEqual(items["parent_imdb_id"], "111161")
+        XCTAssertNil(items["season"])
+        XCTAssertNil(items["episode"])
     }
 
-    func testCanonicalImdbId() {
-        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("tt0111161"), "111161")
-        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("tt-0111161"), "111161")
-        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("tt_0111161"), "111161")
-        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("0111161"), "111161")
-        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("111161"), "111161")
-        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("tt0000001"), "1")
-        XCTAssertNil(OpenSubtitlesClient.canonicalImdbId(""))
-        XCTAssertNil(OpenSubtitlesClient.canonicalImdbId("not-an-id"))
+    func testSearchDecodesTheAttributesShape() async throws {
+        let session = ScriptedNetworkSession(responses: [
+            .init(data: Data(searchJSON.utf8), statusCode: 200)
+        ])
+        let client = OpenSubtitlesClient(apiKey: "k", session: session, baseURL: baseURL)
+
+        let results = try await client.search(OpenSubtitlesClient.SearchQuery(title: "The Movie"))
+
+        XCTAssertEqual(results.count, 2)
+        XCTAssertEqual(results[0].subtitleId, "8520224")
+        XCTAssertEqual(results[0].fileId, 987)
+        XCTAssertEqual(results[0].fileName, "The.Movie.es.srt")
+        XCTAssertEqual(results[0].languageCode, "es")
+        XCTAssertEqual(results[0].release, "The Movie (1999)")
+        XCTAssertEqual(results[0].downloadCount, 147)
+        XCTAssertEqual(results[0].rating, 4.6)
+        XCTAssertFalse(results[0].machineTranslated)
+        // A numeric id must decode too — the API is not consistent.
+        XCTAssertEqual(results[1].subtitleId, "778899")
+        XCTAssertTrue(results[1].machineTranslated)
+    }
+
+    /// The flat shape is still accepted, so an older gateway does not empty
+    /// the list.
+    func testSearchAlsoAcceptsTheFlatShape() async throws {
+        let flat = """
+        { "data": [ { "id": "1", "language_code": "spa", "release": "X", "download_count": 3,
+                      "rating": 4.1, "files": [ { "file_id": 42, "file_name": "x.srt" } ] } ] }
+        """
+        let session = ScriptedNetworkSession(responses: [
+            .init(data: Data(flat.utf8), statusCode: 200)
+        ])
+        let client = OpenSubtitlesClient(apiKey: "k", session: session, baseURL: baseURL)
+
+        let results = try await client.search(OpenSubtitlesClient.SearchQuery(title: "X"))
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results[0].fileId, 42)
+        XCTAssertEqual(results[0].languageCode, "spa")
+        XCTAssertEqual(results[0].downloadCount, 3)
     }
 
     func testSearchWithoutAnyCriteriaIsRejected() async {
@@ -198,9 +229,11 @@ final class OpenSubtitlesClientTests: XCTestCase {
 
     // MARK: - Download
 
-    func testDownloadFollowsTheLinkAndUnzipsTheFile() async throws {
+    /// The download is a POST with the `file_id` in the query string — the
+    /// id of the concrete file, which a subtitle can bundle several of.
+    func testDownloadPostsTheFileIdAndUnzipsTheFile() async throws {
         let linkJSON = """
-        { "link": "https://dl.opensubtitles.com/file.srt.gz", "file_name": "The.Movie.spa.srt", "remaining": 99 }
+        { "link": "https://dl.opensubtitles.com/file.srt.gz", "file_name": "The.Movie.es.srt", "remaining": 99 }
         """
         let session = ScriptedNetworkSession(responses: [
             .init(data: Data(linkJSON.utf8), statusCode: 200),
@@ -208,22 +241,29 @@ final class OpenSubtitlesClientTests: XCTestCase {
         ])
         let client = OpenSubtitlesClient(apiKey: "k", session: session, baseURL: baseURL)
 
-        let file = try await client.download(subtitleId: "5512345", fileId: 987)
+        let file = try await client.download(fileId: 987)
 
         XCTAssertEqual(file.text, Self.plainFixture)
         XCTAssertEqual(file.format, "srt")
-        XCTAssertEqual(file.fileName, "The.Movie.spa.srt")
+        XCTAssertEqual(file.fileName, "The.Movie.es.srt")
 
         XCTAssertEqual(session.capturedRequests.count, 2)
         let first = try XCTUnwrap(session.capturedRequests[0].url)
-        XCTAssertEqual(first.path, "/api/v1/subtitles/5512345/download")
+        XCTAssertEqual(first.path, "/api/v1/download")
+        let components = try XCTUnwrap(URLComponents(url: first, resolvingAgainstBaseURL: false))
+        let items = Dictionary(uniqueKeysWithValues: (components.queryItems ?? []).map { ($0.name, $0.value) })
+        XCTAssertEqual(items["file_id"], "987")
+        XCTAssertEqual(session.capturedRequests[0].httpMethod, "POST")
+
         let second = try XCTUnwrap(session.capturedRequests[1].url)
         XCTAssertEqual(second.absoluteString, "https://dl.opensubtitles.com/file.srt.gz")
+        // The API key never travels to the CDN.
+        XCTAssertNil(session.capturedRequests[1].value(forHTTPHeaderField: "Api-Key"))
     }
 
     func testDownloadAcceptsAPlainFileToo() async throws {
         let linkJSON = """
-        { "link": "https://dl.opensubtitles.com/file.srt", "file_name": "The.Movie.spa.srt" }
+        { "link": "https://dl.opensubtitles.com/file.srt", "file_name": "The.Movie.es.srt" }
         """
         let session = ScriptedNetworkSession(responses: [
             .init(data: Data(linkJSON.utf8), statusCode: 200),
@@ -231,7 +271,7 @@ final class OpenSubtitlesClientTests: XCTestCase {
         ])
         let client = OpenSubtitlesClient(apiKey: "k", session: session, baseURL: baseURL)
 
-        let file = try await client.download(subtitleId: "1", fileId: nil)
+        let file = try await client.download(fileId: 1)
         XCTAssertEqual(file.text, Self.plainFixture)
     }
 
@@ -242,10 +282,32 @@ final class OpenSubtitlesClientTests: XCTestCase {
         let client = OpenSubtitlesClient(apiKey: "k", session: session, baseURL: baseURL)
 
         do {
-            _ = try await client.download(subtitleId: "1", fileId: nil)
+            _ = try await client.download(fileId: 1)
             XCTFail("expected throw")
         } catch {
             XCTAssertEqual(error as? OpenSubtitlesError, .malformedResponse)
+        }
+    }
+
+    /// A payload that claims to be gzip but cannot be inflated is broken.
+    /// It must NOT reach the server as if it were a subtitle.
+    func testBrokenCompressedPayloadIsRejected() async {
+        let linkJSON = """
+        { "link": "https://dl.opensubtitles.com/file.srt.gz", "file_name": "x.srt" }
+        """
+        // Gzip magic followed by garbage: the header is broken.
+        let broken: [UInt8] = [0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x01, 0x02]
+        let session = ScriptedNetworkSession(responses: [
+            .init(data: Data(linkJSON.utf8), statusCode: 200),
+            .init(data: Data(broken), statusCode: 200)
+        ])
+        let client = OpenSubtitlesClient(apiKey: "k", session: session, baseURL: baseURL)
+
+        do {
+            _ = try await client.download(fileId: 1)
+            XCTFail("expected throw")
+        } catch {
+            XCTAssertEqual(error as? OpenSubtitlesError, .compressedPayloadUnreadable)
         }
     }
 
@@ -273,6 +335,23 @@ final class OpenSubtitlesClientTests: XCTestCase {
         XCTAssertEqual(OpenSubtitlesClient.format(fromFileName: "a.b.ass"), "ass")
         XCTAssertEqual(OpenSubtitlesClient.format(fromFileName: nil), "srt")
         XCTAssertEqual(OpenSubtitlesClient.format(fromFileName: "a.b.unknown"), "srt")
+    }
+
+    func testCanonicalImdbId() {
+        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("tt0111161"), "111161")
+        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("tt-0111161"), "111161")
+        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("tt_0111161"), "111161")
+        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("0111161"), "111161")
+        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("111161"), "111161")
+        XCTAssertEqual(OpenSubtitlesClient.canonicalImdbId("tt0000001"), "1")
+        XCTAssertNil(OpenSubtitlesClient.canonicalImdbId(""))
+        XCTAssertNil(OpenSubtitlesClient.canonicalImdbId("not-an-id"))
+    }
+
+    func testCanonicalNumericId() {
+        XCTAssertEqual(OpenSubtitlesClient.canonicalNumericId("0133552"), "133552")
+        XCTAssertEqual(OpenSubtitlesClient.canonicalNumericId("133552"), "133552")
+        XCTAssertNil(OpenSubtitlesClient.canonicalNumericId("abc"))
     }
 
     // MARK: - Fixtures

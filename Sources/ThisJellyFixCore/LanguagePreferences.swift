@@ -137,4 +137,33 @@ public struct LanguagePreferences: Sendable, Equatable {
         "ukr": "uk", "ces": "cs", "cze": "cs", "ron": "ro", "rum": "ro",
         "hun": "hu", "cat": "ca", "eus": "eu", "glg": "gl",
     ]
+
+    /// The 639-1 codes above → 639-2/T, the tag Jellyfin uses for the
+    /// subtitles it stores (`spa`, `eng`, …). A subtitle uploaded by the app
+    /// must carry the same tag the server's own files carry, or the library
+    /// ends up with two spellings of the same language.
+    private static let iso6391To6392: [String: String] = [
+        "es": "spa", "en": "eng", "ja": "jpn", "pt": "por", "fr": "fra",
+        "de": "deu", "it": "ita", "ru": "rus", "ko": "kor", "zh": "zho",
+        "ar": "ara", "nl": "nld", "pl": "pol", "tr": "tur", "sv": "swe",
+        "no": "nor", "da": "dan", "fi": "fin", "el": "ell", "he": "heb",
+        "hi": "hin", "th": "tha", "vi": "vie", "id": "ind", "ms": "may",
+        "uk": "ukr", "cs": "ces", "ro": "ron", "hu": "hun", "ca": "cat",
+        "eu": "eus", "gl": "glg",
+    ]
+
+    /// The ISO 639-1 code of any language tag, whatever shape it comes in
+    /// (`"spa"`, `"Español"`, `"es-ES"` → `"es"`). nil when the tag carries
+    /// no specific language.
+    public static func normalizedCode(_ raw: String) -> String? {
+        let value = canonical(raw)
+        return value.isEmpty ? nil : value
+    }
+
+    /// The ISO 639-2/T code of any language tag (`"es"`, `"Español"`,
+    /// `"spa"` → `"spa"`). nil when the tag carries no specific language.
+    public static func iso6392Code(_ raw: String) -> String? {
+        guard let base = normalizedCode(raw) else { return nil }
+        return iso6391To6392[base]
+    }
 }

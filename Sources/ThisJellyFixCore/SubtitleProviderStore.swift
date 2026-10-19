@@ -73,6 +73,7 @@ public struct SubtitleProviderStore: Sendable {
     @discardableResult
     public func add(
         _ id: SubtitleProviderID,
+        isEnabled: Bool = true,
         language: String? = nil
     ) throws -> SubtitleProviderConfig {
         guard SubtitleProviderCatalog.descriptor(for: id) != nil else {
@@ -84,7 +85,7 @@ public struct SubtitleProviderStore: Sendable {
         }
         let config = SubtitleProviderConfig(
             id: id,
-            isEnabled: true,
+            isEnabled: isEnabled,
             language: language.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         )
         list.append(config)

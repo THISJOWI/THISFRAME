@@ -222,6 +222,9 @@ final class PlayerViewModel {
     var subtitleProviderStore = SubtitleProviderStore()
     /// Builds the client for an app-side provider (tests inject a stub).
     var openSubtitlesClientFactory: (String) -> OpenSubtitlesClient = { OpenSubtitlesClient(apiKey: $0) }
+    /// Title used when the item detail cannot be read: the player always
+    /// knows it (the series name for an episode, the title for a movie).
+    var subtitleSearchTitle: String?
 
     // MARK: - Playback Reporting
     private var reporter = JellyfinPlaybackReporter()
@@ -1936,15 +1939,17 @@ final class PlayerViewModel {
         var results: [SubtitleSearchResult] = []
         var failures: [String] = []
 
-        // 1. The server's own providers.
-        do {
-            let serverResults = try await subtitleClient.searchRemoteSubtitles(
-                serverURL: serverURL, token: token, itemId: itemId, language: language
-            )
-            results.append(contentsOf: serverResults.map(SubtitleSearchResult.init(server:)))
-        } catch {
-            failures.append(error.localizedDescription)
-            TJFLog("subsearch: server search failed: \(error.localizedDescription)")
+        // 1. The server's own providers — only when the user left them on.
+        if isServerProviderEnabled {
+            do {
+                let serverResults = try await subtitleClient.searchRemoteSubtitles(
+                    serverURL: serverURL, token: token, itemId: itemId, language: language
+                )
+                results.append(contentsOf: serverResults.map(SubtitleSearchResult.init(server:)))
+            } catch {
+                failures.append(error.localizedDescription)
+                TJFLog("subsearch: server search failed: \(error.localizedDescription)")
+            }
         }
 
         // 2. The providers the app queries itself.
@@ -1956,15 +1961,20 @@ final class PlayerViewModel {
                     failures.append("\(displayName(of: config.id)): falta la API key.")
                     continue
                 }
+                // The provider only understands ISO 639-1 codes; anything
+                // else would make it answer 400.
+                let providerLanguage = LanguagePreferences.normalizedCode(config.language ?? language)
                 do {
                     let found = try await openSubtitlesClientFactory(key).search(
                         OpenSubtitlesClient.SearchQuery(
                             title: target.title,
                             imdbId: target.imdbId,
                             tmdbId: target.tmdbId,
-                            season: target.season,
-                            episode: target.episode,
-                            language: config.language ?? language
+                            parentImdbId: target.parentImdbId,
+                            parentTmdbId: target.parentTmdbId,
+                            seasonNumber: target.season,
+                            episodeNumber: target.episode,
+                            language: providerLanguage
                         )
                     )
                     results.append(contentsOf: found.map {
@@ -1987,6 +1997,12 @@ final class PlayerViewModel {
         }
     }
 
+    /// The server provider can be switched off in the settings; the switch
+    /// has to be honoured here, or the screen lies.
+    private var isServerProviderEnabled: Bool {
+        subtitleProviderStore.config(for: .jellyfinServer)?.isEnabled ?? true
+    }
+
     /// The app-side providers the user switched on and that have a key.
     private func enabledClientSideProviders() -> [SubtitleProviderConfig] {
         subtitleProviderStore.effectiveConfigs().filter { config in
@@ -2002,31 +2018,51 @@ final class PlayerViewModel {
 
     /// What the item looks like to an external provider.
     ///
-    /// The item detail carries the external ids (Imdb/TMDB). Episodes rarely
-    /// have their own, so they are searched by series title plus season and
-    /// episode number — the form the providers expect.
+    /// The item detail carries the external ids. A movie is searched by its
+    /// own id; an **episode** is searched by the id of the *series* it
+    /// belongs to (the provider calls it the parent id) plus its season and
+    /// episode number — the episode itself usually carries no id.
     private func searchTarget(
         itemId: String,
         serverURL: URL,
         token: String
     ) async -> SubtitleSearchTarget {
-        guard let userId else { return SubtitleSearchTarget() }
+        guard let userId else { return fallbackSearchTarget() }
         do {
             let detail = try await itemDetailClient.fetchItemDetail(
                 userId: userId, serverURL: serverURL, token: token, itemId: itemId
             )
             let isEpisode = detail.type == "Episode"
-            return SubtitleSearchTarget(
+            var target = SubtitleSearchTarget(
                 title: isEpisode ? (detail.seriesName ?? detail.name) : detail.name,
-                imdbId: detail.imdbId,
-                tmdbId: detail.tmdbId,
+                imdbId: isEpisode ? nil : detail.imdbId,
+                tmdbId: isEpisode ? nil : detail.tmdbId,
                 season: isEpisode ? detail.parentIndexNumber : nil,
                 episode: isEpisode ? detail.indexNumber : nil
             )
+            if isEpisode, let seriesId = detail.seriesId {
+                // The parent ids live on the series, not on the episode.
+                if let series = try? await itemDetailClient.fetchItemDetail(
+                    userId: userId, serverURL: serverURL, token: token, itemId: seriesId
+                ) {
+                    target.parentImdbId = series.imdbId
+                    target.parentTmdbId = series.tmdbId
+                }
+            }
+            if target.isEmpty {
+                return fallbackSearchTarget()
+            }
+            return target
         } catch {
-            TJFLog("subsearch: item detail failed, falling back to title search")
-            return SubtitleSearchTarget()
+            TJFLog("subsearch: item detail failed, falling back to the known title")
+            return fallbackSearchTarget()
         }
+    }
+
+    /// What can still be searched when the item detail could not be read:
+    /// the title the player already knows.
+    private func fallbackSearchTarget() -> SubtitleSearchTarget {
+        SubtitleSearchTarget(title: subtitleSearchTitle)
     }
 
     /// Download one remote result, then load the NEW file into the overlay
@@ -2045,20 +2081,27 @@ final class PlayerViewModel {
                 try await subtitleClient.downloadRemoteSubtitle(
                     serverURL: serverURL, token: token, itemId: itemId, subtitleId: subtitleId
                 )
-            case .clientSide(let provider, let subtitleId, let fileId):
+            case .clientSide(let provider, _, let fileId):
                 // The app fetches it and hands it to the server, which then
                 // serves it like any other external subtitle.
                 guard let key = subtitleProviderStore.apiKey(for: provider), !key.isEmpty else {
                     throw SubtitleProviderError.missingAPIKey
                 }
-                let file = try await openSubtitlesClientFactory(key).download(
-                    subtitleId: subtitleId, fileId: fileId
-                )
+                guard let fileId else { throw OpenSubtitlesError.missingFile }
+                let file = try await openSubtitlesClientFactory(key).download(fileId: fileId)
+                // The server tags its own subtitles with the 639-2 code
+                // (`spa`); uploading the same spelling keeps the library
+                // from carrying two tags for the same language.
+                let language = LanguagePreferences.iso6392Code(result.languageCode ?? "")
+                    ?? result.languageCode
+                    ?? "und"
                 try await subtitleClient.uploadExternalSubtitle(
                     serverURL: serverURL, token: token, itemId: itemId,
                     data: file.text,
-                    language: result.languageCode ?? file.languageCode ?? "und",
-                    format: file.format
+                    language: language,
+                    format: file.format,
+                    isForced: result.isForced,
+                    isHearingImpaired: result.isHearingImpaired
                 )
             }
             await selectFreshlyDownloadedSubtitle()

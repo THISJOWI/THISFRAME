@@ -17,6 +17,8 @@ final class MediaCardLayoutTests: XCTestCase {
         XCTAssertEqual(MediaCardLayout.Shape.poster.aspectRatio, 2.0 / 3.0, accuracy: 0.0001)
     }
 
+    // MARK: - Height
+
     func testHeightDerivesFromTheShape() {
         // 16:9 tile.
         XCTAssertEqual(MediaCardLayout.height(forWidth: 240, shape: .landscape), 135)
@@ -28,27 +30,6 @@ final class MediaCardLayoutTests: XCTestCase {
     func testHeightOfZeroWidthIsZero() {
         XCTAssertEqual(MediaCardLayout.height(forWidth: 0, shape: .landscape), 0)
         XCTAssertEqual(MediaCardLayout.height(forWidth: -10, shape: .poster), 0)
-    }
-
-    // MARK: - Width inside a container
-
-    func testFlexibleCardTakesTheOfferedWidthAndNeverMore() {
-        // The grid column is what the card must fit in: 120…180 pt on iOS.
-        for column in [CGFloat(120), 161, 180] {
-            let width = MediaCardLayout.width(for: .flexible, availableWidth: column)
-            XCTAssertLessThanOrEqual(width, column)
-            XCTAssertEqual(width, column)
-        }
-    }
-
-    func testFixedCardKeepsItsDesignedSize() {
-        XCTAssertEqual(MediaCardLayout.width(for: .fixed(240), availableWidth: 161), 240)
-    }
-
-    func testSizeCombinesWidthAndHeight() {
-        let size = MediaCardLayout.size(forWidth: 161, shape: .landscape)
-        XCTAssertEqual(size.width, 161)
-        XCTAssertEqual(size.height, 91)
     }
 
     // MARK: - Which image the server is asked for
@@ -78,6 +59,11 @@ final class MediaCardLayoutTests: XCTestCase {
         XCTAssertEqual(
             JellyfinArtwork.preferredImageType(shape: .poster, availableTypes: ["Thumb", "Backdrop", "Primary"]),
             "Primary"
+        )
+        // A 16:9 backdrop cropped into a poster frame would leave a sliver:
+        // the poster shape prefers no image at all.
+        XCTAssertNil(
+            JellyfinArtwork.preferredImageType(shape: .poster, availableTypes: ["Backdrop"])
         )
     }
 
