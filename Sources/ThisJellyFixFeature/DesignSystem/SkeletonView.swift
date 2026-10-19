@@ -1,9 +1,14 @@
 import SwiftUI
+import ThisJellyFixCore
 
 /// Shimmering placeholder shown while a card or row loads.
 struct SkeletonView: View {
     let width: CGFloat
     let height: CGFloat
+    /// When set, the placeholder takes the width its container offers and
+    /// derives the height from this ratio — the same box the real card will
+    /// occupy, so nothing jumps when the artwork arrives.
+    var aspectRatio: CGFloat? = nil
     var cornerRadius: CGFloat = MareaTheme.Radius.card
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -21,7 +26,7 @@ struct SkeletonView: View {
                 )
                 .offset(x: shimmering && !reduceMotion ? width : -width)
             )
-            .frame(width: width, height: height)
+            .modifier(SkeletonSizing(width: width, height: height, aspectRatio: aspectRatio))
             .clipped()
             .onAppear {
                 guard !reduceMotion else { return }
@@ -29,6 +34,25 @@ struct SkeletonView: View {
                     shimmering = true
                 }
             }
+    }
+}
+
+/// Fixed box, or a ratio box that follows the container width.
+private struct SkeletonSizing: ViewModifier {
+    let width: CGFloat
+    let height: CGFloat
+    let aspectRatio: CGFloat?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let aspectRatio {
+            content
+                .frame(maxWidth: .infinity)
+                .aspectRatio(aspectRatio, contentMode: .fit)
+        } else {
+            content
+                .frame(width: width, height: height)
+        }
     }
 }
 

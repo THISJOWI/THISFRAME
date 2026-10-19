@@ -203,8 +203,9 @@ final class PlayerViewModel {
     }
 
     // MARK: - Remote subtitle search state (P6 sheet)
-    /// Last search results (server providers); empty until searched.
-    var remoteSubtitleResults: [RemoteSubtitleInfo] = []
+    /// Last search results — the server's own providers and the ones the app
+    /// queries itself, in one list. Empty until searched.
+    var remoteSubtitleResults: [SubtitleSearchResult] = []
     var isSearchingRemoteSubs = false
     var remoteSubtitleError: String?
     /// Prefilled from profile/system language; editable in the sheet.
@@ -217,6 +218,10 @@ final class PlayerViewModel {
     var showSubtitleSearch = false
     /// Injectable search client (tests).
     var subtitleClient = JellyfinSubtitleClient()
+    /// Where the user's subtitle providers live (Ajustes → Proveedores).
+    var subtitleProviderStore = SubtitleProviderStore()
+    /// Builds the client for an app-side provider (tests inject a stub).
+    var openSubtitlesClientFactory: (String) -> OpenSubtitlesClient = { OpenSubtitlesClient(apiKey: $0) }
 
     // MARK: - Playback Reporting
     private var reporter = JellyfinPlaybackReporter()
@@ -1908,9 +1913,14 @@ final class PlayerViewModel {
         return LanguagePreferences.systemDefault ?? "es"
     }
 
-    /// Search server providers. Never touches playback — results land in
-    /// `remoteSubtitleResults` for the sheet. Empty = no provider configured
-    /// server-side or no match (surfaced as helper text, not an error).
+    /// Search the configured providers for subtitles of the current item.
+    ///
+    /// Two families, one list:
+    /// - the Jellyfin server's own providers (unchanged flow), and
+    /// - the providers the app queries itself with the user's key.
+    ///
+    /// A provider that fails never sinks the search: the others still
+    /// answer, and the failure is only reported when nothing came back.
     func searchRemoteSubtitles() async {
         guard !isSearchingRemoteSubs,
               let serverURL, let token, let itemId else { return }
@@ -1922,36 +1932,150 @@ final class PlayerViewModel {
         isSearchingRemoteSubs = true
         remoteSubtitleError = nil
         defer { isSearchingRemoteSubs = false }
+
+        var results: [SubtitleSearchResult] = []
+        var failures: [String] = []
+
+        // 1. The server's own providers.
         do {
-            remoteSubtitleResults = try await subtitleClient.searchRemoteSubtitles(
+            let serverResults = try await subtitleClient.searchRemoteSubtitles(
                 serverURL: serverURL, token: token, itemId: itemId, language: language
             )
-            remoteSubsSearched = true
-            if remoteSubtitleResults.isEmpty {
-                TJFLog("subsearch: no results (server may have no subtitle provider configured)")
-            }
+            results.append(contentsOf: serverResults.map(SubtitleSearchResult.init(server:)))
         } catch {
-            remoteSubtitleError = error.localizedDescription
-            TJFLog("subsearch failed: \(error.localizedDescription)")
+            failures.append(error.localizedDescription)
+            TJFLog("subsearch: server search failed: \(error.localizedDescription)")
+        }
+
+        // 2. The providers the app queries itself.
+        let appProviders = enabledClientSideProviders()
+        if !appProviders.isEmpty {
+            let target = await searchTarget(itemId: itemId, serverURL: serverURL, token: token)
+            for config in appProviders {
+                guard let key = subtitleProviderStore.apiKey(for: config.id), !key.isEmpty else {
+                    failures.append("\(displayName(of: config.id)): falta la API key.")
+                    continue
+                }
+                do {
+                    let found = try await openSubtitlesClientFactory(key).search(
+                        OpenSubtitlesClient.SearchQuery(
+                            title: target.title,
+                            imdbId: target.imdbId,
+                            tmdbId: target.tmdbId,
+                            season: target.season,
+                            episode: target.episode,
+                            language: config.language ?? language
+                        )
+                    )
+                    results.append(contentsOf: found.map {
+                        SubtitleSearchResult(openSubtitles: $0, provider: config.id)
+                    })
+                } catch {
+                    failures.append("\(displayName(of: config.id)): \(error.localizedDescription)")
+                    TJFLog("subsearch: \(config.id.rawValue) failed: \(error.localizedDescription)")
+                }
+            }
+        }
+
+        remoteSubtitleResults = results
+        remoteSubsSearched = true
+        if results.isEmpty, let first = failures.first {
+            remoteSubtitleError = first
+        }
+        if results.isEmpty {
+            TJFLog("subsearch: no results (server may have no subtitle provider configured)")
         }
     }
 
-    /// Download one remote result server-side, then load the NEW file into
-    /// the overlay and select it — without recreating the player item, so
-    /// playback (and PiP) continue uninterrupted.
-    func downloadAndSelectRemoteSubtitle(_ result: RemoteSubtitleInfo) async {
+    /// The app-side providers the user switched on and that have a key.
+    private func enabledClientSideProviders() -> [SubtitleProviderConfig] {
+        subtitleProviderStore.effectiveConfigs().filter { config in
+            guard config.isEnabled,
+                  let descriptor = SubtitleProviderCatalog.descriptor(for: config.id) else { return false }
+            return descriptor.isClientSide && subtitleProviderStore.isConfigured(config.id)
+        }
+    }
+
+    private func displayName(of id: SubtitleProviderID) -> String {
+        SubtitleProviderCatalog.descriptor(for: id)?.displayName ?? id.rawValue
+    }
+
+    /// What the item looks like to an external provider.
+    ///
+    /// The item detail carries the external ids (Imdb/TMDB). Episodes rarely
+    /// have their own, so they are searched by series title plus season and
+    /// episode number — the form the providers expect.
+    private func searchTarget(
+        itemId: String,
+        serverURL: URL,
+        token: String
+    ) async -> SubtitleSearchTarget {
+        guard let userId else { return SubtitleSearchTarget() }
+        do {
+            let detail = try await itemDetailClient.fetchItemDetail(
+                userId: userId, serverURL: serverURL, token: token, itemId: itemId
+            )
+            let isEpisode = detail.type == "Episode"
+            return SubtitleSearchTarget(
+                title: isEpisode ? (detail.seriesName ?? detail.name) : detail.name,
+                imdbId: detail.imdbId,
+                tmdbId: detail.tmdbId,
+                season: isEpisode ? detail.parentIndexNumber : nil,
+                episode: isEpisode ? detail.indexNumber : nil
+            )
+        } catch {
+            TJFLog("subsearch: item detail failed, falling back to title search")
+            return SubtitleSearchTarget()
+        }
+    }
+
+    /// Download one remote result, then load the NEW file into the overlay
+    /// and select it — without recreating the player item, so playback (and
+    /// PiP) continue uninterrupted.
+    func downloadAndSelectRemoteSubtitle(_ result: SubtitleSearchResult) async {
         guard downloadingRemoteSubtitleId == nil,
               let userId, let serverURL, let token, let itemId else { return }
         downloadingRemoteSubtitleId = result.id
         remoteSubtitleError = nil
         defer { downloadingRemoteSubtitleId = nil }
         do {
-            try await subtitleClient.downloadRemoteSubtitle(
-                serverURL: serverURL, token: token, itemId: itemId, subtitleId: result.id
-            )
-            // The sidecar is new server-side: refresh ONLY the stream list
-            // (keep the current URL + PlaySessionId — no re-prepare, no stop).
-            // Subs siempre -1 (invariante anti-dobles); se preserva el audio.
+            switch result.handle {
+            case .server(let subtitleId):
+                // The server fetches it and stores it next to the video.
+                try await subtitleClient.downloadRemoteSubtitle(
+                    serverURL: serverURL, token: token, itemId: itemId, subtitleId: subtitleId
+                )
+            case .clientSide(let provider, let subtitleId, let fileId):
+                // The app fetches it and hands it to the server, which then
+                // serves it like any other external subtitle.
+                guard let key = subtitleProviderStore.apiKey(for: provider), !key.isEmpty else {
+                    throw SubtitleProviderError.missingAPIKey
+                }
+                let file = try await openSubtitlesClientFactory(key).download(
+                    subtitleId: subtitleId, fileId: fileId
+                )
+                try await subtitleClient.uploadExternalSubtitle(
+                    serverURL: serverURL, token: token, itemId: itemId,
+                    data: file.text,
+                    language: result.languageCode ?? file.languageCode ?? "und",
+                    format: file.format
+                )
+            }
+            await selectFreshlyDownloadedSubtitle()
+        } catch {
+            remoteSubtitleError = error.localizedDescription
+            TJFLog("subsearch download failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// The sidecar is new server-side: refresh ONLY the stream list (keep
+    /// the current URL + PlaySessionId — no re-prepare, no stop), load the
+    /// new file and select it.
+    ///
+    /// Subs siempre -1 (invariante anti-dobles); se preserva el audio.
+    private func selectFreshlyDownloadedSubtitle() async {
+        guard let userId, let serverURL, let token, let itemId else { return }
+        do {
             let info = try await JellyfinPlaybackClient().fetchPlaybackInfo(
                 userId: userId, serverURL: serverURL, token: token, itemId: itemId,
                 deviceProfile: .avPlayer.capped(to: selectedQuality.maxBitrate),
@@ -1986,7 +2110,7 @@ final class PlayerViewModel {
             }
         } catch {
             remoteSubtitleError = error.localizedDescription
-            TJFLog("subsearch download failed: \(error.localizedDescription)")
+            TJFLog("subsearch: refresh after download failed: \(error.localizedDescription)")
         }
     }
 

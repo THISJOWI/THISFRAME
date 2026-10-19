@@ -121,50 +121,65 @@ private final class CachedImageLoader: ObservableObject {
 
 // MARK: - MareaImageView
 
+/// The app's only image renderer.
+///
+/// Three sizing modes, and the artwork can never escape the box it was
+/// given:
+/// - **fixed** — an exact `width` × `height` box (cards with a designed
+///   size). The picture is cropped to fill it, never stretched.
+/// - **ratio** — the box keeps `aspectRatio` and takes the width its
+///   container offers. This is what cards in adaptive grids use: the
+///   artwork can never be wider than the column that hosts it.
+/// - **flexible** — fills whatever frame the caller gives (the detail hero,
+///   the "continue watching" card). The caller owns the bounds.
 struct MareaImageView: View {
     let url: URL?
     let placeholder: String
+    /// Fixed box width. Zero together with a zero height means "flexible".
     let width: CGFloat
+    /// Fixed box height. Zero together with a zero width means "flexible".
     let height: CGFloat
+    /// When set, the box keeps this width/height ratio and takes the width
+    /// its container offers. Overrides the fixed box.
+    var aspectRatio: CGFloat? = nil
     /// Tried once when `url` fails (missing Thumb/Backdrop frame) so the card
     /// shows the portrait poster instead of a dead dark rectangle.
     var fallbackURL: URL? = nil
 
     @StateObject private var loader = CachedImageLoader()
 
-    init(url: URL?, placeholder: String = "?", width: CGFloat = 150, height: CGFloat = 220, fallbackURL: URL? = nil) {
+    init(
+        url: URL?,
+        placeholder: String = "?",
+        width: CGFloat = 150,
+        height: CGFloat = 220,
+        aspectRatio: CGFloat? = nil,
+        fallbackURL: URL? = nil
+    ) {
         self.url = url
         self.placeholder = placeholder
         self.width = width
         self.height = height
+        self.aspectRatio = aspectRatio
         self.fallbackURL = fallbackURL
     }
 
-    /// Cards are fixed 2:3-ish tiles; the detail hero asks for 0/0 and gets a
-    /// view that fills whatever frame it's given, so a 16:9 backdrop is cropped
-    /// to the hero instead of being letterboxed inside a 600x400 box.
-    var isFlexible: Bool { width <= 0 && height <= 0 }
+    /// True when the view takes the bounds of its container instead of a
+    /// fixed box.
+    var isFlexible: Bool { width <= 0 && height <= 0 && aspectRatio == nil }
 
     var body: some View {
         Group {
-            if let uiImage = loader.image {
-                #if os(macOS)
-                Image(nsImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                #else
-                Image(uiImage: uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                #endif
+            if let image = loader.image {
+                artwork(image)
             } else if loader.isLoading {
                 ProgressView()
-                    .mareaImageSizing(width: width, height: height)
+                    .mareaRatioBox(aspectRatio, contentMode: .fit)
             } else {
-                placeholderView
+                placeholderBox
             }
         }
-        .mareaImageSizing(width: width, height: height)
+        .modifier(MareaImageSizing(width: width, height: height, aspectRatio: aspectRatio))
         .task(id: url) {
             if let url {
                 loader.load(url: url, fallback: fallbackURL)
@@ -172,39 +187,69 @@ struct MareaImageView: View {
         }
     }
 
-    private var placeholderView: some View {
+    /// The loaded picture. Cropped to fill its box — never stretched, never
+    /// allowed to grow past it.
+    @ViewBuilder
+    private func artwork(_ image: PlatformImage) -> some View {
+        #if os(macOS)
+        Image(nsImage: image)
+            .resizable()
+            .mareaRatioBox(aspectRatio, contentMode: .fill)
+        #else
+        Image(uiImage: image)
+            .resizable()
+            .mareaRatioBox(aspectRatio, contentMode: .fill)
+        #endif
+    }
+
+    private var placeholderBox: some View {
         ZStack {
             MareaTheme.Colors.surface
             Text(placeholder)
                 .font(.title2.bold())
                 .foregroundStyle(MareaTheme.Colors.accent.opacity(0.6))
         }
-        .mareaImageSizing(width: width, height: height)
+        .mareaRatioBox(aspectRatio, contentMode: .fit)
     }
 }
 
-/// Fixed tile (frame + rounded corners) for cards, or fill-the-frame with no
-/// corner rounding when the caller passes 0/0.
+/// Applies a fixed aspect ratio when there is one, and leaves the view
+/// alone when there is not.
+private extension View {
+    func mareaRatioBox(_ ratio: CGFloat?, contentMode: ContentMode) -> some View {
+        if let ratio {
+            return AnyView(self.aspectRatio(ratio, contentMode: contentMode))
+        }
+        return AnyView(self)
+    }
+}
+
+/// Fixed tile (frame + rounded corners) for cards, a ratio box that follows
+/// the container width, or fill-the-frame with no corner rounding when the
+/// caller passes 0/0.
 private struct MareaImageSizing: ViewModifier {
     let width: CGFloat
     let height: CGFloat
+    let aspectRatio: CGFloat?
 
     private var isFlexible: Bool { width <= 0 && height <= 0 }
 
     @ViewBuilder
     func body(content: Content) -> some View {
-        if isFlexible {
-            content.frame(maxWidth: .infinity, maxHeight: .infinity)
+        if let aspectRatio {
+            // The branches already keep the ratio; this only makes the box
+            // take the width the container offers.
+            content
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        } else if isFlexible {
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipShape(Rectangle())
         } else {
             content
                 .frame(width: width, height: height)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
-    }
-}
-
-private extension View {
-    func mareaImageSizing(width: CGFloat, height: CGFloat) -> some View {
-        modifier(MareaImageSizing(width: width, height: height))
     }
 }

@@ -340,7 +340,7 @@ struct HomeView: View {
                             },
                             imageURL: { libraryModel.imageURL(for: $0, wide: row.title == "Estás viendo") },
                             fallbackImageURL: row.title == "Estás viendo"
-                                ? { libraryModel.imageURL(for: $0, wide: false) }
+                                ? { libraryModel.posterURL(for: $0) }
                                 : nil,
                             onPlayDirect: { item in directItem = item },
                             onSeeAll: seeAllAction(for: row.title),

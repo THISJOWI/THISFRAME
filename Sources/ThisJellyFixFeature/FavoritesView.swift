@@ -126,12 +126,6 @@ struct FavoritesView: View {
     }
 
     private func imageURL(for item: JellyfinMediaItem) -> URL? {
-        guard item.hasImage else { return nil }
-        return serverURL
-            .appendingPathComponent("Items/\(item.id)/Images/Primary")
-            .appending(queryItems: [
-                URLQueryItem(name: "maxWidth", value: "300"),
-                URLQueryItem(name: "quality", value: "90"),
-            ])
+        item.artworkURL(serverURL: serverURL)
     }
 }

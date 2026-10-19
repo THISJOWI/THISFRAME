@@ -91,7 +91,11 @@ struct SearchView: View {
                                     NavigationLink(value: item) {
                                         MediaCardView(
                                             item: item,
-                                            imageURL: imageURL(for: item)
+                                            imageURL: imageURL(for: item),
+                                            // The grid column decides the width:
+                                            // a fixed card size would overflow
+                                            // the cell and overlap the next one.
+                                            flexibleWidth: true
                                         )
                                         .transition(.scale.combined(with: .opacity))
                                     }
@@ -229,12 +233,6 @@ struct SearchView: View {
     #endif
 
     private func imageURL(for item: JellyfinMediaItem) -> URL? {
-        guard item.hasImage else { return nil }
-        return serverURL
-            .appendingPathComponent("Items/\(item.id)/Images/Primary")
-            .appending(queryItems: [
-                URLQueryItem(name: "maxWidth", value: "300"),
-                URLQueryItem(name: "quality", value: "90"),
-            ])
+        item.artworkURL(serverURL: serverURL)
     }
 }

@@ -19,6 +19,10 @@ public struct JellyfinItemDetail: Codable, Sendable, Equatable, Identifiable {
     /// Series carry their artwork in this array; only movies (and some
     /// episodes) put a `Backdrop` entry in `imageTags`.
     public let backdropImageTags: [String]?
+    /// External provider ids the server knows ("Tmdb", "Imdb", "Tvdb", …).
+    /// Empty for episodes — those carry the ids of the media file, not of
+    /// the series.
+    public let providerIds: [String: String]?
     /// Server-side per-user state: favorite flag, played flag, resume position.
     public let userData: UserData?
 
@@ -39,6 +43,7 @@ public struct JellyfinItemDetail: Codable, Sendable, Equatable, Identifiable {
         case indexNumber = "IndexNumber"
         case imageTags = "ImageTags"
         case backdropImageTags = "BackdropImageTags"
+        case providerIds = "ProviderIds"
         case userData = "UserData"
     }
 
@@ -63,6 +68,16 @@ public struct JellyfinItemDetail: Codable, Sendable, Equatable, Identifiable {
     }
 
     public var isFavorite: Bool { userData?.isFavorite ?? false }
+
+    /// Value for an external provider key, case-insensitive (`Tmdb`/`tmdb`).
+    public func providerId(for provider: String) -> String? {
+        guard let providerIds else { return nil }
+        let wanted = provider.lowercased()
+        return providerIds.first { $0.key.lowercased() == wanted }?.value
+    }
+
+    public var tmdbId: String? { providerId(for: "Tmdb") }
+    public var imdbId: String? { providerId(for: "Imdb") }
 
     public var isPlayed: Bool { userData?.played ?? false }
 

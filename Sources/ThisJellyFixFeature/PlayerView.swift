@@ -1625,7 +1625,7 @@ private struct RemoteSubtitleSearchSheet: View {
                             .disabled(viewModel.remoteSubtitleLanguage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
                     }
-                    Text("Requiere un proveedor de subtítulos configurado en el servidor (p. ej. OpenSubtitles).")
+                    Text("Busca en los proveedores del servidor y en los que has añadido en Ajustes → Proveedores de subtítulos.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

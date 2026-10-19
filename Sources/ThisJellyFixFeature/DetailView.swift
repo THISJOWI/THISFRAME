@@ -1060,15 +1060,12 @@ private struct EpisodeRow: View {
     var body: some View {
         HStack(spacing: 12) {
             // Episode thumbnail
-            if episode.imageTags?["Backdrop"] != nil || episode.imageTags?["Primary"] != nil {
-                let hasBackdrop = episode.imageTags?["Backdrop"] != nil
-                let thumbURL = serverURL
-                    .appendingPathComponent("Items/\(episode.id)/Images/\(hasBackdrop ? "Backdrop" : "Primary")")
-                    .appending(queryItems: [
-                        URLQueryItem(name: "maxWidth", value: "300"),
-                        URLQueryItem(name: "quality", value: "90"),
-                    ])
-
+            if let thumbURL = JellyfinArtwork.url(
+                for: episode,
+                serverURL: serverURL,
+                shape: .landscape,
+                targetWidth: 120
+            ) {
                 MareaImageView(url: thumbURL, width: 120, height: 68)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
             } else {

@@ -21,6 +21,16 @@ public struct LanguagePreferences: Sendable, Equatable {
     /// back to the system language at playback time.
     public static let noPreference = ""
 
+    /// Codes offered in the language pickers: the common ones plus the
+    /// system language when it is not already in the list.
+    public static var pickerCodes: [String] {
+        var codes = ["es", "en", "ja", "pt", "fr", "de", "it"]
+        if let system = systemDefault, !codes.contains(system) {
+            codes.insert(system, at: 0)
+        }
+        return codes
+    }
+
     public init(preferredAudio: String? = nil, preferredSubtitles: String? = nil) {
         self.preferredAudio = preferredAudio
         self.preferredSubtitles = preferredSubtitles

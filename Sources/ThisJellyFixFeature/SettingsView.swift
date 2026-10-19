@@ -13,6 +13,7 @@ struct SettingsView: View {
                 SubtitleSizeSettingsSection()
                 LanguageSettingsSection()
                 #if os(iOS) || os(macOS)
+                SubtitleProvidersSection()
                 IntegrationsSection()
                 #endif
                 DiagnosticsSection()
@@ -112,11 +113,7 @@ private struct LanguageSettingsSection: View {
 
     /// Common picker choices + the system language as suggested default.
     private var options: [String] {
-        var codes = ["es", "en", "ja", "pt", "fr", "de", "it"]
-        if let system = LanguagePreferences.systemDefault, !codes.contains(system) {
-            codes.insert(system, at: 0)
-        }
-        return codes
+        LanguagePreferences.pickerCodes
     }
 
     var body: some View {

@@ -58,7 +58,11 @@ struct LibraryGridView: View {
                 if items.isEmpty && isLoadingPage {
                     LazyVGrid(columns: columns, spacing: MareaTheme.Spacing.md) {
                         ForEach(0..<12, id: \.self) { _ in
-                            SkeletonView(width: 120, height: 180)
+                            SkeletonView(
+                                width: 0,
+                                height: 0,
+                                aspectRatio: MediaCardLayout.Shape.poster.aspectRatio
+                            )
                         }
                     }
                     .padding(.horizontal, MareaTheme.Spacing.md)
@@ -68,7 +72,10 @@ struct LibraryGridView: View {
                             NavigationLink(value: item) {
                                 MediaCardView(
                                     item: item,
-                                    imageURL: model.imageURL(for: item)
+                                    imageURL: model.imageURL(for: item),
+                                    // The grid column decides the width: a
+                                    // fixed card size would overflow the cell.
+                                    flexibleWidth: true
                                 )
                             }
                             .buttonStyle(.plain)

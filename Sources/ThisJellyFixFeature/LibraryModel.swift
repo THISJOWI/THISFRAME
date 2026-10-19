@@ -469,27 +469,20 @@ final class LibraryModel {
         }
     }
 
+    /// Artwork for a card showing `item`.
+    ///
+    /// Episodes are always 16:9 frames (their card is landscape) and
+    /// everything else a 2:3 poster, so the picture asked for always
+    /// matches the box it is drawn in. `wide: true` forces the landscape
+    /// variant for the items that are not episodes — the "continue
+    /// watching" row.
     func imageURL(for item: JellyfinMediaItem, wide: Bool = false) -> URL? {
-        guard item.hasImage else { return nil }
-        let path: String
-        if wide {
-            // Resume-row landscape cards: prefer a real 16:9 frame (Thumb),
-            // then the backdrop, then fall back to the portrait poster.
-            if item.imageTags?["Thumb"] != nil {
-                path = "Items/\(item.id)/Images/Thumb"
-            } else if !(item.backdropImageTags ?? []).isEmpty {
-                path = "Items/\(item.id)/Images/Backdrop"
-            } else {
-                path = "Items/\(item.id)/Images/Primary"
-            }
-        } else {
-            path = "Items/\(item.id)/Images/Primary"
-        }
-        return serverURL
-            .appendingPathComponent(path)
-            .appending(queryItems: [
-                URLQueryItem(name: "maxWidth", value: wide ? "480" : "300"),
-                URLQueryItem(name: "quality", value: "90"),
-            ])
+        item.artworkURL(serverURL: serverURL, shape: wide ? .landscape : nil)
+    }
+
+    /// The item's portrait poster, cropped to a 2:3 box. Used as the
+    /// fallback when a landscape frame cannot be fetched.
+    func posterURL(for item: JellyfinMediaItem) -> URL? {
+        item.artworkURL(serverURL: serverURL, shape: .poster)
     }
 }
