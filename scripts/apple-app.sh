@@ -41,6 +41,48 @@ open_device_hub() {
 
 if [[ "$ACTION" == hub ]]; then open_device_hub; exit 0; fi
 
+# ¿Hay algún certificado de firma de Apple en este equipo?
+#
+# Compilar para un dispositivo físico exige un certificado "Apple
+# Development" (o "Apple Distribution") con clave privada. Sin él, el build
+# muere en el paso de firma con "No signing certificate ... found". El
+# simulador firma ad-hoc y no necesita certificado, así que cuando no hay
+# identidad se compila para el simulador en su lugar.
+has_signing_identity() {
+  local count
+  # sed -E: el sed de macOS (BSD) no entiende "\+" en modo básico.
+  count="$(security find-identity -v -p codesigning 2>/dev/null \
+    | sed -nE 's/^[[:space:]]*([0-9]+) valid identities found.*/\1/p')"
+  [[ -n "$count" && "$count" -gt 0 ]]
+}
+
+# Primer destino que encaje con la plataforma pedida y el tipo de equipo.
+# "$3" es "" para un dispositivo físico o "Simulator" para el simulador.
+pick_destination() {
+  printf '%s\n' "$1" | python3 -c '
+import re, sys
+platforms = {"ios": "iOS", "tvos": "tvOS", "visionos": "visionOS"}
+wanted, kind, suffix = platforms[sys.argv[1]], sys.argv[2].lower(), sys.argv[3]
+if suffix:
+    wanted = wanted + " " + suffix
+for line in sys.stdin:
+    # xcodebuild imprime "id:XXXX" SIN espacio tras los dos puntos; con
+    # "id: " la busqueda no encontraba nunca ningun destino y se caia al
+    # destino generico (que exige certificado de firma).
+    match = re.search(r"platform:([^,]+),.*?id:\s*([^,}]+)", line)
+    if not match or match.group(1) != wanted:
+        continue
+    identifier = match.group(2).strip()
+    # "Any iOS Device" / "Any iOS Simulator Device" son marcadores de
+    # posicion, no equipos reales: no se pueden instalar ni arrancar.
+    if identifier.endswith(":placeholder") or "Placeholder" in identifier:
+        continue
+    if not kind or kind in line.lower():
+        print(f"platform={wanted},id={identifier}")
+        break
+' "$2" "$DEVICE_KIND" "$3"
+}
+
 DESTINATION=""
 if [[ -n "$DEVICE_ID" ]]; then
   DESTINATION="platform=$XCODE_PLATFORM,id=$DEVICE_ID"
@@ -50,35 +92,13 @@ else
   echo "Buscando dispositivos disponibles para ${PLATFORM}…"
   DESTINATIONS="$(xcodebuild -showdestinations -project "$PROJECT" -scheme "$SCHEME" 2>/dev/null || true)"
   # Preferir dispositivos físicos. Después, elegir simuladores por nombre estable.
-  DESTINATION="$(printf '%s\n' "$DESTINATIONS" | python3 -c '
-import re, sys
-platforms = {"ios": "iOS", "tvos": "tvOS", "visionos": "visionOS"}
-wanted, kind = platforms[sys.argv[1]], sys.argv[2].lower()
-matches = []
-for line in sys.stdin:
-    match = re.search(r"platform:([^,]+),.*?id: ([^,}]+)", line)
-    if match and match.group(1) == wanted:
-        matches.append((line, match.group(2).strip()))
-for line, identifier in matches:
-    if not kind or kind in line.lower():
-        print(f"platform={wanted},id={identifier}")
-        break
-' "$PLATFORM" "$DEVICE_KIND")"
+  DESTINATION="$(pick_destination "$DESTINATIONS" "$PLATFORM" "")"
+  if [[ -n "$DESTINATION" && "$DESTINATION" != *Simulator* ]] && ! has_signing_identity; then
+    echo "Este equipo no tiene ningún certificado de firma de Apple: la compilación para el dispositivo fallaría. Compilo para el simulador."
+    DESTINATION="$(pick_destination "$DESTINATIONS" "$PLATFORM" "Simulator")"
+  fi
   if [[ -z "$DESTINATION" ]]; then
-    DESTINATION="$(printf '%s\n' "$DESTINATIONS" | python3 -c '
-import re, sys
-platforms = {"ios": "iOS", "tvos": "tvOS", "visionos": "visionOS"}
-wanted, kind = platforms[sys.argv[1]] + " Simulator", sys.argv[2].lower()
-matches = []
-for line in sys.stdin:
-    match = re.search(r"platform:([^,]+),.*?id: ([^,}]+)", line)
-    if match and match.group(1) == wanted:
-        matches.append((line, match.group(2).strip()))
-for line, identifier in matches:
-    if not kind or kind in line.lower():
-        print(f"platform={wanted},id={identifier}")
-        break
-' "$PLATFORM" "$DEVICE_KIND")"
+    DESTINATION="$(pick_destination "$DESTINATIONS" "$PLATFORM" "Simulator")"
   fi
 fi
 
@@ -89,11 +109,40 @@ if [[ -z "$DESTINATION" ]]; then
 fi
 
 echo "Destino: $DESTINATION"
+# -allowProvisioningUpdates: con firma automática, deja que Xcode cree (o
+# refresque) el certificado y el perfil de aprovisionamiento. Sin este flag el
+# build muere con "No signing certificate ... found" la primera vez.
 xcodebuild -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" \
-  -derivedDataPath "$DERIVED_DATA" -configuration Debug build
+  -derivedDataPath "$DERIVED_DATA" -configuration Debug build -allowProvisioningUpdates
 
 [[ "$ACTION" == run ]] || exit 0
-APP="$DERIVED_DATA/Build/Products/Debug/thisjellyfix.app"
+
+# El bundle vive en una carpeta según la plataforma: Debug-iphoneos para el
+# dispositivo, Debug-iphonesimulator para el simulador y Debug para macOS.
+app_path() {
+  local destination="$1" platform="$2" variant
+  case "$platform" in
+    macos) variant="Debug" ;;
+    ios) variant="Debug-iphoneos" ;;
+    tvos) variant="Debug-appletvos" ;;
+    visionos) variant="Debug-xros" ;;
+    *) variant="Debug" ;;
+  esac
+  if [[ "$destination" == *Simulator* ]]; then
+    case "$platform" in
+      ios) variant="Debug-iphonesimulator" ;;
+      tvos) variant="Debug-appletvsimulator" ;;
+      visionos) variant="Debug-xrsimulator" ;;
+    esac
+  fi
+  echo "$DERIVED_DATA/Build/Products/$variant/thisjellyfix.app"
+}
+
+APP="$(app_path "$DESTINATION" "$PLATFORM")"
+if [[ ! -d "$APP" ]]; then
+  echo "No se encontró la app compilada en $APP" >&2
+  exit 1
+fi
 if [[ "$PLATFORM" == macos ]]; then
   open "$APP"
 elif [[ "$DESTINATION" == *Simulator* ]]; then
@@ -105,7 +154,23 @@ elif [[ "$DESTINATION" == *Simulator* ]]; then
 elif [[ "$DESTINATION" != generic/* ]]; then
   DEVICE_ID="$(printf '%s' "$DESTINATION" | sed -nE 's/.*id=([^,]+).*/\1/p')"
   xcrun devicectl device install app --device "$DEVICE_ID" "$APP"
-  xcrun devicectl device process launch --device "$DEVICE_ID" "$BUNDLE_ID"
+  # El primer arranque en un equipo nuevo falla hasta que el usuario confía
+  # en el perfil: se instala pero no arranca. Se explica en vez de volcar
+  # el error crudo de devicectl.
+  if ! LAUNCH_OUT="$(xcrun devicectl device process launch --device "$DEVICE_ID" "$BUNDLE_ID" 2>&1)"; then
+    echo "$LAUNCH_OUT"
+    if grep -q "has not been explicitly trusted" <<<"$LAUNCH_OUT"; then
+      {
+        echo
+        echo "La app está instalada, pero el iPhone todavía no confía en el perfil de firma."
+        echo "En el iPhone: Ajustes › General › VPN y gestión de dispositivos ›"
+        echo "  «Apple Development: …» › Confiar."
+        echo "Si sigue sin arrancar: Ajustes › Privacidad y seguridad › Modo desarrollador (activar y reiniciar)."
+      } >&2
+    fi
+    exit 1
+  fi
+  echo "$LAUNCH_OUT"
 else
   echo "Compilación lista. Selecciona un dispositivo en Device Hub para instalar y ejecutar la app."
 fi
