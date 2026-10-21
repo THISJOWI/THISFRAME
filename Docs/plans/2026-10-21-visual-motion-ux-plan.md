@@ -1271,3 +1271,119 @@ git commit -m "feat(player): subtitle crossfade and transport polish"
 - **No** se aniade `matchedGeometryEffect` manual entre la tarjeta y el hero: la navegación
   programática lo hace frágil; se usa `navigationTransition` del sistema (Task 7).
 - **No** se cambia el endpoint ni las credenciales de TMDB/Jellyfin.
+
+---
+
+## Registro de decisiones (ledger de ejecución)
+
+# SDD ledger — plan: Docs/plans/2026-10-21-visual-motion-ux-plan.md
+
+Plan: implementación de modo claro/oscuro, animaciones, pull-to-refresh y estado de
+episodios para THISFRAME. Spec: este mismo fichero (no hay spec separada — el plan
+fue el análisis del repo y ES la spec).
+
+Pre-flight: sin conflictos de interfaces entre tasks (Task 1 produce los modelos de Core,
+Task 2 los tokens de DesignSystem, Tasks 3–8 consumen de forma aditiva; el único
+solapamiento — Task 6 consume la recarga de episodios de Task 4 — está ordenado).
+
+Baseline verificada antes de Task 1: `swift test` → exit 0 (264 tests Core + resto en verde).
+
+Task 1: Ruling: `resumePositionSeconds` se queda en `JellyfinMediaItem.swift` (junto a
+  `durationMinutes`) en lugar de duplicarse en el fichero nuevo — el plan lo ponía en
+  `EpisodeWatchState.swift` y habría colisionado con el miembro ya existente; mantener los
+  accesores DTO junto al DTO es más cohesivo y no cambia la API pública.
+  Coste si está mal: un `git mv` de 4 líneas.
+Task 1: Ruling: los ticks del test de duración eran 3 600 000 000 (360 s), no 1 h —
+  1 h son 36 000 000 000 ticks (10 000 000 ticks/s). El fallo era del test, no de la
+  implementación (`UserData.resumePositionSeconds` ya usa /10 000 000). Test corregido.
+  Coste si está mal: la constante del test.
+Task 1: complete (commits 52eb601..4d65900, tests: swift test → exit 0, 0 failures)
+Task 2: complete (commits 4d65900..HEAD, tests: swift test → exit 0)
+Task 3: Ruling: el target visionOS NO compilaba antes de este cambio (`glassEffect` no
+  existe en visionOS y `AVPlayer.isExternalPlaybackActive` tampoco). El plan exige que las
+  4 plataformas compilen (AC-31), así que se corrigió con guardas de COMPILE-TIME puras:
+  `wasExternallyActive = false` en visionOS y el aviso de AirPlay dentro de `#if !os(visionOS)`.
+  Cero cambio de comportamiento en iOS/macOS/tvOS.
+  Coste si está mal: 2 guardas de 4 líneas.
+Task 3: Ruling: el botón "Conectar" usaba `.tint(.mint)` — verde menta fuera de la paleta de
+  THISFRAME. Cambiado a `MareaTheme.Colors.accent` (el rojo de marca). Es eliminación de un
+  color ajeno, no rediseño de la identidad.
+  Coste si está mal: 1 línea.
+Task 3: nota: `swift test` mostró un fallo ESPORÁDICO en ThisJellyFixFeatureTests (1 vez de 5);
+  el mismo fallo se observó en la línea base ANTES de tocar nada y no se ha reproducido en 4
+  ejecuciones posteriores. Test preexistente e inestable, no causado por este trabajo.
+Task 3: complete (commits cc89935..9d0dd76, tests: swift test → exit 0; xcodebuild macOS+iOS+tvOS+visionOS → BUILD SUCCEEDED)
+Task 4: complete (commits 9d0dd76..HEAD, tests: swift test → exit 0; xcodebuild iOS → BUILD SUCCEEDED)
+Task 5: Ruling: el plan pedía un flag `hasAppeared` dentro de la tarjeta, pero eso NO evita
+  el parpadeo al hacer scroll (SwiftUI destruye y recrea las celdas fuera de pantalla, y
+  @State se reinicia). Se implementó `CardEntranceModifier` con un flag `animates` que la
+  fila pasa a las tarjetas: las primeras se animan, las que aparecen después se muestran ya
+  en su sitio (`isRevealed` inicial = `!animates`, así que no hay frame en blanco).
+  Coste si está mal: 1 modificador de 40 líneas.
+Task 5: Ruling: las tarjetas de rejilla (LibraryGridView, SearchView, FavoritesView) NO se
+  animan al entrar: en una rejilla las celdas aparecen continuamente al hacer scroll y
+  animarlas produce parpadeo. Las estanterías horizontales (RowSection) sí se animan.
+  Coste si está mal: 1 parámetro por vista.
+Task 5: complete (commits 3ffdfc6..HEAD, tests: swift test → exit 0; xcodebuild iOS+macOS+tvOS+visionOS → BUILD SUCCEEDED)
+Task 6: Ruling: `loadDetail()` se dividió en `loadDetail()` (con spinner, para la primera
+  carga) y `fetchDetail(reloadSeasons:)` (sin spinner, para refrescar): un `.refreshable` que
+  conmuta a "Cargando detalle…" borraría el contenido que se está refrescando.
+  Coste si está mal: 2 métodos.
+Task 6: Ruling: `loadSeasons()` ahora recarga la temporada SELECCIONADA (no la primera): un
+  refresco no debe devolver al usuario a la temporada 1.
+  Coste si está mal: 3 líneas.
+Task 6: complete (commits c056e83..HEAD, tests: swift test → exit 0; xcodebuild iOS+macOS → BUILD SUCCEEDED)
+Task 7: Ruling: NO se implementa `navigationTransition(.zoom)` + `matchedTransitionSource`
+  (el "zoom" póster→ficha). El ID de transición tendría que ser `item.id`, y el MISMO título
+  aparece en varias estanterías a la vez ("Películas" y "Últimos agregados"), con lo que
+  habría dos fuentes con el mismo ID en el mismo namespace — colisión que SwiftUI no resuelve
+  de forma fiable. Sin forma de verificar la animación en este entorno, el riesgo de
+  regresión en la navegación supera el beneficio. La continuidad se entrega con el crossfade
+  de imagen del hero (Task 5) + la transición de opacidad del contenido.
+  Coste si está mal: queda sin zooms la transición de navegación.
+Task 7: complete (commits 279a27e..HEAD, tests: swift test → exit 0; xcodebuild iOS+macOS+tvOS+visionOS → BUILD SUCCEEDED)
+Task 8: Ruling: `StubLibraryClient.recordedStartIndices` se mutaba desde varias tareas a la vez
+  (`LibraryModel.load()` carga 4 filas en paralelo) → carrera de datos → corrupción de heap →
+  SIGSEGV/SIGTRAP del proceso de test. Preexistente (se observó en la línea base) y causaba
+  ~1 fallo de suite por cada 20 ejecuciones. Arreglado con un NSLock en el stub, con test de
+  estrés RED (5/5 crashes) → GREEN (5/5 + 15/15 suite completa sin fallos).
+  Coste si está mal: 1 lock en un stub de test.
+Task 8: contraste verificado numéricamente (WCAG): modo claro — texto primario 19.7:1,
+  texto sobre acento 4.4:1, badge neutro 7.0:1, overlay 17.6:1; modo oscuro sin cambios.
+Task 8: complete (commits c5e472e..HEAD, tests: swift test → exit 0 (15/15); xcodebuild iOS+macOS+tvOS+visionOS → BUILD SUCCEEDED)
+
+Final: revisión de rama (code-reviewer) — 1 CRITICAL, 6 IMPORTANT, 5 MINOR.
+Final: fixed CRITICAL (macOS no seguía el esquema de color) — `NSApp.appearance` se sincroniza
+  con la preferencia vía `MacAppearance.appAppearance(for:)` (test RED: `cannot find
+  'MacAppearance' in scope` → GREEN 4/4). Sin esto, en macOS el modo forzado dejaba texto
+  negro sobre tokens oscuros.
+Final: fixed IMPORTANT (macOS nunca recargaba los episodios) — la recarga tras cerrar el
+  reproductor se añadió también a la rama `#if os(macOS)`.
+Final: fixed IMPORTANT (carrera recarga vs reporte final) — la recarga espera 1,5 s a que el
+  reporte `Stopped` llegue al servidor; si no, la lista mostraba el estado anterior.
+Final: fixed IMPORTANT (un fallo de red borraba la lista) — `loadEpisodes` conserva los
+  episodios previos y muestra un aviso (`episodesError`) en vez de "No hay episodios".
+Final: fixed IMPORTANT (la lista desaparecía en cada recarga) — el spinner solo aparece en la
+  primera carga; las recargas son silenciosas (`loadEpisodes(for:silently:)`).
+Final: fixed IMPORTANT (la etiqueta de accesibilidad no decía el título) — usa
+  `episode.displayTitle` en vez de `episode.episodeLabel`.
+Final: fixed IMPORTANT (canal de la barra invisible en claro) — `ResumeCardView` usa un
+  canal blanco 0.25 (la barra va sobre el scrim oscuro de la tarjeta, en ambos modos).
+Final: fixed MINOR (transición en el nivel equivocado) — el `.transition(.opacity)` pasa a las
+  ramas del `if/else` de `MareaImageView`.
+Final: fixed MINOR (el refresh de la rejilla perdía páginas) — `reloadFirstPage` sustituye
+  solo la primera página y conserva el resto; el refresco ya no es un no-op silencioso
+  (`isRefreshing` aparte de `isLoadingPage`).
+Final: fixed MINOR (animaciones que ignoraban "reducir movimiento") — `PressableCardStyle`,
+  `DiscoveryRowView`, `DetailView` y `FloatingTabBar` pasan a `MareaMotion.resolve` /
+  `mareaAnimation`.
+Final: fixed MINOR (`AppearanceSettings` era código muerto) — `AppearanceSettings.current()`
+  lo usa la sincronización de apariencia de macOS.
+Final: fixed MINOR (rojo de marca bajo 4.5:1) — nuevo token `accentText`: el MISMO tono de
+  rojo, un pelo más profundo en claro (5.1:1) y un pelo más claro en oscuro (4.8:1). Los
+  RELLENOS (botones, barras, badges) conservan el rojo de marca intacto en ambos modos.
+  Test RED→GREEN (`MareaContrastTests`, 5/5) con medición WCAG real.
+Final: minor (deferred): el rojo de marca sobre la TARJETA oscura da 3.59:1 (preexistente;
+  el token de texto lo sube a 3.89:1). Los badges de género (rojo sobre su propio tinte al
+  20 %) dan 3.36:1 en claro y 3.92:1 en oscuro — PREEXISTENTE en ambos modos. Corregirlo
+  exigiría cambiar el color del badge, que el brief prohíbe.
