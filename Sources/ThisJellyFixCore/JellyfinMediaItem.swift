@@ -257,6 +257,22 @@ public struct JellyfinEpisode: Codable, Sendable, Equatable, Identifiable {
         userData?.resumePositionSeconds
     }
 
+    /// Percentage already played, as the server reports it (0–100).
+    public var playedPercentage: Double? {
+        userData?.playedPercentage
+    }
+
+    /// True when Jellyfin marks the episode as played.
+    public var isPlayed: Bool {
+        userData?.played ?? false
+    }
+
+    /// Total runtime in seconds. nil when the server did not report one.
+    public var durationSeconds: Double? {
+        guard let runTimeTicks, runTimeTicks > 0 else { return nil }
+        return Double(runTimeTicks) / 10_000_000.0
+    }
+
     public var episodeLabel: String {
         // Season 0 = specials in Jellyfin (Plex/TVDB convention).
         // Show "Especial N" instead of "T0 E1" for a friendlier label.
