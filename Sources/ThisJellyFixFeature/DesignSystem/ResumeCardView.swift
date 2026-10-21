@@ -97,15 +97,7 @@ struct ResumeCardView: View {
     }
 
     private func progressBar(_ percentage: Double) -> some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Rectangle().fill(.black.opacity(0.6))
-                Rectangle()
-                    .fill(MareaTheme.Colors.accent)
-                    .frame(width: max(3, geo.size.width * percentage / 100.0))
-            }
-        }
-        .frame(height: 4)
+        ProgressBarView(fraction: percentage / 100.0, height: 4)
     }
 
     /// "T1 E3 · Vas por 12 min" — what the viewer needs at a glance. The row

@@ -74,20 +74,16 @@ struct MediaCardView: View {
             if let percentage = item.playedPercentage, percentage > 0 {
                 VStack(spacing: 0) {
                     Spacer()
-                    Rectangle()
-                        .fill(.black.opacity(0.6))
-                        .frame(height: 4)
-                        .overlay(alignment: .leading) {
-                            GeometryReader { geo in
-                                Rectangle()
-                                    .fill(MareaTheme.Colors.accent)
-                                    .frame(width: geo.size.width * percentage / 100.0)
-                                    .animation(.easeInOut(duration: 0.5), value: percentage)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.card))
+                    // The bar sits on top of the artwork: it keeps the dark
+                    // scrim channel it always had.
+                    ProgressBarView(
+                        fraction: percentage / 100.0,
+                        height: 4,
+                        track: Color.black.opacity(0.6)
+                    )
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.card))
             }
 
             // Play button overlay for wide cards with progress

@@ -8,6 +8,9 @@ struct ProgressBarView: View {
     /// Played share in `0...1`.
     let fraction: Double
     var height: CGFloat = 3
+    /// Channel of the bar. Cards that draw it on top of artwork pass a dark
+    /// scrim; bars on the page use the theme token.
+    var track: Color = MareaTheme.Colors.progressTrack
 
     private var clamped: Double { min(max(fraction, 0), 1) }
 
@@ -15,7 +18,7 @@ struct ProgressBarView: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(MareaTheme.Colors.progressTrack)
+                    .fill(track)
                 Capsule()
                     .fill(MareaTheme.Colors.accent)
                     .frame(width: max(0, geo.size.width * clamped))

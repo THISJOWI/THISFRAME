@@ -4,11 +4,26 @@ import ThisJellyFixNetworking
 @testable import ThisJellyFixFeature
 
 /// Scriptable library client — feeds `load()` with fixed rows.
+///
+/// `LibraryModel.load()` fetches its rows CONCURRENTLY, so this stub is hit
+/// from several threads at once: every mutable piece needs a lock, or the
+/// concurrent appends race and corrupt the heap (it used to crash the test
+/// process with SIGSEGV, roughly one run in twenty).
 final class StubLibraryClient: JellyfinLibraryProviding, @unchecked Sendable {
     var views: [LibraryView] = []
     var resumeItems: [JellyfinMediaItem] = []
     var latestItems: [JellyfinMediaItem] = []
-    private(set) var recordedStartIndices: [Int?] = []
+
+    /// Guards the mutable state below.
+    private let lock = NSLock()
+    private var _recordedStartIndices: [Int?] = []
+
+    /// Start indices of every `fetchItems` call, in no particular order.
+    var recordedStartIndices: [Int?] {
+        lock.lock()
+        defer { lock.unlock() }
+        return _recordedStartIndices
+    }
 
     func fetchViews(userId: String, serverURL: URL, token: String) async throws -> [LibraryView] {
         views
@@ -19,7 +34,9 @@ final class StubLibraryClient: JellyfinLibraryProviding, @unchecked Sendable {
         parentId: String?, includeTypes: String?,
         limit: Int, orderBy: String, filters: String?, startIndex: Int?
     ) async throws -> [JellyfinMediaItem] {
-        recordedStartIndices.append(startIndex)
+        lock.lock()
+        _recordedStartIndices.append(startIndex)
+        lock.unlock()
         return latestItems
     }
 

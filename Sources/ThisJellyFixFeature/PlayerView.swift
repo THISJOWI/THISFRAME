@@ -377,6 +377,8 @@ struct PlayerView: View {
                         .transition(.opacity)
                 }
             }
+            // The subtitle fades in and out instead of blinking on and off.
+            .mareaAnimation(MareaMotion.fade, value: viewModel.subtitleText)
 
             // Controls overlay — always the topmost hosting view. AirPlay's
             // route picker lives INSIDE it (top-right cluster slot), mounted
@@ -766,9 +768,11 @@ struct PlayerView: View {
             let delta = horizontal > 0 ? 15.0 : -15.0
             Task {
                 await viewModel.seekRelative(delta)
-                withAnimation { seekIndicator = SeekIndicator(text: delta > 0 ? "+15s" : "-15s") }
+                withAnimation(MareaMotion.standard) {
+                    seekIndicator = SeekIndicator(text: delta > 0 ? "+15s" : "-15s")
+                }
                 try? await Task.sleep(for: .seconds(0.8))
-                withAnimation { seekIndicator = nil }
+                withAnimation(MareaMotion.fade) { seekIndicator = nil }
             }
         }
     }

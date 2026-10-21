@@ -9,6 +9,9 @@ import SwiftUI
 struct FloatingTabBar: View {
     @Binding var selection: MareaTab
 
+    /// The capsule that moves from one tab to the next.
+    @Namespace private var tabNamespace
+
     /// Favorites lives inside Home rows; the pill mirrors the native tabs.
     private var tabs: [MareaTab] { [.home, .search, .profile] }
 
@@ -18,15 +21,24 @@ struct FloatingTabBar: View {
                 Button {
                     selection = tab
                 } label: {
-                    VStack(spacing: 2) {
-                        Image(systemName: tab.icon)
-                            .font(.system(size: 20, weight: .medium))
-                        Text(tab.label)
-                            .font(.caption2)
+                    ZStack {
+                        // The selection blob slides between tabs instead of
+                        // the icon simply changing colour.
+                        if selection == tab {
+                            Capsule()
+                                .fill(MareaTheme.Colors.glass)
+                                .matchedGeometryEffect(id: "tab.selection", in: tabNamespace)
+                        }
+                        VStack(spacing: 2) {
+                            Image(systemName: tab.icon)
+                                .font(.system(size: 20, weight: .medium))
+                            Text(tab.label)
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(
+                            selection == tab ? MareaTheme.Colors.accent : Color.secondary
+                        )
                     }
-                    .foregroundStyle(
-                        selection == tab ? MareaTheme.Colors.accent : Color.secondary
-                    )
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.plain)
