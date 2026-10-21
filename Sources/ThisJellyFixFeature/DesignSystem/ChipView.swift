@@ -13,7 +13,7 @@ struct ChipView: View {
             .padding(.vertical, MareaTheme.Spacing.xs + 2)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.white.opacity(0.9) : MareaTheme.Colors.glass)
+                    .fill(isSelected ? MareaTheme.Colors.accent : MareaTheme.Colors.glass)
             )
             .foregroundStyle(isSelected ? Color.black : Color.primary)
     }

@@ -59,7 +59,7 @@ struct FavoritesView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
             }
-            .background(Color.black.opacity(0.3))
+            .background(MareaTheme.Colors.surfaceOverlay)
             .navigationTitle("Favoritos")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

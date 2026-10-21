@@ -48,7 +48,7 @@ struct LoginView: View {
                 TextField("Tu usuario", text: $authModel.username)
                     .textFieldStyle(.plain)
                     .padding(12)
-                    .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                    .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 10))
                     .autocorrectionDisabled()
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
@@ -59,7 +59,7 @@ struct LoginView: View {
                 SecureField("Tu contraseña", text: $authModel.password)
                     .textFieldStyle(.plain)
                     .padding(12)
-                    .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                    .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 10))
                     .submitLabel(.go)
                     .onSubmit { loginIfPossible() }
 

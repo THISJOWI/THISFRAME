@@ -62,7 +62,7 @@ struct SearchView: View {
                         }
                     }
                     .padding(14)
-                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                    .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 14))
 
                     // Results
                     if hasSearched && results.isEmpty && catalogResults.isEmpty
@@ -132,7 +132,7 @@ struct SearchView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 16)
             }
-            .background(Color.black.opacity(0.3))
+            .background(MareaTheme.Colors.surfaceOverlay)
             .navigationTitle("Buscar")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

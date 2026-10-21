@@ -38,10 +38,10 @@ struct CastDevicePickerSheet: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Transmitir a")
                     .font(.headline)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             if controller.manager.state.isConnected {
@@ -81,14 +81,14 @@ struct CastDevicePickerSheet: View {
         VStack(spacing: MareaTheme.Spacing.md) {
             Spacer()
             CastIcon()
-                .stroke(.white.opacity(0.35), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(Color.primary.opacity(0.35), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .frame(width: 56, height: 42)
             Text("Sin dispositivos")
                 .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.7))
+                .foregroundStyle(.secondary)
             Text("¿Tu Chromecast está encendido y en la misma red que este iPhone?")
                 .font(.caption)
-                .foregroundStyle(.white.opacity(0.45))
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, MareaTheme.Spacing.lg)
             Button {
@@ -96,7 +96,7 @@ struct CastDevicePickerSheet: View {
             } label: {
                 Label("Reintentar", systemImage: "arrow.clockwise")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                     .padding(.horizontal, MareaTheme.Spacing.md)
                     .padding(.vertical, MareaTheme.Spacing.sm)
                     .background(MareaTheme.Colors.surfaceElevated, in: Capsule())
@@ -124,16 +124,16 @@ struct CastDevicePickerSheet: View {
         } label: {
             HStack(spacing: MareaTheme.Spacing.md) {
                 CastIcon()
-                    .stroke(.white, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .stroke(Color.primary, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                     .frame(width: 28, height: 21)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(device.name)
                         .font(.body.weight(.medium))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                     if device.isBusy {
                         Text("En uso — conectar tomará el control")
                             .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(.secondary)
                     }
                 }
                 Spacer()
@@ -142,11 +142,11 @@ struct CastDevicePickerSheet: View {
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(MareaTheme.Colors.accent)
                 } else if isConnecting(device) {
-                    ProgressView().tint(.white)
+                    ProgressView().tint(Color.primary)
                 } else {
                     Image(systemName: "chevron.right")
                         .font(.caption)
-                        .foregroundStyle(.white.opacity(0.4))
+                        .foregroundStyle(.tertiary)
                 }
             }
             .padding(.horizontal, MareaTheme.Spacing.md)

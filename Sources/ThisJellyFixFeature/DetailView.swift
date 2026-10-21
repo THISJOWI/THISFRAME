@@ -289,7 +289,7 @@ struct DetailView: View {
             // The hero owns the whole top of the screen; the navigation bar floats
             // above it (hidden background) so the backdrop bleeds under the status bar.
             .ignoresSafeArea(edges: .top)
-            .background(Color.black.ignoresSafeArea())
+            .background(MareaTheme.Colors.background.ignoresSafeArea())
             .onChange(of: scrollToEpisodesToken) { _, _ in
                 withAnimation { scroller.scrollTo(Self.episodesAnchor, anchor: .top) }
             }
@@ -370,7 +370,8 @@ struct DetailView: View {
                 backdropImage(detail: detail, width: proxy.size.width)
 
                 // Bottom scrim keeps the badges readable on light artwork and blends
-                // the image into the black content below.
+                // the image into the content below. The last stop is the app
+                // background, so the artwork melts into the page in either mode.
                 LinearGradient(
                     colors: [
                         .clear,
@@ -378,7 +379,7 @@ struct DetailView: View {
                         .black.opacity(0.3),
                         .black.opacity(0.7),
                         .black.opacity(0.95),
-                        .black
+                        MareaTheme.Colors.background
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -483,7 +484,7 @@ struct DetailView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(detail.name)
                 .font(.largeTitle.bold())
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
 
             if let year = detail.year {
@@ -567,8 +568,8 @@ struct DetailView: View {
                         .lineLimit(1)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
-                        .background(.white.opacity(0.10), in: Capsule())
-                        .foregroundStyle(.white)
+                        .background(MareaTheme.Colors.overlayFill, in: Capsule())
+                        .foregroundStyle(.primary)
                 }
             }
         }
@@ -620,10 +621,10 @@ struct DetailView: View {
                                     .background(
                                         index == selectedSeasonIndex
                                             ? MareaTheme.Colors.accent
-                                            : Color.white.opacity(0.1),
+                                            : MareaTheme.Colors.overlayFill,
                                         in: Capsule()
                                     )
-                                    .foregroundStyle(index == selectedSeasonIndex ? .black : .white)
+                                    .foregroundStyle(index == selectedSeasonIndex ? Color.black : Color.primary)
                             }
                             .buttonStyle(.plain)
                         }

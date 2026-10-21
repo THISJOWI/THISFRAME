@@ -51,7 +51,7 @@ struct IntegrationsSection: View {
                 .foregroundStyle(.secondary)
         }
         .padding(16)
-        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 24)
         .onAppear(perform: load)
         .onChange(of: radarrURL) { _, _ in save() }

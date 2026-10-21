@@ -48,6 +48,20 @@ public struct ThisJellyFixRootView: View {
     /// actually loaded (kept, never consumed early — see `HandoffResolver`).
     @State private var pendingHandoff: HandoffIntent?
 
+    /// Appearance preference (Core). "system" leaves the color scheme to the
+    /// OS — the app must not force a scheme in that mode.
+    @AppStorage(AppearanceSettings.Key.appearance)
+    private var appearanceRaw: String = AppearanceSettings.Appearance.system.rawValue
+
+    /// The scheme the app forces, or `nil` to follow the system.
+    private var preferredColorScheme: ColorScheme? {
+        switch AppearanceSettings.Appearance(rawValue: appearanceRaw) ?? .system {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+
     public var body: some View {
         ZStack {
             #if os(iOS)
@@ -113,7 +127,7 @@ public struct ThisJellyFixRootView: View {
                 ServerConnectionView(model: model)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(preferredColorScheme)
         #if os(iOS)
         // The system asks for the fullscreen UI back when the user taps the
         // floating window and no player is alive to claim the request.
@@ -712,7 +726,7 @@ private struct ServerConnectionView: View {
                         #endif
                         .disableAutocorrection(true)
                         .padding(12)
-                        .background(.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                        .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 12))
                         .submitLabel(.go)
                         .onSubmit { Task { await model.connect() } }
 
@@ -734,7 +748,7 @@ private struct ServerConnectionView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.mint)
+                .tint(MareaTheme.Colors.accent)
                 .disabled(model.address.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || model.isConnecting)
 
                 if !model.savedServers.isEmpty {
@@ -767,7 +781,7 @@ private struct ServerConnectionView: View {
                                 .accessibilityLabel("Eliminar \(saved.name)")
                             }
                             .padding(12)
-                            .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                            .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 12))
                         }
                     }
                     .frame(maxWidth: 440)

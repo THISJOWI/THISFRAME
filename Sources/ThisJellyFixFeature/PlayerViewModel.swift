@@ -758,7 +758,12 @@ final class PlayerViewModel {
         // Swapping the item tears down the external session: stop() resets
         // the route machine, so an active AirPlay session dies silently here.
         // Warn instead of pretending the receiver follows along.
+        // visionOS has no AirPlay API — there is no external session to warn about.
+        #if os(visionOS)
+        let wasExternallyActive = false
+        #else
         let wasExternallyActive = engine.player.isExternalPlaybackActive
+        #endif
 
         // El cambio de calidad preserva audio servido y burn-in activo
         // (subs -1 en caso contrario: invariante anti-dobles).
@@ -780,7 +785,9 @@ final class PlayerViewModel {
             rate: rate
         )
         if wasExternallyActive {
+            #if !os(visionOS)
             airplayMessage = "AirPlay detenido por el cambio de calidad — vuelve a seleccionarlo"
+            #endif
             TJFLog("airplay: quality swap ended external session — user must re-select")
         }
     }

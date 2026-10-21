@@ -42,7 +42,7 @@ struct CatalogDetailView: View {
             }
             .padding(24)
         }
-        .background(Color.black.opacity(0.3))
+        .background(MareaTheme.Colors.surfaceOverlay)
         .navigationTitle(item.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

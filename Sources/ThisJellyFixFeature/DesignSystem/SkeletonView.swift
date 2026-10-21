@@ -20,7 +20,7 @@ struct SkeletonView: View {
             .overlay(
                 // Subtle sheen sweeping across the placeholder.
                 LinearGradient(
-                    colors: [.clear, .white.opacity(0.06), .clear],
+                    colors: [.clear, Color.primary.opacity(0.06), .clear],
                     startPoint: .leading,
                     endPoint: .trailing
                 )

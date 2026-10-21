@@ -84,6 +84,7 @@ struct ProfileView: View {
                     .padding(.horizontal, 32)
                 }
             }
+            .background(MareaTheme.Colors.background)
             .navigationTitle("Perfil")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

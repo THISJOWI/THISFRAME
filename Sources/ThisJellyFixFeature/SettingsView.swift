@@ -9,6 +9,7 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                AppearanceSettingsSection()
                 SkipSettingsSection()
                 SubtitleSizeSettingsSection()
                 LanguageSettingsSection()
@@ -25,6 +26,46 @@ struct SettingsView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+}
+
+// MARK: - Appearance
+
+/// Light / dark / follow the system.
+///
+/// The value lives in `UserDefaults` (Core) so the root view reacts to it
+/// live: `AppearanceSettings.Appearance.system` resolves to `nil`, which
+/// leaves the scheme to the operating system instead of forcing one.
+private struct AppearanceSettingsSection: View {
+    @AppStorage(AppearanceSettings.Key.appearance)
+    private var rawAppearance: String = AppearanceSettings.Appearance.system.rawValue
+
+    private var selection: Binding<AppearanceSettings.Appearance> {
+        Binding(
+            get: { AppearanceSettings.Appearance(rawValue: rawAppearance) ?? .system },
+            set: { rawAppearance = $0.rawValue }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Apariencia")
+                .font(.headline)
+
+            Picker("Apariencia", selection: selection) {
+                ForEach(AppearanceSettings.Appearance.allCases, id: \.self) { mode in
+                    Text(mode.label).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            Text("«Sistema» sigue la preferencia del sistema.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(16)
+        .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 24)
     }
 }
 
@@ -48,7 +89,7 @@ private struct DiagnosticsSection: View {
                     Label("Compartir registro de reproducción", systemImage: "doc.text.magnifyingglass")
                         .frame(maxWidth: .infinity)
                         .padding(14)
-                        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                        .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 12))
                 }
                 #endif
                 Text("Últimos eventos de reproducción y PiP, sin contraseñas.")
@@ -61,7 +102,7 @@ private struct DiagnosticsSection: View {
             }
         }
         .padding(16)
-        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 24)
     }
 }
@@ -97,7 +138,7 @@ private struct SkipSettingsSection: View {
             Toggle("Ending", isOn: $creditsEnabled)
         }
         .padding(16)
-        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 24)
     }
 }
@@ -142,7 +183,7 @@ private struct LanguageSettingsSection: View {
                 .foregroundStyle(.secondary)
         }
         .padding(16)
-        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 24)
         .onAppear {
             // Preselect system language on first run (only if never set).
@@ -215,7 +256,7 @@ private struct SubtitleSizeSettingsSection: View {
                 .foregroundStyle(.secondary)
         }
         .padding(16)
-        .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal, 24)
     }
 }

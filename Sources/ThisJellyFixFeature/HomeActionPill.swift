@@ -31,10 +31,10 @@ struct HomeActionPill: View {
             } label: {
                 ZStack(alignment: .bottomTrailing) {
                     CastIcon()
-                        .stroke(.white, lineWidth: 0)
-                        .foregroundStyle(.white)
+                        .stroke(Color.primary, lineWidth: 0)
+                        .foregroundStyle(.primary)
                         .frame(width: 20, height: 15)
-                        .overlay(CastIcon().stroke(.white, style: StrokeStyle(lineWidth: 2, lineCap: .round)))
+                        .overlay(CastIcon().stroke(Color.primary, style: StrokeStyle(lineWidth: 2, lineCap: .round)))
                         .frame(width: 36, height: 36)
                     if cast.manager.state.isConnected {
                         Circle()
@@ -64,14 +64,21 @@ struct HomeActionPill: View {
 }
 
 /// Liquid Glass (OS 26+) con fallback translúcido en versiones anteriores.
+///
+/// visionOS has no Liquid Glass API — it keeps the translucent fallback even
+/// on OS 26.
 private extension View {
     @ViewBuilder
     func pillGlassBackground() -> some View {
-        if #available(iOS 26, macOS 26, tvOS 26, visionOS 26, *) {
+        #if os(visionOS)
+        self.background(MareaTheme.Colors.glass, in: Capsule())
+        #else
+        if #available(iOS 26, macOS 26, tvOS 26, *) {
             self.glassEffect(.regular.interactive(), in: Capsule())
         } else {
-            self.background(.white.opacity(0.08), in: Capsule())
+            self.background(MareaTheme.Colors.glass, in: Capsule())
         }
+        #endif
     }
 }
 
@@ -79,7 +86,7 @@ private extension View {
     func pillIcon() -> some View {
         self
             .font(.body)
-            .foregroundStyle(.white)
+            .foregroundStyle(.primary)
             .frame(width: 36, height: 36)
     }
 }
