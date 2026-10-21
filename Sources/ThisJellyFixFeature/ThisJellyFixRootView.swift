@@ -118,22 +118,7 @@ public struct ThisJellyFixRootView: View {
         // The system asks for the fullscreen UI back when the user taps the
         // floating window and no player is alive to claim the request.
         .fullScreenCover(item: $restoredPlayback) { restored in
-            PlayerView(
-                streamURL: restored.context.streamURL,
-                title: restored.context.title,
-                startPosition: restored.position,
-                onDismiss: {
-                    restoredPlayback = nil
-                    refreshResumeSoon()
-                },
-                itemId: restored.context.itemId,
-                serverURL: restored.context.serverURL,
-                token: restored.context.token,
-                userId: restored.context.userId,
-                playSessionId: restored.context.playSessionId,
-                mediaStreams: restored.context.mediaStreams,
-                restoredViewModel: restored.viewModel
-            )
+            restoredPlayerView(restored)
         }
         .onChange(of: selectedTab) { _, tab in
             // TabView keeps views alive, so onAppear won't re-fire on tab
@@ -323,6 +308,33 @@ public struct ThisJellyFixRootView: View {
             restoredPlayback = nil
             refreshResumeSoon()
         }
+    }
+
+    /// Rebuild the fullscreen player from a floating PiP session. Kept out of
+    /// `body`'s closure: the root's view expression already sits at the
+    /// type-checker's per-expression budget, and the full parameter list tips
+    /// it over. Passes the restored context through so the rebuilt player
+    /// keeps the same audio mapping, subtitle line and media type.
+    private func restoredPlayerView(_ restored: RestoredPlayback) -> PlayerView {
+        PlayerView(
+            streamURL: restored.context.streamURL,
+            title: restored.context.title,
+            startPosition: restored.position,
+            onDismiss: {
+                restoredPlayback = nil
+                refreshResumeSoon()
+            },
+            itemId: restored.context.itemId,
+            serverURL: restored.context.serverURL,
+            token: restored.context.token,
+            userId: restored.context.userId,
+            mediaType: restored.context.mediaType,
+            playSessionId: restored.context.playSessionId,
+            mediaStreams: restored.context.mediaStreams,
+            audioServerIndex: restored.context.audioServerIndex,
+            subtitle: restored.context.subtitle,
+            restoredViewModel: restored.viewModel
+        )
     }
 
     /// Forced resume-row refresh AFTER the stop POST has had time to land.

@@ -135,7 +135,7 @@ app_path() {
       visionos) variant="Debug-xrsimulator" ;;
     esac
   fi
-  echo "$DERIVED_DATA/Build/Products/$variant/thisjellyfix.app"
+  echo "$DERIVED_DATA/Build/Products/$variant/THISFRAME.app"
 }
 
 APP="$(app_path "$DESTINATION" "$PLATFORM")"

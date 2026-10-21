@@ -188,10 +188,19 @@ struct PlayerView: View {
         viewModel.configureMediaStreams(mediaStreams)
         viewModel.noteServedAudioServerIndex(audioServerIndex)
         viewModel.configureNowPlaying(title: title)
+        // Carried into the PiP context so a restore rebuilds the same player.
+        viewModel.playerSubtitle = subtitle
+        viewModel.playerMediaType = mediaType
         // Fallback for the subtitle search: the series name for an episode,
         // the item's own title otherwise.
         viewModel.subtitleSearchTitle = subtitle ?? title
-        wireNextEpisode()
+        // A restored (floating) VM already carries its episode navigation
+        // (`hasNextEpisode`/`hasPreviousEpisode` + the closures). Wiring nil
+        // here would erase it and the restored player could not jump to the
+        // previous/next episode (the "second, broken player" symptom).
+        if !isRestoring {
+            wireNextEpisode()
+        }
         // Server favorite flag for the heart button (fills in when it lands).
         Task { await viewModel.loadFavoriteState() }
     }

@@ -136,7 +136,15 @@ final class PlayerViewModel {
 
     // MARK: - Server media streams (external subtitles)
     private var serverMediaStreams: [MediaStream] = []
+    /// True once the external subtitle fetch has SETTLED (success or
+    /// definitive failure). The poll freezes on this, never on a fetch that
+    /// merely started.
     private var externalSubsLoaded = false
+    /// Guards against concurrent fetches: the 0.5 s timer would otherwise
+    /// re-enter the download while a previous one is still in flight.
+    private var externalSubsLoading = false
+    /// Bounded auto-retries for transient SRT download failures.
+    private var externalSubsAttempts = 0
     /// Índice SERVIDOR (`MediaStream.index`) del audio que trae el stream
     /// actual: el pedido vía `AudioStreamIndex` o el default del servidor.
     /// Sin esto el picker solo vería el audio servido (remux/transcode traen
@@ -559,6 +567,13 @@ final class PlayerViewModel {
     private var lastSeekAt: Date?
     /// Display title — carried into the PiP context for restore.
     var playbackTitle: String = ""
+    /// Second controls line (series name for episodes, nil for movies) —
+    /// carried into the PiP context so the restored player shows the same
+    /// subtitle and uses it for external subtitle search.
+    var playerSubtitle: String?
+    /// Jellyfin media type of the playing item ("Movie", "Episode", …) —
+    /// carried into the PiP context (Handoff payload).
+    var playerMediaType: String = ""
 
     func prepareStream(url: URL, startPosition: Double? = nil) async {
         do {
@@ -827,16 +842,19 @@ final class PlayerViewModel {
         availableSubtitleTracks = []
         selectedAudioTrackIndex = nil
         selectedSubtitleTrackIndex = nil
-        // Per-item lock is cleared, but the MANUAL language/off choice
-        // survives: the next episode re-picks the same language via fresh
-        // indices (or stays off) instead of reverting to profile defaults.
-        subtitleSelectionLocked = manualSubtitlesOff || manualSubtitleLanguage != nil
+        // Per-item lock is cleared on a new item: the MANUAL language must
+        // re-apply (via fresh indices) and "off" is handled by
+        // `manualSubtitlesOff` inside `applyLanguagePreferences`. Keeping the
+        // lock true here blocked that re-pick, so the next episode opened
+        // without the language the user had chosen.
+        subtitleSelectionLocked = false
         externalSubs = []
         externalSubServerIndices = []
         selectedExternalSubIndex = nil
         subtitleText = nil
         unavailableSubtitleTracks = []
         failedSubtitleServerIndices = []
+        externalSubsAttempts = 0
         burnedInSubtitleServerIndex = nil
         showAudioPicker = false
         showSubtitlePicker = false
@@ -1469,11 +1487,13 @@ final class PlayerViewModel {
 
         TJFLog("loadTracks audio=\(availableAudioTracks.count) subs=\(availableSubtitleTracks.count) ext=\(externalSubs.count) attempt=\(trackLoadAttempts)")
 
-        if !availableAudioTracks.isEmpty || !externalSubs.isEmpty {
-            tracksLoaded = true
-        }
-
+        // Fetch external subtitles FIRST: the poll must not freeze on audio
+        // alone. Freezing before the (awaited) download populated the list left
+        // the picker empty with no retry — the "subtitles never load" bug.
         await addExternalSubtitlesIfNeeded()
+        if !availableAudioTracks.isEmpty || !externalSubs.isEmpty {
+            tracksLoaded = externalSubsLoaded
+        }
         // Fullscreen invariant: native legible stays off (overlay renders).
         // While PiP is active the native track IS the renderer — forcing -1
         // here would mute PiP subs on every poll until tracks settle.
@@ -1664,10 +1684,20 @@ final class PlayerViewModel {
     /// render through the SwiftUI overlay — the server converts any text
     /// format to SRT on request (`/Subtitles/{i}/Stream.srt`).
     private func addExternalSubtitlesIfNeeded() async {
-        // Don't consume the flag before the streams are actually configured.
-        guard !externalSubsLoaded, !serverMediaStreams.isEmpty else { return }
-        guard reportingConfigured, let itemId, let serverURL, let token else { return }
-        externalSubsLoaded = true
+        // One fetch at a time: the 0.5 s timer would otherwise re-enter the
+        // download while the previous one is still in flight.
+        guard !externalSubsLoaded, !externalSubsLoading else { return }
+        // Nothing fetchable yet (streams still arriving, or no reporting to
+        // build the URL): settle the poll. A later `refreshMediaStreams`
+        // resets the latch and retries.
+        guard !serverMediaStreams.isEmpty,
+              reportingConfigured, let itemId, let serverURL, let token
+        else {
+            externalSubsLoaded = true
+            return
+        }
+        externalSubsLoading = true
+        defer { externalSubsLoading = false }
         let gen = subtitleGeneration
 
         // Bitmap (PGS/VobSub/DVB): sin texto convertible a SRT; fuera del
@@ -1677,6 +1707,8 @@ final class PlayerViewModel {
             return !PlaybackStreamPicker.bitmapCodecs.contains((stream.codec ?? "").lowercased())
         }
         guard !candidates.isEmpty else {
+            // No text tracks to fetch: settle so the poll can stop.
+            externalSubsLoaded = true
             TJFLog("extSubs: server declares none")
             return
         }
@@ -1738,6 +1770,15 @@ final class PlayerViewModel {
                 applyPiPSubtitleMode(active: true)
             }
             #endif
+        }
+        // Settled (success or definitive failure). Failures stay listed for
+        // manual retry; auto-retry a couple of times so a flaky server does
+        // not silently drop a track.
+        if failed.isEmpty || externalSubsAttempts >= 2 {
+            externalSubsLoaded = true
+        } else {
+            externalSubsAttempts += 1
+            TJFLog("extSubs: \(failed.count) track(s) failed — auto-retry \(externalSubsAttempts)/2")
         }
     }
 
@@ -1898,8 +1939,15 @@ final class PlayerViewModel {
         TJFLog("refreshMediaStreams: \(serverMediaStreams.count) -> \(streams.count)")
         serverMediaStreams = streams
         // New streams for the same item: reload overlay tracks once.
-        // Limpia fallos/no-disponibles del estado anterior (se recalculan).
+        // Limpia fallos/no-disponibles del estado anterior (se recalculan) y
+        // las filas overlay previas: sin esto, una actualización tardía tras un
+        // swap apilaba las pistas del episodio anterior sobre las nuevas.
+        externalSubs = []
+        externalSubServerIndices = []
+        selectedExternalSubIndex = nil
+        subtitleText = nil
         externalSubsLoaded = false
+        externalSubsAttempts = 0
         failedSubtitleServerIndices = []
         unavailableSubtitleTracks = []
         tracksLoaded = false
@@ -2409,7 +2457,10 @@ final class PlayerViewModel {
             playSessionId: reportingSessionId,
             streamURL: streamURL,
             title: playbackTitle,
-            mediaStreams: serverMediaStreams
+            mediaStreams: serverMediaStreams,
+            subtitle: playerSubtitle,
+            audioServerIndex: servedAudioServerIndex,
+            mediaType: playerMediaType
         )
     }
 
@@ -2464,8 +2515,18 @@ final class PlayerViewModel {
     }
     #endif
 
-    /// The fullscreen view disappeared. Playback must NOT die with it: hand
-    /// the running item to the floating window when possible, otherwise stop.
+    /// The fullscreen view disappeared.
+    ///
+    /// An INTENTIONAL exit from the player inside the app (close button, swipe,
+    /// error teardown) ends the experience: it must NOT open a PiP window.
+    /// Automatic PiP is the system's job when the app leaves the foreground
+    /// (`canStartPictureInPictureAutomaticallyFromInline`), and the manual PiP
+    /// button starts it on demand. Floating here is what opened a PiP window
+    /// on every close and then "restored" a broken second player.
+    ///
+    /// Exception: a PiP window is ALREADY up (background auto-start). Closing
+    /// the fullscreen cover then must not kill it — the coordinator adopts the
+    /// session so the window keeps playing with the view gone.
     func handleViewExit(handoffAllowed: Bool = true) {
         #if os(iOS)
         if errorMessage != nil {
@@ -2475,18 +2536,13 @@ final class PlayerViewModel {
             stopSync(reportStop: true)
             return
         }
-        if handoffAllowed, canAutoHandoffToPiP, reportingConfigured, itemId != nil,
-           // The user CLOSED the floating window before: that ended playback.
-           !stopReported
-        {
-            if PipCoordinator.shared.float(self) {
-                TJFLog("pip: view exit → floating (reporting continues)")
-                // onDisappear stopped the timer before us — the floating VM
-                // must keep reporting progress.
-                startUpdating()
-                return
-            }
-            TJFLog("pip: float refused → stopping with report")
+        if handoffAllowed, PipCoordinator.shared.isWindowActive,
+           PipCoordinator.shared.float(self) {
+            TJFLog("pip: view exit while PiP active → adopting session, window kept")
+            // onDisappear stopped the timer before us — the adopted VM must
+            // keep reporting progress.
+            startUpdating()
+            return
         }
         #endif
         stopSync(reportStop: true)

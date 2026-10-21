@@ -3304,6 +3304,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisjellyfix.ios;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				INFOPLIST_KEY_CFBundleDisplayName = THISFRAME;
+				INFOPLIST_KEY_CFBundleName = THISFRAME;
+				PRODUCT_NAME = THISFRAME;
 			};
 			name = Debug;
 		};
@@ -3345,6 +3348,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisjellyfix.macos;
 				SDKROOT = macosx;
+				INFOPLIST_KEY_CFBundleDisplayName = THISFRAME;
+				INFOPLIST_KEY_CFBundleName = THISFRAME;
+				PRODUCT_NAME = THISFRAME;
 			};
 			name = Release;
 		};
@@ -3552,6 +3558,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisjellyfix.visionos;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
+				INFOPLIST_KEY_CFBundleDisplayName = THISFRAME;
+				INFOPLIST_KEY_CFBundleName = THISFRAME;
+				PRODUCT_NAME = THISFRAME;
 			};
 			name = Debug;
 		};
@@ -3713,6 +3722,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisjellyfix.tvos;
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
+				INFOPLIST_KEY_CFBundleDisplayName = THISFRAME;
+				INFOPLIST_KEY_CFBundleName = THISFRAME;
+				PRODUCT_NAME = THISFRAME;
 			};
 			name = Debug;
 		};
@@ -4241,6 +4253,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisjellyfix.visionos;
 				SDKROOT = xros;
 				TARGETED_DEVICE_FAMILY = 7;
+				INFOPLIST_KEY_CFBundleDisplayName = THISFRAME;
+				INFOPLIST_KEY_CFBundleName = THISFRAME;
+				PRODUCT_NAME = THISFRAME;
 			};
 			name = Release;
 		};
@@ -4306,6 +4321,9 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisjellyfix.macos;
 				SDKROOT = macosx;
+				INFOPLIST_KEY_CFBundleDisplayName = THISFRAME;
+				INFOPLIST_KEY_CFBundleName = THISFRAME;
+				PRODUCT_NAME = THISFRAME;
 			};
 			name = Debug;
 		};
@@ -4324,6 +4342,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisjellyfix.ios;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				INFOPLIST_KEY_CFBundleDisplayName = THISFRAME;
+				INFOPLIST_KEY_CFBundleName = THISFRAME;
+				PRODUCT_NAME = THISFRAME;
 			};
 			name = Release;
 		};
@@ -4340,6 +4361,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisjellyfix.tvos;
 				SDKROOT = appletvos;
 				TARGETED_DEVICE_FAMILY = 3;
+				INFOPLIST_KEY_CFBundleDisplayName = THISFRAME;
+				INFOPLIST_KEY_CFBundleName = THISFRAME;
+				PRODUCT_NAME = THISFRAME;
 			};
 			name = Release;
 		};

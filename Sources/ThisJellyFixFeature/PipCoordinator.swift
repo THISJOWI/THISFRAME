@@ -17,6 +17,14 @@ struct PipContext {
     let streamURL: URL
     let title: String
     let mediaStreams: [MediaStream]
+    /// Series name (episodes) or nil (movies) — the second controls line and
+    /// the fallback for external subtitle search on restore.
+    let subtitle: String?
+    /// Audio served (`MediaStream.index`) so the restored picker maps
+    /// engine↔server without re-guessing by language.
+    let audioServerIndex: Int?
+    /// Jellyfin media type of the playing item ("Movie", "Episode", …).
+    let mediaType: String
 }
 
 /// Native picture-in-picture orchestration.

@@ -108,6 +108,9 @@ targets:
         embed: true
     settings:
       base:
+        PRODUCT_NAME: THISFRAME
+        INFOPLIST_KEY_CFBundleDisplayName: THISFRAME
+        INFOPLIST_KEY_CFBundleName: THISFRAME
         PRODUCT_BUNDLE_IDENTIFIER: com.thisjellyfix.ios
         INFOPLIST_FILE: Apps/iOS/Info.plist
         CODE_SIGN_ENTITLEMENTS: Apps/iOS/ThisJellyfix.entitlements
@@ -168,7 +171,7 @@ targets:
         embed: true
       - target: Discovery-macOS
         embed: true
-    settings: { base: { PRODUCT_BUNDLE_IDENTIFIER: com.thisjellyfix.macos, ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon-macOS, GENERATE_INFOPLIST_FILE: NO, INFOPLIST_FILE: Apps/macOS/Info.plist, CODE_SIGN_ENTITLEMENTS: Apps/macOS/ThisJellyfix.entitlements } }
+    settings: { base: { PRODUCT_NAME: THISFRAME, INFOPLIST_KEY_CFBundleDisplayName: THISFRAME, INFOPLIST_KEY_CFBundleName: THISFRAME, PRODUCT_BUNDLE_IDENTIFIER: com.thisjellyfix.macos, ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon-macOS, GENERATE_INFOPLIST_FILE: NO, INFOPLIST_FILE: Apps/macOS/Info.plist, CODE_SIGN_ENTITLEMENTS: Apps/macOS/ThisJellyfix.entitlements } }
 
   Core-tvOS:
     type: framework
@@ -223,7 +226,7 @@ targets:
         embed: true
       - target: Discovery-tvOS
         embed: true
-    settings: { base: { PRODUCT_BUNDLE_IDENTIFIER: com.thisjellyfix.tvos, CODE_SIGN_ENTITLEMENTS: Apps/tvOS/ThisJellyfix.entitlements } }
+    settings: { base: { PRODUCT_NAME: THISFRAME, INFOPLIST_KEY_CFBundleDisplayName: THISFRAME, INFOPLIST_KEY_CFBundleName: THISFRAME, PRODUCT_BUNDLE_IDENTIFIER: com.thisjellyfix.tvos, CODE_SIGN_ENTITLEMENTS: Apps/tvOS/ThisJellyfix.entitlements } }
 
   Core-visionOS:
     type: framework
@@ -278,4 +281,4 @@ targets:
         embed: true
       - target: Discovery-visionOS
         embed: true
-    settings: { base: { PRODUCT_BUNDLE_IDENTIFIER: com.thisjellyfix.visionos, CODE_SIGN_ENTITLEMENTS: Apps/visionOS/ThisJellyfix.entitlements } }
+    settings: { base: { PRODUCT_NAME: THISFRAME, INFOPLIST_KEY_CFBundleDisplayName: THISFRAME, INFOPLIST_KEY_CFBundleName: THISFRAME, PRODUCT_BUNDLE_IDENTIFIER: com.thisjellyfix.visionos, CODE_SIGN_ENTITLEMENTS: Apps/visionOS/ThisJellyfix.entitlements } }
