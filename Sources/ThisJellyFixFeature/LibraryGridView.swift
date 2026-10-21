@@ -147,6 +147,7 @@ struct LibraryGridView: View {
     /// The pages the user already scrolled through are kept: only the first
     /// page is re-read.
     private func reloadFirstPage() async {
+        guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
         let page = await model.fetchPage(

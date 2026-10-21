@@ -640,6 +640,7 @@ struct DetailView: View {
                         ForEach(Array(seasons.enumerated()), id: \.element.id) { index, season in
                             Button {
                                 selectedSeasonIndex = index
+                                episodesError = nil
                                 Task { await loadEpisodes(for: season) }
                             } label: {
                                 Text(season.displayName)
