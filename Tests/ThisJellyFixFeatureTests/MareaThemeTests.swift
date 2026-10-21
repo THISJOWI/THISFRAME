@@ -4,7 +4,9 @@ import SwiftUI
 
 final class MareaThemeTests: XCTestCase {
     func testBackgroundIsPureBlack() {
-        XCTAssertEqual(MareaTheme.Colors.background, Color.black)
+        // The DARK variant must stay exactly the historical one: THISFRAME's
+        // identity is a pure black app with a brand red.
+        XCTAssertEqual(MareaTheme.Palette.backgroundDark, Color.black)
     }
 
     func testAccentMatchesBadgeRed() {
@@ -23,5 +25,26 @@ final class MareaThemeTests: XCTestCase {
         XCTAssertEqual(MareaTheme.Radius.small, 8)
         XCTAssertEqual(MareaTheme.Radius.card, 12)
         XCTAssertEqual(MareaTheme.Radius.hero, 24)
+    }
+
+    func testDarkAccentKeepsBrandRed() {
+        XCTAssertEqual(
+            MareaTheme.Palette.accentDark,
+            Color(red: 0.90, green: 0.06, blue: 0.13)
+        )
+    }
+
+    func testAccentIsIdenticalInLightAndDark() {
+        // The brand red never moves: it is the one color of the identity.
+        XCTAssertEqual(MareaTheme.Palette.accentLight, MareaTheme.Palette.accentDark)
+    }
+
+    func testEverySurfaceTokenDefinesBothVariants() {
+        XCTAssertNotEqual(MareaTheme.Palette.backgroundLight, MareaTheme.Palette.backgroundDark)
+        XCTAssertNotEqual(MareaTheme.Palette.surfaceLight, MareaTheme.Palette.surfaceDark)
+        XCTAssertNotEqual(
+            MareaTheme.Palette.surfaceElevatedLight,
+            MareaTheme.Palette.surfaceElevatedDark
+        )
     }
 }
