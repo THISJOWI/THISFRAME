@@ -101,6 +101,63 @@ final class JellyfinLibraryClientTests: XCTestCase {
         XCTAssertTrue(auth.contains("mytoken"))
         XCTAssertTrue(auth.contains("Token="))
     }
+
+    func testFetchEpisodesAsksTheServerInsteadOfTheURLCache() async throws {
+        let session = MockNetworkSession(data: """
+        {"Items":[]}
+        """.data(using: .utf8)!, statusCode: 200)
+
+        let client = JellyfinLibraryClient(session: session)
+        _ = try await client.fetchEpisodes(
+            userId: "u1",
+            serverURL: URL(string: "http://localhost:8096")!,
+            token: "tok",
+            seriesId: "s1",
+            seasonId: "se1"
+        )
+
+        // An episode's progress changes on the server (it may even have been
+        // played from another client): a cached answer would show a stale
+        // playback state.
+        XCTAssertEqual(session.capturedRequest?.cachePolicy, .reloadIgnoringLocalCacheData)
+    }
+
+    func testFetchEpisodesDecodesPlaybackProgress() async throws {
+        let session = MockNetworkSession(data: """
+        {"Items":[{"Id":"e1","Name":"Episodio","RunTimeTicks":36000000000,
+        "UserData":{"PlaybackPositionTicks":18000000000,"PlayedPercentage":50,"Played":false}}]}
+        """.data(using: .utf8)!, statusCode: 200)
+
+        let client = JellyfinLibraryClient(session: session)
+        let episodes = try await client.fetchEpisodes(
+            userId: "u1",
+            serverURL: URL(string: "http://localhost:8096")!,
+            token: "tok",
+            seriesId: "s1",
+            seasonId: "se1"
+        )
+
+        XCTAssertEqual(episodes.count, 1)
+        XCTAssertEqual(episodes[0].watchState, .inProgress(fraction: 0.5))
+    }
+
+    func testFetchEpisodesDecodesWatchedFlag() async throws {
+        let session = MockNetworkSession(data: """
+        {"Items":[{"Id":"e1","Name":"Episodio","RunTimeTicks":36000000000,
+        "UserData":{"PlaybackPositionTicks":0,"Played":true}}]}
+        """.data(using: .utf8)!, statusCode: 200)
+
+        let client = JellyfinLibraryClient(session: session)
+        let episodes = try await client.fetchEpisodes(
+            userId: "u1",
+            serverURL: URL(string: "http://localhost:8096")!,
+            token: "tok",
+            seriesId: "s1",
+            seasonId: "se1"
+        )
+
+        XCTAssertEqual(episodes[0].watchState, .watched)
+    }
 }
 
 // MARK: - Mock

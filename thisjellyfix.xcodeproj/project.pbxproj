@@ -62,6 +62,7 @@
 		15073E7ADB019B19F974C7F6 /* RowSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D9C6E2078ECBAFC3312333 /* RowSection.swift */; };
 		155DF913687A0FBC67603BD7 /* PlaybackDeviceProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00193F5C845E2D76D677171B /* PlaybackDeviceProfile.swift */; };
 		1953AD8CBE461149AAF67777 /* CastDevicePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F3393D23846F61BDCC33AF /* CastDevicePickerSheet.swift */; };
+		195D62B765CB3A3DD911B972 /* ProgressBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1110A28323E1E010AC541C51 /* ProgressBarView.swift */; };
 		1A25A36A4022B5C9148F8CCD /* JellyfinServerProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA95529E78948EB1C050098F /* JellyfinServerProbe.swift */; };
 		1C0D725DA523C20086FD0FC9 /* LibraryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81B3D72ECAE6007FFBAAB00 /* LibraryModel.swift */; };
 		1C9D4E334AB64CAD850DA35F /* Feature-macOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 0F734B1401D9FD0BC14D69A3 /* Feature-macOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -297,8 +298,11 @@
 		7CDD94D99679B6573E08D673 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8744C95B68222A27AC754B46 /* SettingsView.swift */; };
 		7D02F10BE9A808E675DC8DA6 /* ThisJellyFixRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3D98506E466F46333AAD78 /* ThisJellyFixRootView.swift */; };
 		7D6DE5C57D6CC971E1DFF691 /* CastButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C772B22757960B1AE2602062 /* CastButton.swift */; };
+		7EB5143CA2955214DDE3A68C /* ProgressBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1110A28323E1E010AC541C51 /* ProgressBarView.swift */; };
 		7F0F3080769F1DFEA272409D /* OpenSubtitlesClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF34A599069BD130D8107C0 /* OpenSubtitlesClient.swift */; };
+		7F2358D27F81FF4AB6F15465 /* ProgressBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1110A28323E1E010AC541C51 /* ProgressBarView.swift */; };
 		7F7D12A7F88392B377BE6914 /* JellyfinDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF3A4DC6E40C71A45C0AEE7 /* JellyfinDate.swift */; };
+		80088DB1BC8C0748BB1FBDD4 /* ProgressBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1110A28323E1E010AC541C51 /* ProgressBarView.swift */; };
 		805EFBA09B456A10273CCB90 /* DiscoveryRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8397746BC556FCF6C9C6410E /* DiscoveryRowView.swift */; };
 		805F5B2CA6F310B32BC78140 /* Playback-macOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9120E3D0C3E4801FF21A328 /* Playback-macOS.framework */; };
 		809F0276A34C260BBECCF666 /* JellyfinPlaybackClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708CC6C4AD140C5FD530E54A /* JellyfinPlaybackClient.swift */; };
@@ -1025,6 +1029,7 @@
 		0D0AC7DCCC4A1DD25BD1A786 /* ThisJellyfix.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ThisJellyfix.entitlements; sourceTree = "<group>"; };
 		0E1736573B5EC3AC5FB9B075 /* JellyfinSegmentClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinSegmentClient.swift; sourceTree = "<group>"; };
 		0F734B1401D9FD0BC14D69A3 /* Feature-macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Feature-macOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1110A28323E1E010AC541C51 /* ProgressBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarView.swift; sourceTree = "<group>"; };
 		1291B2AB055CB771BDDC5DA5 /* JellyfinArtwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinArtwork.swift; sourceTree = "<group>"; };
 		1299D0FC3ECE91B5827C8AAD /* JellyfinUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinUser.swift; sourceTree = "<group>"; };
 		1AE0C6C290BD2E1075089FE0 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
@@ -1388,6 +1393,7 @@
 				AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */,
 				B1F1F56FBAE5B47C8F09263E /* MareaMotion.swift */,
 				05829AA22DEA8728FC257895 /* MareaTheme.swift */,
+				1110A28323E1E010AC541C51 /* ProgressBarView.swift */,
 				CB62174F75826768421F5928 /* ResumeCardView.swift */,
 				38D9C6E2078ECBAFC3312333 /* RowSection.swift */,
 				E54B3E1A9A057B9D8B2D3E78 /* SkeletonView.swift */,
@@ -2408,6 +2414,7 @@
 				AC73A689499A33380008B3F3 /* PlayerView.swift in Sources */,
 				34E97A1EF724C12AACBE1CB8 /* PlayerViewModel.swift in Sources */,
 				F56B4102AF8B4757D334EF2C /* ProfileView.swift in Sources */,
+				7F2358D27F81FF4AB6F15465 /* ProgressBarView.swift in Sources */,
 				639F82A10A2956BFC1EAEEA9 /* ResumeCardView.swift in Sources */,
 				F2F76D5498E83096AC2DFED0 /* RowSection.swift in Sources */,
 				5D5F2642311899E17781667B /* SearchView.swift in Sources */,
@@ -2588,6 +2595,7 @@
 				D13C00823AE2A8F2FBD52C8F /* PlayerView.swift in Sources */,
 				FC0028EF738C1C1567B02D31 /* PlayerViewModel.swift in Sources */,
 				CA3AB48A3C409A04E7692F33 /* ProfileView.swift in Sources */,
+				80088DB1BC8C0748BB1FBDD4 /* ProgressBarView.swift in Sources */,
 				25E0140BBEE201B3CBCEDABD /* ResumeCardView.swift in Sources */,
 				15073E7ADB019B19F974C7F6 /* RowSection.swift in Sources */,
 				3BD7E3542DDACF09FC3C5F2D /* SearchView.swift in Sources */,
@@ -2672,6 +2680,7 @@
 				380DE7E7F1184BA40C80A7D4 /* PlayerView.swift in Sources */,
 				C9529E04065A73C012C69B92 /* PlayerViewModel.swift in Sources */,
 				7831790D6624D6403B60BF94 /* ProfileView.swift in Sources */,
+				195D62B765CB3A3DD911B972 /* ProgressBarView.swift in Sources */,
 				D16545A493CF9542803009E6 /* ResumeCardView.swift in Sources */,
 				B81BCD379A618CDB87A7FF5D /* RowSection.swift in Sources */,
 				E2186BFEB1FDFA51EC8E998D /* SearchView.swift in Sources */,
@@ -2951,6 +2960,7 @@
 				83EC22EF2B914DA95CCA35D7 /* PlayerView.swift in Sources */,
 				93E5A042C1DD72FB893D7ACC /* PlayerViewModel.swift in Sources */,
 				09D87DB843120EC8D1DBE969 /* ProfileView.swift in Sources */,
+				7EB5143CA2955214DDE3A68C /* ProgressBarView.swift in Sources */,
 				841CFD6E422ECB256F8A8A6A /* ResumeCardView.swift in Sources */,
 				5459491D21936B06837A0ADF /* RowSection.swift in Sources */,
 				9E5DDE166D5BB74164021B4D /* SearchView.swift in Sources */,

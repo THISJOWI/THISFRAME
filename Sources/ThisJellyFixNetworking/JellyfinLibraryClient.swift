@@ -162,7 +162,14 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
             URLQueryItem(name: "seasonId", value: seasonId),
         ]
 
-        let data = try await fetchData(from: components.url!, token: token)
+        let data = try await fetchData(
+            from: components.url!, token: token,
+            // An episode's playback state lives on the server and changes
+            // there — including when it was played from another client. A
+            // cached answer would show a stale progress (or a stale "watched"
+            // mark), so this request must always reach Jellyfin.
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
         let response = try JSONDecoder().decode(JellyfinEpisodesResponse.self, from: data)
         return response.items
     }

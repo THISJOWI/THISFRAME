@@ -197,7 +197,15 @@ struct DetailView: View {
             }
             .task { await loadDetailAndMaybeAutoplay() }
             .onChange(of: showPlayer) { _, showing in
-                if !showing { onPlayerDismiss?() }
+                if !showing {
+                    onPlayerDismiss?()
+                    // The episode we just played changed its state on the
+                    // server — the list must show the new progress (or the
+                    // "watched" mark) without the user pulling to refresh.
+                    if detail?.type == "Series" {
+                        Task { await reloadEpisodesAfterPlayback() }
+                    }
+                }
             }
             // Ownership (iOS mirror): mounted detail claims the slot.
             .onAppear { HandoffCenter.shared.setDetailActive(true) }
@@ -936,6 +944,13 @@ struct DetailView: View {
         }
     }
 
+    /// Re-read the season that is on screen after a playback session: the
+    /// server owns the progress, so the rows are re-read instead of guessed.
+    private func reloadEpisodesAfterPlayback() async {
+        guard seasons.indices.contains(selectedSeasonIndex) else { return }
+        await loadEpisodes(for: seasons[selectedSeasonIndex])
+    }
+
     // MARK: - Metrics
 
     /// The navigation bar floats over the top of the hero, so it has to be tall
@@ -1058,9 +1073,77 @@ private struct EpisodeRow: View {
     let serverURL: URL
     let onPlay: () -> Void
 
+    /// The episode's playback state, straight from the server: "watched"
+    /// only when Jellyfin says so, "in progress" when there is a position.
+    private var watchState: EpisodeWatchState { episode.watchState }
+
+    private var isWatched: Bool { watchState == .watched }
+
+    /// Minutes already watched, when the episode has been started.
+    private var watchedMinutes: Int? {
+        guard let seconds = episode.resumePositionSeconds, seconds > 0 else { return nil }
+        return max(1, Int((seconds / 60).rounded()))
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             // Episode thumbnail
+            thumbnail
+
+            // Episode info.
+            // `.frame(maxWidth: .infinity)` is not cosmetic: without it a long
+            // episode title reports its unwrapped width, the HStack grows past
+            // the screen and the vertical ScrollView becomes pannable sideways.
+            VStack(alignment: .leading, spacing: 4) {
+                // "T1 E3 · Nombre del episodio" — number and title together so
+                // the viewer never has to read two lines to get the full story.
+                // episodeLabel falls back to "Especial N" for season-0 items and
+                // to the raw name when numbering metadata is absent.
+                Text(episode.displayTitle)
+                    .font(.subheadline.weight(.medium))
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    // A watched episode reads as "done" without relying on the
+                    // colour of the icon alone.
+                    .foregroundStyle(isWatched ? Color.secondary : Color.primary)
+
+                if let status {
+                    Text(status)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+                // Progress line — only when there is a real share to show.
+                if case .inProgress(let fraction) = watchState, let fraction {
+                    ProgressBarView(fraction: fraction)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 2)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityLabel)
+
+            Spacer(minLength: 4)
+
+            // Play button
+            Button(action: onPlay) {
+                Image(systemName: "play.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(MareaTheme.Colors.accent)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Reproducir \(episode.displayTitle)")
+        }
+        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Thumbnail
+
+    private var thumbnail: some View {
+        ZStack(alignment: .topTrailing) {
             if let thumbURL = JellyfinArtwork.url(
                 for: episode,
                 serverURL: serverURL,
@@ -1079,40 +1162,56 @@ private struct EpisodeRow: View {
                     }
             }
 
-            // Episode info.
-            // `.frame(maxWidth: .infinity)` is not cosmetic: without it a long
-            // episode title reports its unwrapped width, the HStack grows past
-            // the screen and the vertical ScrollView becomes pannable sideways.
-            VStack(alignment: .leading, spacing: 4) {
-                // "T1 E3 · Nombre del episodio" — number and title together so
-                // the viewer never has to read two lines to get the full story.
-                // episodeLabel falls back to "Especial N" for season-0 items and
-                // to the raw name when numbering metadata is absent.
-                Text(episode.displayTitle)
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-
-                if let duration = episode.durationMinutes {
-                    Text("\(duration) min")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(1)
-
-            Spacer(minLength: 4)
-
-            // Play button
-            Button(action: onPlay) {
-                Image(systemName: "play.circle.fill")
-                    .font(.title2)
+            // Watched mark. The icon AND the title treatment carry the state:
+            // neither depends on the colour alone.
+            if isWatched {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 18))
                     .foregroundStyle(MareaTheme.Colors.accent)
+                    .shadow(color: .black.opacity(0.5), radius: 2)
+                    .offset(x: 5, y: -5)
+                    .transition(.scale.combined(with: .opacity))
             }
-            .buttonStyle(.plain)
         }
-        .padding(.vertical, 4)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityHidden(true)
+    }
+
+    // MARK: - Text
+
+    /// "42 min", "42 min · Vas por 18 min" or "42 min · Visto".
+    private var status: String? {
+        var parts: [String] = []
+        if let duration = episode.durationMinutes {
+            parts.append("\(duration) min")
+        }
+        switch watchState {
+        case .unwatched:
+            break
+        case .inProgress:
+            if let minutes = watchedMinutes {
+                parts.append("Vas por \(minutes) min")
+            }
+        case .watched:
+            parts.append("Visto")
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    /// The state in words, so VoiceOver never has to guess from a colour.
+    private var accessibilityLabel: String {
+        let name = episode.episodeLabel
+        switch watchState {
+        case .unwatched:
+            return "\(name). No visto."
+        case .inProgress(let fraction):
+            guard let fraction else {
+                let minutes = watchedMinutes.map { "Vas por \($0) minutos" } ?? "En curso"
+                return "\(name). En progreso. \(minutes)."
+            }
+            let percent = Int((fraction * 100).rounded())
+            return "\(name). En progreso, \(percent) por ciento."
+        case .watched:
+            return "\(name). Visto."
+        }
     }
 }
