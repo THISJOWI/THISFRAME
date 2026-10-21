@@ -277,9 +277,11 @@ struct DetailView: View {
                         Spacer(minLength: 80)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .transition(.opacity)
                 } else if isLoading {
                     ProgressView("Cargando detalle…")
                         .frame(maxWidth: .infinity, minHeight: 400)
+                        .transition(.opacity)
                 } else if let error = errorMessage {
                     VStack(spacing: 16) {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -291,9 +293,13 @@ struct DetailView: View {
                             .tint(MareaTheme.Colors.accent)
                     }
                     .frame(maxWidth: .infinity, minHeight: 400)
+                    .transition(.opacity)
                 }
             }
             .frame(maxWidth: .infinity)
+            // The content fades in over the loading state instead of cutting
+            // to it — the screen never "jumps" under the reader.
+            .animation(MareaMotion.fade, value: detail != nil)
             // The hero owns the whole top of the screen; the navigation bar floats
             // above it (hidden background) so the backdrop bleeds under the status bar.
             .ignoresSafeArea(edges: .top)

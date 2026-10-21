@@ -9,6 +9,10 @@ struct CatalogCardView: View {
     let item: CatalogItem
     /// Download state for this item, if the user already ordered it.
     var state: DownloadState? = nil
+    /// Position in the shelf — drives the entrance stagger.
+    var appearIndex: Int = 0
+    /// False for cards that must appear already in place.
+    var revealWithRow: Bool = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -44,6 +48,7 @@ struct CatalogCardView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .cardEntrance(index: appearIndex, animates: revealWithRow)
     }
 
     private struct Badge {

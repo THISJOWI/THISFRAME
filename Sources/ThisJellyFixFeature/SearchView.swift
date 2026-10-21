@@ -221,7 +221,10 @@ struct SearchView: View {
                             item: item,
                             state: discovery?.coordinator.entries.first {
                                 (item.tmdbId != nil && $0.tmdbId == item.tmdbId) || $0.title == item.title
-                            }?.state
+                            }?.state,
+                            // Grid cells appear as the user scrolls: they
+                            // show up already in place.
+                            revealWithRow: false
                         )
                     }
                     .buttonStyle(PressableCardStyle())

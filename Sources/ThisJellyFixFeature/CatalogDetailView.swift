@@ -68,6 +68,34 @@ struct CatalogDetailView: View {
     // MARK: - Sections
 
     private var header: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Backdrop hero. TMDB already gave us the backdrop path — it was
+            // never used. It fades in over the page and gives the sheet the
+            // same depth the library detail screen has.
+            if let backdropURL = item.backdropURL {
+                MareaImageView(
+                    url: backdropURL,
+                    placeholder: "",
+                    width: 0,
+                    height: 0
+                )
+                .frame(height: 180)
+                .clipped()
+                .overlay(
+                    LinearGradient(
+                        colors: [.clear, MareaTheme.Colors.surfaceOverlay],
+                        startPoint: .center,
+                        endPoint: .bottom
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: MareaTheme.Radius.card))
+            }
+
+            posterRow
+        }
+    }
+
+    private var posterRow: some View {
         HStack(alignment: .top, spacing: 16) {
             MareaImageView(
                 url: item.posterURL,

@@ -9,6 +9,10 @@ struct DiscoveryRowView: View {
     let row: CatalogRow
     let discovery: DiscoveryModel
 
+    /// True once the shelf has been revealed — the cards that scroll in
+    /// later are shown already in place.
+    @State private var appeared = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
@@ -25,18 +29,25 @@ struct DiscoveryRowView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(alignment: .top, spacing: 14) {
-                    ForEach(row.items) { item in
+                    ForEach(Array(row.items.enumerated()), id: \.element.id) { index, item in
                         NavigationLink(value: item) {
                             CatalogCardView(
                                 item: item,
-                                state: state(for: item)
+                                state: state(for: item),
+                                appearIndex: index,
+                                revealWithRow: !appeared
                             )
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(PressableCardStyle())
                     }
                 }
                 .padding(.horizontal, 32)
             }
+        }
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 16)
+        .onAppear {
+            withAnimation(MareaMotion.gentle) { appeared = true }
         }
         .task {
             // First render: sync any orders already in flight elsewhere.
