@@ -82,8 +82,8 @@ struct RowSection: View {
             // viewAligned gives Netflix-style peek: cards snap to the
             // leading edge and the next one stays visible at the trailing.
             LazyHStack(alignment: .top, spacing: 14) {
-                ForEach(items) { item in
-                    card(for: item)
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    card(for: item, index: index)
                 }
             }
             .padding(.horizontal, MareaTheme.Spacing.xl)
@@ -95,8 +95,8 @@ struct RowSection: View {
     #if os(macOS)
     private var FlowLayoutRows: some View {
         WrapLayout(spacing: MareaTheme.Spacing.md) {
-            ForEach(items) { item in
-                card(for: item)
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                card(for: item, index: index)
             }
         }
         .padding(.horizontal, MareaTheme.Spacing.xl)
@@ -104,35 +104,44 @@ struct RowSection: View {
     #endif
 
     @ViewBuilder
-    private func card(for item: JellyfinMediaItem) -> some View {
-        let card = cardView(for: item)
+    private func card(for item: JellyfinMediaItem, index: Int) -> some View {
+        let card = cardView(for: item, index: index)
 
         if item.type == "Episode" || item.type == "Movie", let onPlayDirect {
             // Direct playback — no DetailView in between.
             Button { onPlayDirect(item) } label: { card }
-                .buttonStyle(.plain)
+                .buttonStyle(PressableCardStyle())
         } else {
             NavigationLink(value: item) { card }
-                .buttonStyle(.plain)
+                .buttonStyle(PressableCardStyle())
         }
     }
 
-    private func cardView(for item: JellyfinMediaItem) -> AnyView {
+    private func cardView(for item: JellyfinMediaItem, index: Int) -> AnyView {
+        // Cards that appear while the user scrolls are shown already in
+        // place: only the first reveal of the row is animated.
+        let animates = !appeared
+
         if wide {
             // "Estás viendo": dedicated panoramic card — 16:9 backdrop with
             // title on the scrim and a progress bar on the lower edge.
-            return AnyView(ResumeCardView(
-                item: item,
-                imageURL: imageURL(item),
-                fallbackImageURL: fallbackImageURL?(item)
-            ))
+            return AnyView(
+                ResumeCardView(
+                    item: item,
+                    imageURL: imageURL(item),
+                    fallbackImageURL: fallbackImageURL?(item)
+                )
+                .cardEntrance(index: index, animates: animates)
+            )
         }
         return AnyView(MediaCardView(
             item: item,
             imageURL: imageURL(item),
             wide: wide,
             fallbackImageURL: fallbackImageURL?(item),
-            badge: badgeFor?(item)
+            badge: badgeFor?(item),
+            appearIndex: index,
+            revealWithRow: animates
         ))
     }
 }

@@ -75,10 +75,13 @@ struct LibraryGridView: View {
                                     imageURL: model.imageURL(for: item),
                                     // The grid column decides the width: a
                                     // fixed card size would overflow the cell.
-                                    flexibleWidth: true
+                                    flexibleWidth: true,
+                                    // Grid cells appear as the user scrolls:
+                                    // they show up already in place.
+                                    revealWithRow: false
                                 )
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(PressableCardStyle())
                             .onAppear {
                                 // Kick the next page when the trailing cell shows.
                                 if index >= items.count - 6 {

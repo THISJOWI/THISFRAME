@@ -19,7 +19,11 @@ struct MediaCardView: View {
     var fallbackImageURL: URL? = nil
     /// Overlay badge (bottom-left) — Netflix-style "Nueva temporada" / "Siguiente episodio".
     var badge: CardBadge? = nil
-    @State private var isAppeared = false
+    /// Position in the row — drives the entrance stagger.
+    var appearIndex: Int = 0
+    /// False for cards that must appear already in place (the row revealed
+    /// them later, while the user was scrolling).
+    var revealWithRow: Bool = true
 
     private var isEpisode: Bool { item.type == "Episode" }
     private var isWide: Bool { wide || isEpisode }
@@ -50,13 +54,7 @@ struct MediaCardView: View {
             // Text below card
             labels
         }
-        .scaleEffect(isAppeared ? 1 : 0.9)
-        .opacity(isAppeared ? 1 : 0)
-        .onAppear {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8).delay(Double.random(in: 0...0.15))) {
-                isAppeared = true
-            }
-        }
+        .cardEntrance(index: appearIndex, animates: revealWithRow)
     }
 
     // MARK: - Thumbnail
@@ -99,7 +97,6 @@ struct MediaCardView: View {
                     .foregroundStyle(.white)
                     .padding(10)
                     .background(.black.opacity(0.5), in: Circle())
-                    .opacity(isAppeared ? 1 : 0)
             }
 
             // Badge overlay (bottom-left, over the image)

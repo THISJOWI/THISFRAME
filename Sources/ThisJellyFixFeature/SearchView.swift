@@ -95,11 +95,13 @@ struct SearchView: View {
                                             // The grid column decides the width:
                                             // a fixed card size would overflow
                                             // the cell and overlap the next one.
-                                            flexibleWidth: true
+                                            flexibleWidth: true,
+                                            // Grid cells appear as the user
+                                            // scrolls: already in place.
+                                            revealWithRow: false
                                         )
-                                        .transition(.scale.combined(with: .opacity))
                                     }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(PressableCardStyle())
                                 }
                             }
                             .padding(.horizontal, 4)

@@ -85,14 +85,17 @@ struct FavoritesView: View {
                 // Top-align so variable text height below posters doesn't
                 // vertically offset them (default .center alignment).
                 LazyHStack(alignment: .top, spacing: 14) {
-                    ForEach(items) { item in
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                         NavigationLink(value: item) {
                             MediaCardView(
                                 item: item,
-                                imageURL: imageURL(for: item)
+                                imageURL: imageURL(for: item),
+                                // The cards come into view as the strip is
+                                // scrolled: they show up already in place.
+                                revealWithRow: false
                             )
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(PressableCardStyle())
                     }
                 }
             }

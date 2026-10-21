@@ -61,6 +61,7 @@
 		14F4991178D9D53E907394F8 /* DetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7EB0EE4EE654F6D5845ED31 /* DetailView.swift */; };
 		15073E7ADB019B19F974C7F6 /* RowSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D9C6E2078ECBAFC3312333 /* RowSection.swift */; };
 		155DF913687A0FBC67603BD7 /* PlaybackDeviceProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00193F5C845E2D76D677171B /* PlaybackDeviceProfile.swift */; };
+		189E93FAE231BB7E64B62DF8 /* CardEntrance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C03D736722E3CB8ABABE72B /* CardEntrance.swift */; };
 		1953AD8CBE461149AAF67777 /* CastDevicePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46F3393D23846F61BDCC33AF /* CastDevicePickerSheet.swift */; };
 		195D62B765CB3A3DD911B972 /* ProgressBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1110A28323E1E010AC541C51 /* ProgressBarView.swift */; };
 		1A25A36A4022B5C9148F8CCD /* JellyfinServerProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA95529E78948EB1C050098F /* JellyfinServerProbe.swift */; };
@@ -130,6 +131,7 @@
 		3A10B46F1D5458EB62436552 /* VideoInfoChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCE4E11908708CF8E935D275 /* VideoInfoChips.swift */; };
 		3A894D1DE45F210577A2D171 /* JellyfinArtwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1291B2AB055CB771BDDC5DA5 /* JellyfinArtwork.swift */; };
 		3AFE5BC65C7F06035EDAC29A /* Networking-tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51695B1995A40FA7BE06F2FD /* Networking-tvOS.framework */; };
+		3B478B4F546E61F0F61673E5 /* CardEntrance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C03D736722E3CB8ABABE72B /* CardEntrance.swift */; };
 		3BAF3070B04167743CE6CD92 /* Feature-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29B8B6D4F2BC57EE6634479D /* Feature-iOS.framework */; };
 		3BD7E3542DDACF09FC3C5F2D /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D150E40E2CA61714BB72C24F /* SearchView.swift */; };
 		3BF87831B32E86795B3A22BB /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4C1DE92983F2B02F9FAF05 /* LoginView.swift */; };
@@ -213,6 +215,7 @@
 		5D23CC5249DD2CF4A9925AAB /* EpisodeWatchState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 420B9F9933D4CA3491FDD3FD /* EpisodeWatchState.swift */; };
 		5D5F2642311899E17781667B /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D150E40E2CA61714BB72C24F /* SearchView.swift */; };
 		5D6E8CAE60025A14AB6EAA43 /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90CB900DFBF613262ADEB1FE /* PlaybackEngine.swift */; };
+		5E0A5729A5AEF1C4F61C028F /* CardEntrance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C03D736722E3CB8ABABE72B /* CardEntrance.swift */; };
 		5E2D198A8A93E0AFBDE00B22 /* DirectPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25FFBC2FE20750672856A887 /* DirectPlayer.swift */; };
 		5E411D4500DCEC1C139F6B65 /* JellyfinUserActionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77B48E6D8F931CCE44A4E71 /* JellyfinUserActionClient.swift */; };
 		5E74463CB3FCA150D1F797F6 /* SegmentMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73DDE86CE7705FE952478E82 /* SegmentMarker.swift */; };
@@ -332,6 +335,7 @@
 		899728756CBD6286642CC3C6 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4C1DE92983F2B02F9FAF05 /* LoginView.swift */; };
 		8A8D4E78A5901C96C7CF9530 /* CardBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60780887A822E72106060F1 /* CardBadge.swift */; };
 		8B399410D77DBE401E51A7CE /* AdaptiveColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 822468488001FD86C270A839 /* AdaptiveColor.swift */; };
+		8B82B802156420D3DAF61EA7 /* PressableCardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F699336BE4EC4B4B151858D /* PressableCardStyle.swift */; };
 		8BA72518E13569E22EB4953F /* HandoffActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CCF05E90E5A2BF897FAF75 /* HandoffActivity.swift */; };
 		8C09173C4469A5FA66F1506E /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4C1DE92983F2B02F9FAF05 /* LoginView.swift */; };
 		8C25F3F362A6D00768BF71F9 /* JellyfinAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703D40341AFC8475EC1F03D6 /* JellyfinAuthClient.swift */; };
@@ -341,6 +345,7 @@
 		8E330340E42749A61A0D54D8 /* SavedServersStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 463AD44C3A21E49400899BBF /* SavedServersStore.swift */; };
 		8ED42876B2BBF33403BE7C85 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39CFC19AA8E51100A6C3ECC /* HomeView.swift */; };
 		900A25985CF27F7FDDCFBFF0 /* JellyfinArtwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1291B2AB055CB771BDDC5DA5 /* JellyfinArtwork.swift */; };
+		90AB796B25BB2529F13EF0A2 /* PressableCardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F699336BE4EC4B4B151858D /* PressableCardStyle.swift */; };
 		9231F653A58B2876A5C880A0 /* AVPlayerCapability.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1567A763D694C414C37FAC4 /* AVPlayerCapability.swift */; };
 		93AED2E06240DC4C040A4010 /* MareaMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F1F56FBAE5B47C8F09263E /* MareaMotion.swift */; };
 		93E5A042C1DD72FB893D7ACC /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0070D0D9221BE56B2567FE64 /* PlayerViewModel.swift */; };
@@ -410,6 +415,7 @@
 		B9977F26872EB4319E7A60CD /* PipCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DCD81FFBAA6C6AA2BFB3756 /* PipCoordinator.swift */; };
 		B99C34C085B71041C9DADBCA /* PlaybackPlanResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486B545569E0B384484DA5FD /* PlaybackPlanResolver.swift */; };
 		BACEF4D071C7B842866C7D49 /* SubtitleSearchTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF0A952C102E08FB51EAAA35 /* SubtitleSearchTarget.swift */; };
+		BAD2B42F610B23D1059ACBD2 /* PressableCardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F699336BE4EC4B4B151858D /* PressableCardStyle.swift */; };
 		BAF59E9713DF29AF24F392E9 /* Gzip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 604B8ECB4FE262927E7D2DBA /* Gzip.swift */; };
 		BB6E2C4C4A6415BFA6D845D1 /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0A35B0D698DCB78411E69B /* DownloadsView.swift */; };
 		BB76E5924651F8CC952B759A /* LibraryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81B3D72ECAE6007FFBAAB00 /* LibraryModel.swift */; };
@@ -471,6 +477,7 @@
 		D397998414BC6880C301B93C /* MareaMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F1F56FBAE5B47C8F09263E /* MareaMotion.swift */; };
 		D3BA980A2B956F716043F00D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9DA2D836A9A324A150CEED71 /* Assets.xcassets */; };
 		D3F828F50D8DC5D1A412F379 /* Cast-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2E32C3F5013D11100F88BB46 /* Cast-iOS.framework */; };
+		D41BA9FD5932A3EA09D1239A /* PressableCardStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F699336BE4EC4B4B151858D /* PressableCardStyle.swift */; };
 		D4261614AFEA2FA5037713B1 /* SplitViewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69845415B9D10408A1FABC9B /* SplitViewState.swift */; };
 		D4ABB923E6F471977DE2D87E /* JellyfinUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1299D0FC3ECE91B5827C8AAD /* JellyfinUser.swift */; };
 		D67A9163974970FC4A51CBF8 /* DownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0A35B0D698DCB78411E69B /* DownloadsView.swift */; };
@@ -501,6 +508,7 @@
 		E02793B804DBE25C6BD44743 /* ThisJellyFixVisionOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD74C3F99EEB6FB09C612704 /* ThisJellyFixVisionOSApp.swift */; };
 		E074E85182B5703EB3E28008 /* JellyfinServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54122B1375204F29118DED99 /* JellyfinServer.swift */; };
 		E0DF73868B76A34589187E24 /* TrackNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E34C20DAE1EE3FED70F1446 /* TrackNaming.swift */; };
+		E122F91753EB74A06DC6D483 /* CardEntrance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C03D736722E3CB8ABABE72B /* CardEntrance.swift */; };
 		E14C0478D629F29BE0C250CB /* PiPHandoffPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0CB53C40E7A1184874167E /* PiPHandoffPolicy.swift */; };
 		E1A1CAE37D09285E8F79CDA9 /* LibraryRecommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BEF0CACD602DC995C25421 /* LibraryRecommender.swift */; };
 		E1D3DE25B98745CD033C936F /* CastSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF7E2974B1A8BEE37248B88E /* CastSessionState.swift */; };
@@ -1049,6 +1057,7 @@
 		2AED9E47165C3D3A03CA2FA1 /* LanguagePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguagePreferences.swift; sourceTree = "<group>"; };
 		2B946E14A88221A04728B581 /* NowPlaying.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlaying.swift; sourceTree = "<group>"; };
 		2BD2F14F7A3887C5A6291362 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2C03D736722E3CB8ABABE72B /* CardEntrance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardEntrance.swift; sourceTree = "<group>"; };
 		2E32C3F5013D11100F88BB46 /* Cast-iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Cast-iOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F1129D7EB9075EC47D94476 /* IntegrationsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationsSection.swift; sourceTree = "<group>"; };
 		325842C2350EA466B9161BAF /* PlaybackStreamPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackStreamPicker.swift; sourceTree = "<group>"; };
@@ -1086,6 +1095,7 @@
 		69845415B9D10408A1FABC9B /* SplitViewState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitViewState.swift; sourceTree = "<group>"; };
 		6AE72973D6ADD9B41CD2B730 /* CastStreamPreflight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastStreamPreflight.swift; sourceTree = "<group>"; };
 		6C2DD8EB3A40E6B2F1E0F501 /* Core-macOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Core-macOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6F699336BE4EC4B4B151858D /* PressableCardStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PressableCardStyle.swift; sourceTree = "<group>"; };
 		703D40341AFC8475EC1F03D6 /* JellyfinAuthClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinAuthClient.swift; sourceTree = "<group>"; };
 		708CC6C4AD140C5FD530E54A /* JellyfinPlaybackClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinPlaybackClient.swift; sourceTree = "<group>"; };
 		70CD3E6E34747A9234081146 /* SubtitleProvidersSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleProvidersSection.swift; sourceTree = "<group>"; };
@@ -1388,11 +1398,13 @@
 				822468488001FD86C270A839 /* AdaptiveColor.swift */,
 				76772C32B1E56C8EF7597A68 /* BadgeView.swift */,
 				B60780887A822E72106060F1 /* CardBadge.swift */,
+				2C03D736722E3CB8ABABE72B /* CardEntrance.swift */,
 				C772B22757960B1AE2602062 /* CastButton.swift */,
 				AD8966043EC34B37438FF4A0 /* ChipView.swift */,
 				AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */,
 				B1F1F56FBAE5B47C8F09263E /* MareaMotion.swift */,
 				05829AA22DEA8728FC257895 /* MareaTheme.swift */,
+				6F699336BE4EC4B4B151858D /* PressableCardStyle.swift */,
 				1110A28323E1E010AC541C51 /* ProgressBarView.swift */,
 				CB62174F75826768421F5928 /* ResumeCardView.swift */,
 				38D9C6E2078ECBAFC3312333 /* RowSection.swift */,
@@ -2385,6 +2397,7 @@
 				38B5686DDBB3A2AA8752D8AD /* AuthModel.swift in Sources */,
 				C5453505C2D1924A3EF86FDF /* BadgeView.swift in Sources */,
 				8A8D4E78A5901C96C7CF9530 /* CardBadge.swift in Sources */,
+				5E0A5729A5AEF1C4F61C028F /* CardEntrance.swift in Sources */,
 				41FED9722409A61BECCB75E6 /* CastButton.swift in Sources */,
 				F03F074BCDEAF050FDA812D2 /* CastDevicePickerSheet.swift in Sources */,
 				BCD0B2C1675DD55A1C1E9EC1 /* CatalogCardView.swift in Sources */,
@@ -2413,6 +2426,7 @@
 				B9977F26872EB4319E7A60CD /* PipCoordinator.swift in Sources */,
 				AC73A689499A33380008B3F3 /* PlayerView.swift in Sources */,
 				34E97A1EF724C12AACBE1CB8 /* PlayerViewModel.swift in Sources */,
+				90AB796B25BB2529F13EF0A2 /* PressableCardStyle.swift in Sources */,
 				F56B4102AF8B4757D334EF2C /* ProfileView.swift in Sources */,
 				7F2358D27F81FF4AB6F15465 /* ProgressBarView.swift in Sources */,
 				639F82A10A2956BFC1EAEEA9 /* ResumeCardView.swift in Sources */,
@@ -2566,6 +2580,7 @@
 				1426AB289255A8663046C0BC /* AuthModel.swift in Sources */,
 				A2397FE5BB3DA9537D68BB37 /* BadgeView.swift in Sources */,
 				11989A108E7B1534CABA8986 /* CardBadge.swift in Sources */,
+				3B478B4F546E61F0F61673E5 /* CardEntrance.swift in Sources */,
 				E3FB9F625CB709288D7CFDA3 /* CastButton.swift in Sources */,
 				80EE584BF461F574BFE6C102 /* CastDevicePickerSheet.swift in Sources */,
 				6F9389F2F84B337EA76D4419 /* CatalogCardView.swift in Sources */,
@@ -2594,6 +2609,7 @@
 				645B0D3223FAF4487F528FEF /* PipCoordinator.swift in Sources */,
 				D13C00823AE2A8F2FBD52C8F /* PlayerView.swift in Sources */,
 				FC0028EF738C1C1567B02D31 /* PlayerViewModel.swift in Sources */,
+				8B82B802156420D3DAF61EA7 /* PressableCardStyle.swift in Sources */,
 				CA3AB48A3C409A04E7692F33 /* ProfileView.swift in Sources */,
 				80088DB1BC8C0748BB1FBDD4 /* ProgressBarView.swift in Sources */,
 				25E0140BBEE201B3CBCEDABD /* ResumeCardView.swift in Sources */,
@@ -2651,6 +2667,7 @@
 				DC5ABAD1FC79AFF5D417324F /* AuthModel.swift in Sources */,
 				FB0362E9E7883A6B4FE8A752 /* BadgeView.swift in Sources */,
 				7632651FE35A6391F6A72980 /* CardBadge.swift in Sources */,
+				E122F91753EB74A06DC6D483 /* CardEntrance.swift in Sources */,
 				7D6DE5C57D6CC971E1DFF691 /* CastButton.swift in Sources */,
 				1953AD8CBE461149AAF67777 /* CastDevicePickerSheet.swift in Sources */,
 				D9B24CB559CA55E1C29EE522 /* CatalogCardView.swift in Sources */,
@@ -2679,6 +2696,7 @@
 				E6B2EDC2439F00E0520AC325 /* PipCoordinator.swift in Sources */,
 				380DE7E7F1184BA40C80A7D4 /* PlayerView.swift in Sources */,
 				C9529E04065A73C012C69B92 /* PlayerViewModel.swift in Sources */,
+				BAD2B42F610B23D1059ACBD2 /* PressableCardStyle.swift in Sources */,
 				7831790D6624D6403B60BF94 /* ProfileView.swift in Sources */,
 				195D62B765CB3A3DD911B972 /* ProgressBarView.swift in Sources */,
 				D16545A493CF9542803009E6 /* ResumeCardView.swift in Sources */,
@@ -2931,6 +2949,7 @@
 				8262173985F2D997771C6EEA /* AuthModel.swift in Sources */,
 				65E5F40D9781CD924E73F18D /* BadgeView.swift in Sources */,
 				0192EE4FC3B45611FD125947 /* CardBadge.swift in Sources */,
+				189E93FAE231BB7E64B62DF8 /* CardEntrance.swift in Sources */,
 				C9FB489D8FEC91CFABA948D1 /* CastButton.swift in Sources */,
 				F7B6138D1026BC7B00EB3814 /* CastDevicePickerSheet.swift in Sources */,
 				60FF0CC4A29390239E71623F /* CatalogCardView.swift in Sources */,
@@ -2959,6 +2978,7 @@
 				32768F3A16A828D60EA08AB1 /* PipCoordinator.swift in Sources */,
 				83EC22EF2B914DA95CCA35D7 /* PlayerView.swift in Sources */,
 				93E5A042C1DD72FB893D7ACC /* PlayerViewModel.swift in Sources */,
+				D41BA9FD5932A3EA09D1239A /* PressableCardStyle.swift in Sources */,
 				09D87DB843120EC8D1DBE969 /* ProfileView.swift in Sources */,
 				7EB5143CA2955214DDE3A68C /* ProgressBarView.swift in Sources */,
 				841CFD6E422ECB256F8A8A6A /* ResumeCardView.swift in Sources */,
