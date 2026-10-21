@@ -298,6 +298,13 @@ struct DetailView: View {
             // above it (hidden background) so the backdrop bleeds under the status bar.
             .ignoresSafeArea(edges: .top)
             .background(MareaTheme.Colors.background.ignoresSafeArea())
+            .refreshable {
+                // Detail, seasons and episodes in parallel — one gesture, one
+                // request each. The content stays on screen while they fly.
+                async let detailReload: Void = fetchDetail(reloadSeasons: false)
+                async let seasonsReload: Void = loadSeasons()
+                _ = await (detailReload, seasonsReload)
+            }
             .onChange(of: scrollToEpisodesToken) { _, _ in
                 withAnimation { scroller.scrollTo(Self.episodesAnchor, anchor: .top) }
             }
@@ -872,7 +879,17 @@ struct DetailView: View {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
+        await fetchDetail(reloadSeasons: true)
+    }
 
+    /// (Re)read the item from the server.
+    ///
+    /// The content stays on screen while the request is in flight — a refresh
+    /// must never blank the page it is refreshing.
+    ///
+    /// - Parameter reloadSeasons: false when the caller already reloads the
+    ///   seasons and episodes in parallel.
+    private func fetchDetail(reloadSeasons: Bool) async {
         do {
             // PlaybackInfo only feeds the "Vídeo" chips here — a failure must
             // not stop the detail screen from rendering.
@@ -895,7 +912,7 @@ struct DetailView: View {
             isPlayed = loaded.isPlayed
 
             // Load seasons if this is a series
-            if loaded.type == "Series" {
+            if loaded.type == "Series", reloadSeasons {
                 await loadSeasons()
             }
 
@@ -917,10 +934,12 @@ struct DetailView: View {
                 token: token,
                 seriesId: item.id
             )
-            if let firstSeason = seasons.first {
-                selectedSeasonIndex = 0
-                await loadEpisodes(for: firstSeason)
-            }
+            guard !seasons.isEmpty else { return }
+            // Keep the season the user is looking at — a refresh must not
+            // throw them back to the first one.
+            let index = min(max(selectedSeasonIndex, 0), seasons.count - 1)
+            selectedSeasonIndex = index
+            await loadEpisodes(for: seasons[index])
         } catch {
             // Seasons failing shouldn't block the detail page
         }

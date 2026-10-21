@@ -102,10 +102,9 @@ struct LibraryGridView: View {
         }
         .background(MareaTheme.Colors.background)
         .refreshable {
-            items = []
-            nextStartIndex = nil
-            hasMore = true
-            await loadFirstPage()
+            // Reload the first page IN PLACE: emptying the grid would blank
+            // the screen and throw the scroll position away.
+            await reloadFirstPage()
         }
         .navigationTitle(title)
         #if os(iOS)
@@ -116,7 +115,7 @@ struct LibraryGridView: View {
         }
         .task {
             guard items.isEmpty else { return }
-            await loadNextPage()
+            await reloadFirstPage()
         }
     }
 
@@ -138,7 +137,11 @@ struct LibraryGridView: View {
         }
     }
 
-    private func loadFirstPage() async {
+    /// Fetch the first page and replace the current items.
+    ///
+    /// The grid keeps showing what it has while the request is in flight —
+    /// the user never sees an empty screen, and the scroll position survives.
+    private func reloadFirstPage() async {
         guard !isLoadingPage else { return }
         isLoadingPage = true
         defer { isLoadingPage = false }

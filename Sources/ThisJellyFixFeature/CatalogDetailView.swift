@@ -43,6 +43,11 @@ struct CatalogDetailView: View {
             .padding(24)
         }
         .background(MareaTheme.Colors.surfaceOverlay)
+        .refreshable {
+            // The download state lives in the service, not in this view:
+            // re-reading it is what makes the button honest again.
+            await discovery?.refreshDownloads()
+        }
         .navigationTitle(item.title)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)

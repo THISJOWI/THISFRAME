@@ -178,9 +178,10 @@ struct SearchView: View {
                         limit: 40
                     )
                     guard !Task.isCancelled else { return }
-                    withAnimation(.spring(response: 0.3)) {
-                        results = found
-                    }
+                    // No global animation: a `withAnimation` around the whole
+                    // array re-animates every cell of the grid on each key
+                    // stroke. The cards carry their own entrance instead.
+                    results = found
                 } catch {
                     guard !Task.isCancelled else { return }
                     results = []
@@ -194,9 +195,7 @@ struct SearchView: View {
                 isSearchingCatalog = true
                 let found = await discovery.searchCatalog(query: trimmed)
                 guard !Task.isCancelled else { isSearchingCatalog = false; return }
-                withAnimation(.spring(response: 0.3)) {
-                    catalogResults = found
-                }
+                catalogResults = found
                 isSearchingCatalog = false
                 #endif
             }
@@ -224,9 +223,8 @@ struct SearchView: View {
                                 (item.tmdbId != nil && $0.tmdbId == item.tmdbId) || $0.title == item.title
                             }?.state
                         )
-                        .transition(.scale.combined(with: .opacity))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressableCardStyle())
                 }
             }
             .padding(.horizontal, 4)

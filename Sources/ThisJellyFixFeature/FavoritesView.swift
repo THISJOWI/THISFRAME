@@ -60,6 +60,7 @@ struct FavoritesView: View {
                 .padding(.top, 16)
             }
             .background(MareaTheme.Colors.surfaceOverlay)
+            .refreshable { await loadFavorites() }
             .navigationTitle("Favoritos")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -119,10 +120,10 @@ struct FavoritesView: View {
             )
 
             let (movies, series) = try await (moviesTask, seriesTask)
-            withAnimation(.spring(response: 0.3)) {
-                favoriteMovies = movies
-                favoriteSeries = series
-            }
+            // No global animation here: a `withAnimation` around the whole
+            // assignment re-animates every card in the strip.
+            favoriteMovies = movies
+            favoriteSeries = series
         } catch {
             // Silent fail
         }
