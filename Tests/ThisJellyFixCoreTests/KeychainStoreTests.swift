@@ -70,7 +70,7 @@ final class KeychainStoreTests: XCTestCase {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
         for target in ["iOS", "macOS"] {
-            let url = root.appendingPathComponent("Apps/\(target)/ThisJellyfix.entitlements")
+            let url = root.appendingPathComponent("Apps/\(target)/App.entitlements")
             let data = try Data(contentsOf: url)
             let plist = try XCTUnwrap(
                 try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]

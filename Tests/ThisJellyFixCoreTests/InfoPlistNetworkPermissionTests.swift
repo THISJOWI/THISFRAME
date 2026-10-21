@@ -42,7 +42,7 @@ final class InfoPlistNetworkPermissionTests: XCTestCase {
     }
 
     func testMacOSSandboxAllowsOutgoingConnections() throws {
-        let entitlements = try plist("Apps/macOS/ThisJellyfix.entitlements")
+        let entitlements = try plist("Apps/macOS/App.entitlements")
         XCTAssertEqual(
             entitlements["com.apple.security.network.client"] as? Bool, true,
             "Sandboxed macOS app cannot reach Radarr/Sonarr without network.client"
