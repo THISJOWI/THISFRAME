@@ -47,6 +47,8 @@ struct DetailView: View {
     @State private var selectedSeasonIndex: Int = 0
     @State private var episodes: [JellyfinEpisode] = []
     @State private var isLoadingEpisodes = false
+    /// Message shown when the episode list could not be loaded or refreshed.
+    @State private var episodesError: String?
 
     // MARK: - User flags & technical info
     @State private var isFavorite = false
@@ -97,6 +99,11 @@ struct DetailView: View {
                     } else {
                         SplitViewState.shared.restore()
                         onPlayerDismiss?()
+                        // The episode we just played changed its state on the
+                        // server — the list must show the new progress.
+                        if detail?.type == "Series" {
+                            Task { await reloadEpisodesAfterPlayback() }
+                        }
                     }
                 }
                 // Ownership: a mounted detail claims the Handoff slot (counted
@@ -299,7 +306,7 @@ struct DetailView: View {
             .frame(maxWidth: .infinity)
             // The content fades in over the loading state instead of cutting
             // to it — the screen never "jumps" under the reader.
-            .animation(MareaMotion.fade, value: detail != nil)
+            .mareaAnimation(MareaMotion.fade, value: detail != nil)
             // The hero owns the whole top of the screen; the navigation bar floats
             // above it (hidden background) so the backdrop bleeds under the status bar.
             .ignoresSafeArea(edges: .top)
@@ -652,14 +659,19 @@ struct DetailView: View {
                     }
                 }
 
-                // Episode list
-                if isLoadingEpisodes {
+                // Episode list. The spinner is for the FIRST load only — a
+                // refresh keeps the list on screen instead of blanking it.
+                if episodes.isEmpty, isLoadingEpisodes {
                     ProgressView("Cargando episodios…")
                         .frame(maxWidth: .infinity)
                 } else if episodes.isEmpty {
-                    Text("No hay episodios en esta temporada.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    if let episodesError {
+                        errorBanner(episodesError, systemImage: "exclamationmark.triangle.fill", tint: .orange)
+                    } else {
+                        Text("No hay episodios en esta temporada.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 } else {
                     LazyVStack(alignment: .leading, spacing: 8) {
                         ForEach(episodes) { episode in
@@ -670,6 +682,10 @@ struct DetailView: View {
                                 Task { await playEpisode(episode) }
                             }
                         }
+                    }
+                    // A failed refresh leaves the list usable and says so.
+                    if let episodesError {
+                        errorBanner(episodesError, systemImage: "exclamationmark.triangle.fill", tint: .orange)
                     }
                 }
             }
@@ -951,8 +967,16 @@ struct DetailView: View {
         }
     }
 
-    private func loadEpisodes(for season: JellyfinSeason) async {
-        isLoadingEpisodes = true
+    /// Load the episodes of a season.
+    ///
+    /// - Parameter silently: a refresh keeps the current list on screen (and
+    ///   keeps it if the request fails). Only the FIRST load shows a spinner
+    ///   and may replace the list with an empty one.
+    private func loadEpisodes(for season: JellyfinSeason, silently: Bool = false) async {
+        let isFirstLoad = episodes.isEmpty
+        if !silently || isFirstLoad {
+            isLoadingEpisodes = true
+        }
         defer { isLoadingEpisodes = false }
 
         let libraryClient = JellyfinLibraryClient()
@@ -964,8 +988,15 @@ struct DetailView: View {
                 seriesId: item.id,
                 seasonId: season.id
             )
+            episodesError = nil
         } catch {
-            episodes = []
+            // A failed request must NOT wipe the list the user is reading:
+            // keep it and say what happened.
+            if episodes.isEmpty {
+                episodesError = error.localizedDescription
+            } else {
+                episodesError = "No se pudo actualizar la lista de episodios."
+            }
         }
     }
 
@@ -973,7 +1004,11 @@ struct DetailView: View {
     /// server owns the progress, so the rows are re-read instead of guessed.
     private func reloadEpisodesAfterPlayback() async {
         guard seasons.indices.contains(selectedSeasonIndex) else { return }
-        await loadEpisodes(for: seasons[selectedSeasonIndex])
+        // The player reports the final position and the "played" flag to
+        // Jellyfin asynchronously. Reading the episodes before that report
+        // lands would show the PREVIOUS state — wait for it.
+        try? await Task.sleep(for: .seconds(1.5))
+        await loadEpisodes(for: seasons[selectedSeasonIndex], silently: true)
     }
 
     // MARK: - Metrics
@@ -1223,8 +1258,10 @@ private struct EpisodeRow: View {
     }
 
     /// The state in words, so VoiceOver never has to guess from a colour.
+    /// The full title is part of the label: "T1 E3" alone does not tell the
+    /// user which chapter they are on.
     private var accessibilityLabel: String {
-        let name = episode.episodeLabel
+        let name = episode.displayTitle
         switch watchState {
         case .unwatched:
             return "\(name). No visto."

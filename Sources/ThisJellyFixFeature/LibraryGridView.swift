@@ -20,6 +20,9 @@ struct LibraryGridView: View {
     @State private var items: [JellyfinMediaItem] = []
     @State private var nextStartIndex: Int? = nil
     @State private var isLoadingPage = false
+    /// A refresh is a separate request from a page load: it must not be
+    /// swallowed by a page that happens to be in flight.
+    @State private var isRefreshing = false
     @State private var hasMore = true
 
     private let pageSize = 30
@@ -137,23 +140,33 @@ struct LibraryGridView: View {
         }
     }
 
-    /// Fetch the first page and replace the current items.
+    /// Fetch the first page and refresh what is on screen.
     ///
     /// The grid keeps showing what it has while the request is in flight —
     /// the user never sees an empty screen, and the scroll position survives.
+    /// The pages the user already scrolled through are kept: only the first
+    /// page is re-read.
     private func reloadFirstPage() async {
-        guard !isLoadingPage else { return }
-        isLoadingPage = true
-        defer { isLoadingPage = false }
+        isRefreshing = true
+        defer { isRefreshing = false }
         let page = await model.fetchPage(
             parentId: parentId,
             includeTypes: includeTypes,
             limit: pageSize,
             startIndex: nil
         )
-        items = page
+        if items.count <= page.count {
+            items = page
+        } else {
+            // Keep the pages already loaded below the refreshed first one.
+            items.replaceSubrange(0..<page.count, with: page)
+        }
         hasMore = page.count == pageSize
-        nextStartIndex = page.count
+        // The pagination cursor only moves on the first load: a refresh
+        // re-reads the first page, it does not restart the pagination.
+        if nextStartIndex == nil {
+            nextStartIndex = page.count
+        }
     }
 }
 #endif

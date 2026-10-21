@@ -116,7 +116,7 @@ struct CatalogDetailView: View {
                     systemImage: item.kind == .movie ? "film.fill" : "tv.fill"
                 )
                 .font(.caption)
-                .foregroundStyle(MareaTheme.Colors.accent)
+                .foregroundStyle(MareaTheme.Colors.accentText)
                 if item.isInLibrary {
                     Label("Ya en tu biblioteca", systemImage: "checkmark.seal.fill")
                         .font(.caption)

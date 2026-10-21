@@ -79,6 +79,7 @@
 		229BEE17CC6D659F4D19E4A2 /* Feature-tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9627EED1BAD19BE4D412F23 /* Feature-tvOS.framework */; };
 		22E78D8FFAB72E483AD4B4F5 /* SubtitleSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD8C3C0F1C8346A94B99DDA /* SubtitleSelection.swift */; };
 		23C5C2CFFFFE0FBF537D29C2 /* TMDBMetadataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3A0A16B843E324C3DA2694 /* TMDBMetadataProvider.swift */; };
+		24CE0331C0BF838B5D716E97 /* MacAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB1633FC2CF06CB0CBF1BD61 /* MacAppearance.swift */; };
 		25C8987EF7A40F139D58DD11 /* PiPHandoffPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A0CB53C40E7A1184874167E /* PiPHandoffPolicy.swift */; };
 		25E0140BBEE201B3CBCEDABD /* ResumeCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB62174F75826768421F5928 /* ResumeCardView.swift */; };
 		2605FFA8F307D37B33C2387B /* ThisJellyFixTVOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5569E8E9FF985310B2B9CB2 /* ThisJellyFixTVOSApp.swift */; };
@@ -188,6 +189,7 @@
 		5459491D21936B06837A0ADF /* RowSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38D9C6E2078ECBAFC3312333 /* RowSection.swift */; };
 		54B5B62138DDFEDCB33A4045 /* MediaCardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B0744C6D7ED280C4C2D7761 /* MediaCardLayout.swift */; };
 		54D79CFA9A0CB354861D4530 /* StreamQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665B24744FB49408A7756D22 /* StreamQuality.swift */; };
+		55711CF708430744CF6DBACD /* MacAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB1633FC2CF06CB0CBF1BD61 /* MacAppearance.swift */; };
 		565010993FEDF7B2E2FAE8C9 /* StreamQuality.swift in Sources */ = {isa = PBXBuildFile; fileRef = 665B24744FB49408A7756D22 /* StreamQuality.swift */; };
 		565B846F82A4A862DC8AC20B /* JellyfinLibraryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF84CCF843B7012ACFEC948 /* JellyfinLibraryClient.swift */; };
 		56D41EA451E3D6350DE038A6 /* PlaybackPlanResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 486B545569E0B384484DA5FD /* PlaybackPlanResolver.swift */; };
@@ -281,6 +283,7 @@
 		74DBB365E4DA730D03220ABC /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90CB900DFBF613262ADEB1FE /* PlaybackEngine.swift */; };
 		74E94FD3FB19FA5786FA161E /* SkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E54B3E1A9A057B9D8B2D3E78 /* SkeletonView.swift */; };
 		753E4E602A68CC77C5C86FA2 /* TrackNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E34C20DAE1EE3FED70F1446 /* TrackNaming.swift */; };
+		7559B365D220C07626BAA59A /* MacAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB1633FC2CF06CB0CBF1BD61 /* MacAppearance.swift */; };
 		7575BFB94285EA121DBD6D8A /* Networking-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A23B93170F6FEA62AF418B4E /* Networking-iOS.framework */; };
 		7610069299D8B935C7FD87BC /* CastContentType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E75F17474662E4040FEF98D /* CastContentType.swift */; };
 		76105B8AEF1A4B4A30C6043D /* WrapLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087463C93897C7B0140D89E7 /* WrapLayout.swift */; };
@@ -484,6 +487,7 @@
 		D7515041509C7FE20840D31E /* Feature-visionOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E1730F8F94BE102A9E8DE78C /* Feature-visionOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D76FE6D9D2D73085DE055F72 /* LocalNetworkAuthorizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 379AFC1970CB1DF9D980EF87 /* LocalNetworkAuthorizer.swift */; };
 		D782EA3C8CF9609DA1310A03 /* JellyfinSubtitleClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D3E2A453693F3853A9F8E8 /* JellyfinSubtitleClient.swift */; };
+		D78F9DDA380F333C7FB9540C /* MacAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB1633FC2CF06CB0CBF1BD61 /* MacAppearance.swift */; };
 		D83083A514F36370B5887D6B /* SubtitleSizeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6348BB2CAA8E2EB04A1C695D /* SubtitleSizeSettings.swift */; };
 		D87F893ED2D2C736B56A41B5 /* SubtitleSizeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6348BB2CAA8E2EB04A1C695D /* SubtitleSizeSettings.swift */; };
 		D9B24CB559CA55E1C29EE522 /* CatalogCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F570A623B27EFB00434F42C /* CatalogCardView.swift */; };
@@ -1171,6 +1175,7 @@
 		E54B3E1A9A057B9D8B2D3E78 /* SkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonView.swift; sourceTree = "<group>"; };
 		E7EB0EE4EE654F6D5845ED31 /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
 		E81B3D72ECAE6007FFBAAB00 /* LibraryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryModel.swift; sourceTree = "<group>"; };
+		EB1633FC2CF06CB0CBF1BD61 /* MacAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacAppearance.swift; sourceTree = "<group>"; };
 		EE44DD8B3BAC5D66EFFFF78A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EF10F8D4613F087EAA9548D6 /* DownloadCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadCoordinator.swift; sourceTree = "<group>"; };
 		EF44E1A84B76AB6E359404F9 /* PlaybackInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackInfo.swift; sourceTree = "<group>"; };
@@ -1402,6 +1407,7 @@
 				C772B22757960B1AE2602062 /* CastButton.swift */,
 				AD8966043EC34B37438FF4A0 /* ChipView.swift */,
 				AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */,
+				EB1633FC2CF06CB0CBF1BD61 /* MacAppearance.swift */,
 				B1F1F56FBAE5B47C8F09263E /* MareaMotion.swift */,
 				05829AA22DEA8728FC257895 /* MareaTheme.swift */,
 				6F699336BE4EC4B4B151858D /* PressableCardStyle.swift */,
@@ -2419,6 +2425,7 @@
 				5B92DFDF278A24ABC0072F94 /* LibraryGridView.swift in Sources */,
 				3317F690BF26D705E4276F55 /* LibraryModel.swift in Sources */,
 				899728756CBD6286642CC3C6 /* LoginView.swift in Sources */,
+				7559B365D220C07626BAA59A /* MacAppearance.swift in Sources */,
 				69CAF44085D387AA2E43ADA4 /* MareaMotion.swift in Sources */,
 				AC07A8FC4A5B592E9D9C6F38 /* MareaTabBar.swift in Sources */,
 				32BEF039ED671FFA0D116DFE /* MareaTheme.swift in Sources */,
@@ -2602,6 +2609,7 @@
 				A289D3F1B1D0BACBF1AB3249 /* LibraryGridView.swift in Sources */,
 				BB76E5924651F8CC952B759A /* LibraryModel.swift in Sources */,
 				C8B2BD052E5372AE4F184CF6 /* LoginView.swift in Sources */,
+				D78F9DDA380F333C7FB9540C /* MacAppearance.swift in Sources */,
 				04FF303586CDC11804FD9AED /* MareaMotion.swift in Sources */,
 				81CFFAB9493090F3705A6B59 /* MareaTabBar.swift in Sources */,
 				0E9DC9889DFD824CCFB6C401 /* MareaTheme.swift in Sources */,
@@ -2689,6 +2697,7 @@
 				78250F80AE1251013989C23E /* LibraryGridView.swift in Sources */,
 				7B8484CA12166F51025E11F3 /* LibraryModel.swift in Sources */,
 				3BF87831B32E86795B3A22BB /* LoginView.swift in Sources */,
+				24CE0331C0BF838B5D716E97 /* MacAppearance.swift in Sources */,
 				93AED2E06240DC4C040A4010 /* MareaMotion.swift in Sources */,
 				58067049F30384B6B4CA2662 /* MareaTabBar.swift in Sources */,
 				A31DDDBA3B2E322ECBE00A3C /* MareaTheme.swift in Sources */,
@@ -2971,6 +2980,7 @@
 				10CDE6F9D2CDA9339AE9E28F /* LibraryGridView.swift in Sources */,
 				1C0D725DA523C20086FD0FC9 /* LibraryModel.swift in Sources */,
 				8C09173C4469A5FA66F1506E /* LoginView.swift in Sources */,
+				55711CF708430744CF6DBACD /* MacAppearance.swift in Sources */,
 				D397998414BC6880C301B93C /* MareaMotion.swift in Sources */,
 				D16DFCDD5041366EA0DF5BCD /* MareaTabBar.swift in Sources */,
 				20FCAB03C1044F7846DF217F /* MareaTheme.swift in Sources */,

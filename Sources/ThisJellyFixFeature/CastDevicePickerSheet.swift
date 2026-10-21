@@ -51,7 +51,7 @@ struct CastDevicePickerSheet: View {
                 } label: {
                     Text("Desconectar")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(MareaTheme.Colors.accent)
+                        .foregroundStyle(MareaTheme.Colors.accentText)
                 }
             }
         }
@@ -140,7 +140,7 @@ struct CastDevicePickerSheet: View {
                 if isConnected(device) {
                     Text("Conectado")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(MareaTheme.Colors.accent)
+                        .foregroundStyle(MareaTheme.Colors.accentText)
                 } else if isConnecting(device) {
                     ProgressView().tint(Color.primary)
                 } else {

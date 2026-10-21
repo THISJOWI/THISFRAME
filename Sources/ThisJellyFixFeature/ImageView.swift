@@ -172,18 +172,20 @@ struct MareaImageView: View {
         Group {
             if let image = loader.image {
                 artwork(image)
+                    .transition(.opacity)
             } else if loader.isLoading {
                 ProgressView()
                     .mareaRatioBox(aspectRatio, contentMode: .fit)
+                    .transition(.opacity)
             } else {
                 placeholderBox
+                    .transition(.opacity)
             }
         }
         .modifier(MareaImageSizing(width: width, height: height, aspectRatio: aspectRatio))
         // The picture fades in over the placeholder instead of jumping in.
         // The animation is keyed on "is there an image", not on the image
         // itself: it runs once per picture, never while scrolling.
-        .transition(.opacity)
         .mareaAnimation(MareaMotion.fade, value: loader.image != nil)
         .task(id: url) {
             if let url {

@@ -182,7 +182,7 @@ struct SubtitleProvidersSection: View {
                     Spacer()
                     if alreadyAdded {
                         Image(systemName: "checkmark.circle")
-                            .foregroundStyle(MareaTheme.Colors.accent)
+                            .foregroundStyle(MareaTheme.Colors.accentText)
                     } else {
                         Image(systemName: "chevron.right")
                             .foregroundStyle(.secondary)

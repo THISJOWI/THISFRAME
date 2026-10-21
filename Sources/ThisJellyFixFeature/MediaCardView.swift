@@ -131,7 +131,7 @@ struct MediaCardView: View {
                     if let label = item.episodeLabel {
                         Text(label)
                             .font(.caption)
-                            .foregroundStyle(MareaTheme.Colors.accent)
+                            .foregroundStyle(MareaTheme.Colors.accentText)
                     }
                     Text(item.name)
                         .font(.caption)

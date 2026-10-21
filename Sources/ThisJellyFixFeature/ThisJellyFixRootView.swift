@@ -2,6 +2,9 @@ import Observation
 import SwiftUI
 import ThisJellyFixCore
 import ThisJellyFixNetworking
+#if os(macOS)
+import AppKit
+#endif
 #if canImport(CoreSpotlight)
 import CoreSpotlight
 #endif
@@ -61,6 +64,20 @@ public struct ThisJellyFixRootView: View {
         case .dark: return .dark
         }
     }
+
+    #if os(macOS)
+    /// macOS resolves dynamic colors against `NSAppearance`, NOT against
+    /// SwiftUI's color scheme — so a forced light/dark mode has to set the
+    /// app appearance too, or the theme tokens keep resolving the dark
+    /// variant while the text turns black: unreadable pages.
+    private func applyMacAppearance() {
+        // The test bundle has no NSApp — nothing to style there.
+        guard let app = NSApp else { return }
+        app.appearance = MacAppearance.appAppearance(
+            for: AppearanceSettings.current().appearance
+        )
+    }
+    #endif
 
     public var body: some View {
         ZStack {
@@ -152,7 +169,15 @@ public struct ThisJellyFixRootView: View {
             configureAudioSession()
             registerPipHandlers()
             LocalNetworkAuthorizer.shared.triggerPrompt()
+            #if os(macOS)
+            applyMacAppearance()
+            #endif
         }
+        #if os(macOS)
+        .onChange(of: appearanceRaw) { _, _ in
+            applyMacAppearance()
+        }
+        #endif
         #endif
         .task {
             if model.server != nil && !authModel.isAuthenticated {

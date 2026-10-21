@@ -6,10 +6,16 @@ struct PressableCardStyle: ButtonStyle {
     /// Scale applied while pressed.
     var pressedScale: CGFloat = 0.96
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? pressedScale : 1)
             .opacity(configuration.isPressed ? 0.85 : 1)
-            .animation(MareaMotion.quick, value: configuration.isPressed)
+            // Reduced motion: the card still reacts, but it does not move.
+            .animation(
+                MareaMotion.resolve(MareaMotion.quick, reduceMotion: reduceMotion),
+                value: configuration.isPressed
+            )
     }
 }

@@ -13,6 +13,9 @@ struct DiscoveryRowView: View {
     /// later are shown already in place.
     @State private var appeared = false
 
+    /// The system may ask for no animation at all.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
@@ -47,7 +50,9 @@ struct DiscoveryRowView: View {
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 16)
         .onAppear {
-            withAnimation(MareaMotion.gentle) { appeared = true }
+            withAnimation(MareaMotion.resolve(MareaMotion.gentle, reduceMotion: reduceMotion)) {
+                appeared = true
+            }
         }
         .task {
             // First render: sync any orders already in flight elsewhere.

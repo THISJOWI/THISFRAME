@@ -12,6 +12,9 @@ struct FloatingTabBar: View {
     /// The capsule that moves from one tab to the next.
     @Namespace private var tabNamespace
 
+    /// The system may ask for no animation at all.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     /// Favorites lives inside Home rows; the pill mirrors the native tabs.
     private var tabs: [MareaTab] { [.home, .search, .profile] }
 
@@ -23,7 +26,8 @@ struct FloatingTabBar: View {
                 } label: {
                     ZStack {
                         // The selection blob slides between tabs instead of
-                        // the icon simply changing colour.
+                        // the icon simply changing colour. With "reduce
+                        // motion" the blob simply appears in place.
                         if selection == tab {
                             Capsule()
                                 .fill(MareaTheme.Colors.glass)
@@ -36,7 +40,7 @@ struct FloatingTabBar: View {
                                 .font(.caption2)
                         }
                         .foregroundStyle(
-                            selection == tab ? MareaTheme.Colors.accent : Color.secondary
+                            selection == tab ? MareaTheme.Colors.accentText : Color.secondary
                         )
                     }
                     .frame(maxWidth: .infinity)
@@ -53,6 +57,10 @@ struct FloatingTabBar: View {
         )
         .shadow(color: .black.opacity(0.4), radius: 12, y: 4)
         .padding(.horizontal, MareaTheme.Spacing.xl)
+        .animation(
+            MareaMotion.resolve(MareaMotion.standard, reduceMotion: reduceMotion),
+            value: selection
+        )
     }
 }
 #endif

@@ -27,6 +27,18 @@ enum MareaTheme {
         static let accentLight = accent
         static let accentDark = accent
 
+        /// The brand red used as TEXT on the page background.
+        ///
+        /// The brand red itself reaches 4.44:1 on the dark background and
+        /// 4.43:1 on the light one — just under the 4.5:1 of WCAG AA. The
+        /// TEXT variant is the SAME hue, tuned a shade per mode so it clears
+        /// AA in both: a shade deeper on light, a shade lighter on dark.
+        ///
+        /// Fills — buttons, progress bars, badges — keep the brand red
+        /// untouched, in both modes.
+        static let accentTextLight = Color(red: 0.83, green: 0.045, blue: 0.11)
+        static let accentTextDark = Color(red: 0.93, green: 0.10, blue: 0.16)
+
         static let badgeNeutralDark = Color(red: 0.25, green: 0.27, blue: 0.32)
         static let badgeNeutralLight = Color(white: 0.35)
 
@@ -72,6 +84,11 @@ enum MareaTheme {
         )
         /// Unified accent — tint, progress bars, active tab.
         static let accent = badgeRed
+        /// The accent when it is used as TEXT on the page background.
+        static let accentText = Color.adaptive(
+            light: Palette.accentTextLight,
+            dark: Palette.accentTextDark
+        )
         /// Fallback backdrop while a hero image loads.
         static let heroFallback = Color.adaptive(
             light: Palette.heroFallbackLight,

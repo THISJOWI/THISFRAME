@@ -8,8 +8,13 @@ import AppKit
 extension Color {
     /// A color that resolves to `light` or `dark` with the current color scheme.
     ///
-    /// The platform resolves the variant, so the color follows the system
-    /// appearance live — no view state, no manual invalidation.
+    /// On iOS/tvOS/visionOS the platform resolves the variant against the
+    /// trait collection, which SwiftUI derives from the environment's color
+    /// scheme — so it follows the app (and the system) live.
+    ///
+    /// On macOS the resolution follows `NSAppearance`, which is why the app
+    /// also keeps `NSApp.appearance` in sync with the user's choice (see
+    /// `ThisJellyFixRootView.applyMacAppearance()`).
     static func adaptive(light: Color, dark: Color) -> Color {
         #if canImport(UIKit)
         return Color(uiColor: UIColor { traits in

@@ -20,7 +20,7 @@ struct LoginView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(MareaTheme.Colors.accent)
+                .foregroundStyle(MareaTheme.Colors.accentText)
                 Spacer()
             }
             .frame(maxWidth: 380)

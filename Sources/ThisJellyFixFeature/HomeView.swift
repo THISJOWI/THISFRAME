@@ -137,7 +137,7 @@ struct HomeView: View {
                                 selectedTab = tab
                             } label: {
                                 Label(tab.label, systemImage: tab.icon)
-                                    .foregroundStyle(selectedTab == tab ? MareaTheme.Colors.accent : .primary)
+                                    .foregroundStyle(selectedTab == tab ? MareaTheme.Colors.accentText : .primary)
                             }
                             .buttonStyle(.plain)
                         }

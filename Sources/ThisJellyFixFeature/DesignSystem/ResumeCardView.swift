@@ -97,7 +97,13 @@ struct ResumeCardView: View {
     }
 
     private func progressBar(_ percentage: Double) -> some View {
-        ProgressBarView(fraction: percentage / 100.0, height: 4)
+        // The bar sits on the card's dark scrim: the channel must be LIGHT
+        // in both modes, or it disappears into the artwork.
+        ProgressBarView(
+            fraction: percentage / 100.0,
+            height: 4,
+            track: Color.white.opacity(0.25)
+        )
     }
 
     /// "T1 E3 · Vas por 12 min" — what the viewer needs at a glance. The row
