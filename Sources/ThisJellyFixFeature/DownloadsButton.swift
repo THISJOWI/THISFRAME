@@ -26,7 +26,7 @@ struct DownloadsButton: View {
                         .font(.caption2.bold())
                         .padding(.horizontal, 4)
                         .padding(.vertical, 1)
-                        .background(.red, in: Capsule())
+                        .background(MareaTheme.Colors.crimsonFrame, in: Capsule())
                         .foregroundStyle(.white)
                         .offset(x: 10, y: -6)
                 }

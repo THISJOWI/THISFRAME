@@ -12,7 +12,7 @@ import CoreSpotlight
 import AVFoundation
 #endif
 
-public struct ThisJellyFixRootView: View {
+public struct ThisFrameRootView: View {
     @State private var model = ServerConnectionModel()
     @State private var authModel = AuthModel()
     @State private var libraryModel: LibraryModel?

@@ -25,11 +25,11 @@ enum MareaTab: Int, CaseIterable, Hashable {
     }
 
     var activeColor: Color {
-        .red
+        MareaTheme.Colors.crimsonFrame
     }
 }
 
 // Custom MareaTabBar replaced by native SwiftUI TabView (iOS 26+).
 // Native TabView automatically provides: floating glass material, selection blob,
 // minimize on scroll, search tab role, and all Liquid Glass animations.
-// See ThisJellyFixRootView.swift for the TabView implementation.
+// See ThisFrameRootView.swift for the TabView implementation.

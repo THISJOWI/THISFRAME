@@ -2,8 +2,8 @@ import SwiftUI
 import ThisJellyFixFeature
 
 @main
-struct ThisJellyFixVisionOSApp: App {
+struct ThisFrameVisionOSApp: App {
     var body: some Scene {
-        WindowGroup { ThisJellyFixRootView() }
+        WindowGroup { ThisFrameRootView() }
     }
 }

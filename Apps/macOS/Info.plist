@@ -32,7 +32,7 @@
 	     key macOS 15+ denies those connections and shows NO dialog at all,
 	     so the app just reports "unreachable". -->
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>ThisJellyfix se conecta a Radarr y Sonarr en tu red local para buscar y descargar películas y series.</string>
+	<string>THISFRAME se conecta a Radarr y Sonarr en tu red local para buscar y descargar películas y series.</string>
 
 	<!-- Bonjour services: required in macOS 15+ / iOS 14+ for local network discovery. -->
 	<key>NSBonjourServices</key>

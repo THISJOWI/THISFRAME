@@ -2,10 +2,11 @@ import XCTest
 import SwiftUI
 @testable import ThisJellyFixFeature
 
-/// The accent is the brand red — it never changes. But the brand red reaches
-/// 4.43:1 on a white surface, a hair under the 4.5:1 of WCAG AA. The TEXT
-/// variant of the accent is the same red a shade deeper (5.1:1), and it is
-/// what the views use when the accent is text on the page background.
+/// The accent is Crimson Frame (#D9364F) — it never changes. But the brand
+/// accent reaches 4.57:1 on white and 4.28:1 on the light page background, a
+/// hair under the 4.5:1 of WCAG AA. The TEXT variant of the accent is the same
+/// crimson a shade deeper (4.75:1), and it is what the views use when the
+/// accent is text on the page background.
 final class MareaContrastTests: XCTestCase {
 
     // MARK: - WCAG helpers
@@ -53,11 +54,10 @@ final class MareaContrastTests: XCTestCase {
     }
 
     func testAccentTextOnTheDarkCardSurfaceStaysReadable() {
-        // Known trade-off, PRE-EXISTING: the brand red on the dark card
-        // surface reaches 3.59:1. The dark palette may not change (brand
-        // identity), and the affected labels are bold accent-coloured
-        // actions — the threshold that applies to them is the 3:1 of
-        // non-text/UI components, not the 4.5:1 of body text.
+        // The brand accent on the dark card surface reaches 4.25:1. The dark
+        // palette may not change (brand identity), and the affected labels are
+        // bold accent-coloured actions — the threshold that applies to them is
+        // the 3:1 of non-text/UI components, not the 4.5:1 of body text.
         let ratio = contrastRatio(
             MareaTheme.Palette.accentTextDark,
             MareaTheme.Palette.surfaceDark

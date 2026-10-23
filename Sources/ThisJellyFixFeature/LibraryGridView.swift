@@ -24,6 +24,7 @@ struct LibraryGridView: View {
     /// swallowed by a page that happens to be in flight.
     @State private var isRefreshing = false
     @State private var hasMore = true
+    @State private var pageError: String?
 
     private let pageSize = 30
 
@@ -99,6 +100,17 @@ struct LibraryGridView: View {
                         ProgressView()
                             .padding(.vertical, MareaTheme.Spacing.lg)
                     }
+                    if let pageError {
+                        VStack(spacing: MareaTheme.Spacing.sm) {
+                            Text(pageError)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Button("Reintentar") { loadNextPage() }
+                                .buttonStyle(.bordered)
+                            .disabled(isLoadingPage)
+                        }
+                        .padding(.vertical, MareaTheme.Spacing.md)
+                    }
                 }
             }
             .padding(.vertical, MareaTheme.Spacing.md)
@@ -127,15 +139,20 @@ struct LibraryGridView: View {
         isLoadingPage = true
         let start = nextStartIndex
         Task {
-            let page = await model.fetchPage(
-                parentId: parentId,
-                includeTypes: includeTypes,
-                limit: pageSize,
-                startIndex: start
-            )
-            items.append(contentsOf: page)
-            hasMore = page.count == pageSize
-            nextStartIndex = (nextStartIndex ?? 0) + page.count
+            do {
+                let page = try await model.fetchPage(
+                    parentId: parentId,
+                    includeTypes: includeTypes,
+                    limit: pageSize,
+                    startIndex: start
+                )
+                items.append(contentsOf: page)
+                hasMore = page.count == pageSize
+                nextStartIndex = (nextStartIndex ?? 0) + page.count
+                pageError = nil
+            } catch {
+                pageError = "No se pudo cargar más contenido. Comprueba la conexión y vuelve a intentarlo."
+            }
             isLoadingPage = false
         }
     }
@@ -150,12 +167,18 @@ struct LibraryGridView: View {
         guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
-        let page = await model.fetchPage(
-            parentId: parentId,
-            includeTypes: includeTypes,
-            limit: pageSize,
-            startIndex: nil
-        )
+        let page: [JellyfinMediaItem]
+        do {
+            page = try await model.fetchPage(
+                parentId: parentId,
+                includeTypes: includeTypes,
+                limit: pageSize,
+                startIndex: nil
+            )
+        } catch {
+            pageError = "No se pudo actualizar la biblioteca. Comprueba la conexión y vuelve a intentarlo."
+            return
+        }
         if items.count <= page.count {
             items = page
         } else {
@@ -163,6 +186,7 @@ struct LibraryGridView: View {
             items.replaceSubrange(0..<page.count, with: page)
         }
         hasMore = page.count == pageSize
+        pageError = nil
         // The pagination cursor only moves on the first load: a refresh
         // re-reads the first page, it does not restart the pagination.
         if nextStartIndex == nil {

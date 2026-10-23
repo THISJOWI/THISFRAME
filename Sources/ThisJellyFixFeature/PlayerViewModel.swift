@@ -437,7 +437,7 @@ final class PlayerViewModel {
                 serverURL: serverURL,
                 token: token,
                 playSessionId: reportingSessionId,
-                title: playbackTitle.isEmpty ? "ThisJellyFix" : playbackTitle,
+                title: playbackTitle.isEmpty ? "THISFRAME" : playbackTitle,
                 subtitle: nil,
                 artworkURL: serverURL.appendingPathComponent("Items/\(itemId)/Images/Primary?maxWidth=400&quality=90"),
                 startTime: currentTime > 5 ? currentTime : nil
@@ -771,7 +771,7 @@ final class PlayerViewModel {
                         serverURL: serverURL,
                         token: token,
                         playSessionId: playSessionId,
-                        title: playbackTitle.isEmpty ? "ThisJellyFix" : playbackTitle,
+                        title: playbackTitle.isEmpty ? "THISFRAME" : playbackTitle,
                         subtitle: nil,
                         artworkURL: serverURL.appendingPathComponent(
                             "Items/\(itemId)/Images/Primary?maxWidth=400&quality=90"

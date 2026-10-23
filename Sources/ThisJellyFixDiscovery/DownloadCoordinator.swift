@@ -7,6 +7,8 @@ import Observation
 public enum DownloadCoordinatorError: LocalizedError, Equatable {
     case serviceNotConfigured(DownloadService)
     case lookupReturnedNothing
+    case removalFailed(String)
+    case missingServiceIdentifier(String)
 
     public var errorDescription: String? {
         switch self {
@@ -14,6 +16,10 @@ public enum DownloadCoordinatorError: LocalizedError, Equatable {
             "\(service == .radarr ? "Radarr" : "Sonarr") no está configurado en Ajustes."
         case .lookupReturnedNothing:
             "El servicio no encontró ese título."
+        case .removalFailed(let message):
+            "No se pudo quitar la descarga: \(message)"
+        case .missingServiceIdentifier(let title):
+            "No se pudo identificar la entrada de \(title) en el servicio."
         }
     }
 }
@@ -31,6 +37,9 @@ public final class DownloadCoordinator {
     public private(set) var entries: [DownloadEntry] = []
     /// Last refresh failure (nil = healthy). UI shows it as a banner.
     public private(set) var lastRefreshError: Error?
+    /// Last cancellation failure. Kept separate from refresh status so a
+    /// successful queue refresh cannot erase feedback for a rejected DELETE.
+    public private(set) var lastRemovalError: Error?
 
     private let config: IntegrationConfig
     private let explicitRadarr: (any RadarrProviding)?
@@ -240,20 +249,43 @@ public final class DownloadCoordinator {
     /// Cancel: delete the entry from the *arr service, drop it locally and
     /// re-sync. Files already on disk stay — the service owns those.
     public func removeEntries(matching item: CatalogItem) async {
+        lastRemovalError = nil
         let matches = entries.filter { entry in
             (item.tmdbId != nil && entry.tmdbId == item.tmdbId) || entry.title == item.title
         }
+        var removedIds = Set<String>()
+        var failures: [Error] = []
         for entry in matches {
             // Local-* entries count too: they were already created
             // server-side by submit, cancel must undo them there as well.
-            guard let id = await serviceId(for: entry) else { continue }
-            switch entry.service {
-            case .radarr: try? await radarr?.deleteEntry(id: id)
-            case .sonarr: try? await sonarr?.deleteEntry(id: id)
+            guard let id = await serviceId(for: entry) else {
+                failures.append(DownloadCoordinatorError.missingServiceIdentifier(entry.title))
+                continue
+            }
+            do {
+                switch entry.service {
+                case .radarr:
+                    guard let radarr else {
+                        throw DownloadCoordinatorError.serviceNotConfigured(.radarr)
+                    }
+                    try await radarr.deleteEntry(id: id)
+                case .sonarr:
+                    guard let sonarr else {
+                        throw DownloadCoordinatorError.serviceNotConfigured(.sonarr)
+                    }
+                    try await sonarr.deleteEntry(id: id)
+                }
+                removedIds.insert(entry.id)
+            } catch {
+                failures.append(error)
             }
         }
-        let doomed = Set(matches.map(\.id))
-        entries.removeAll { doomed.contains($0.id) }
+        entries.removeAll { removedIds.contains($0.id) }
+        if !failures.isEmpty {
+            lastRemovalError = DownloadCoordinatorError.removalFailed(
+                failures.map(\.localizedDescription).joined(separator: " ")
+            )
+        }
         persist()
         await refresh()
     }

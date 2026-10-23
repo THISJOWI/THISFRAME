@@ -11,6 +11,7 @@ struct SearchView: View {
     @State private var results: [JellyfinMediaItem] = []
     @State private var isSearching = false
     @State private var hasSearched = false
+    @State private var searchError: String?
     @State private var searchTask: Task<Void, Never>?
     /// nil = discovery not configured → the catalog half never appears.
     @Environment(DiscoveryModel.self) private var discovery: DiscoveryModel?
@@ -53,6 +54,7 @@ struct SearchView: View {
                             Button {
                                 query = ""
                                 results = []
+                                searchError = nil
                                 hasSearched = false
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
@@ -65,7 +67,21 @@ struct SearchView: View {
                     .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 14))
 
                     // Results
-                    if hasSearched && results.isEmpty && catalogResults.isEmpty
+                    if let searchError, hasSearched && results.isEmpty && catalogResults.isEmpty
+                        && !isSearching && !isSearchingCatalog {
+                        VStack(spacing: 12) {
+                            Image(systemName: "wifi.exclamationmark")
+                                .font(.largeTitle)
+                                .foregroundStyle(.secondary)
+                            Text(searchError)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                            Button("Reintentar") { beginSearch(query) }
+                                .buttonStyle(.bordered)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
+                    } else if hasSearched && results.isEmpty && catalogResults.isEmpty
                         && !isSearching && !isSearchingCatalog {
                         VStack(spacing: 12) {
                             Image(systemName: "magnifyingglass")
@@ -159,14 +175,30 @@ struct SearchView: View {
             guard trimmed.count >= 2 else {
                 results = []
                 catalogResults = []
+                searchError = nil
+                isSearching = false
+                isSearchingCatalog = false
                 discovery?.clearCatalogResults()
                 hasSearched = false
                 return
             }
-            searchTask = Task {
+            beginSearch(trimmed)
+        }
+    }
+
+    private func beginSearch(_ queryValue: String) {
+        searchTask?.cancel()
+        let trimmed = queryValue.trimmingCharacters(in: .whitespaces)
+        guard trimmed.count >= 2 else { return }
+        searchError = nil
+        results = []
+        catalogResults = []
+        isSearching = true
+        isSearchingCatalog = false
+        discovery?.clearCatalogResults()
+        searchTask = Task {
                 try? await Task.sleep(for: .milliseconds(300))
                 guard !Task.isCancelled else { return }
-                isSearching = true
                 hasSearched = true
                 do {
                     let found = try await libraryClient.searchItems(
@@ -182,9 +214,11 @@ struct SearchView: View {
                     // array re-animates every cell of the grid on each key
                     // stroke. The cards carry their own entrance instead.
                     results = found
+                    searchError = nil
                 } catch {
                     guard !Task.isCancelled else { return }
                     results = []
+                    searchError = "No se pudo completar la búsqueda. Comprueba la conexión e inténtalo de nuevo."
                 }
                 isSearching = false
 
@@ -194,11 +228,12 @@ struct SearchView: View {
                 guard !Task.isCancelled, let discovery, discovery.hasMetadataProvider else { return }
                 isSearchingCatalog = true
                 let found = await discovery.searchCatalog(query: trimmed)
-                guard !Task.isCancelled else { isSearchingCatalog = false; return }
+                // A cancelled older query must not hide the loading state for
+                // a newer catalog request that has already started.
+                guard !Task.isCancelled else { return }
                 catalogResults = found
                 isSearchingCatalog = false
                 #endif
-            }
         }
     }
 

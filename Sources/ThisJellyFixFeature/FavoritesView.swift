@@ -10,6 +10,7 @@ struct FavoritesView: View {
     @State private var favoriteMovies: [JellyfinMediaItem] = []
     @State private var favoriteSeries: [JellyfinMediaItem] = []
     @State private var isLoading = true
+    @State private var errorMessage: String?
 
     private let libraryClient: any JellyfinLibraryProviding
 
@@ -33,6 +34,25 @@ struct FavoritesView: View {
                         ProgressView("Cargando favoritos…")
                             .frame(maxWidth: .infinity)
                             .padding(.top, 80)
+                    } else if let errorMessage {
+                        VStack(spacing: 12) {
+                            Image(systemName: "wifi.exclamationmark")
+                                .font(.system(size: 40))
+                                .foregroundStyle(.secondary)
+                            Text(errorMessage)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                            Button("Reintentar") { Task { await loadFavorites() } }
+                                .buttonStyle(.bordered)
+                            if !favoriteSeries.isEmpty {
+                                favoritesSection(title: "Series", items: favoriteSeries)
+                            }
+                            if !favoriteMovies.isEmpty {
+                                favoritesSection(title: "Películas", items: favoriteMovies)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 80)
                     } else if favoriteMovies.isEmpty && favoriteSeries.isEmpty {
                         VStack(spacing: 12) {
                             Image(systemName: "heart.slash")
@@ -124,8 +144,9 @@ struct FavoritesView: View {
             // assignment re-animates every card in the strip.
             favoriteMovies = movies
             favoriteSeries = series
+            errorMessage = nil
         } catch {
-            // Silent fail
+            errorMessage = "No se pudieron cargar los favoritos. Comprueba la conexión e inténtalo de nuevo."
         }
     }
 

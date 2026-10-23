@@ -27,11 +27,22 @@ final class MareaThemeTests: XCTestCase {
         XCTAssertEqual(MareaTheme.Radius.hero, 24)
     }
 
-    func testDarkAccentKeepsBrandRed() {
+    func testDarkAccentKeepsCrimsonFrame() {
         XCTAssertEqual(
             MareaTheme.Palette.accentDark,
-            Color(red: 0.90, green: 0.06, blue: 0.13)
+            MareaTheme.Palette.crimsonFrame
         )
+        XCTAssertEqual(
+            MareaTheme.Palette.crimsonFrame,
+            Color(red: 0.851, green: 0.212, blue: 0.310)
+        )
+    }
+
+    func testCrimsonFrameIsTheSingleBrandAccent() {
+        // Every brand token resolves to the same value: one definition.
+        XCTAssertEqual(MareaTheme.Colors.crimsonFrame, MareaTheme.Colors.accent)
+        XCTAssertEqual(MareaTheme.Colors.accent, MareaTheme.Colors.badgeRed)
+        XCTAssertEqual(MareaTab.home.activeColor, MareaTheme.Colors.crimsonFrame)
     }
 
     func testAccentIsIdenticalInLightAndDark() {

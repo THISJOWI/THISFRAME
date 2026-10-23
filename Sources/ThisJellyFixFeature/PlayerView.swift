@@ -344,7 +344,7 @@ struct PlayerView: View {
             // loading gap with an in-player indicator instead of dropping back
             // out to the episode list.
             // NOTE: an active PiP session's AVPlayerLayer is hosted by
-            // ThisJellyFixRootView (always alive) — hosting it here would rip
+            // ThisFrameRootView (always alive) — hosting it here would rip
             // the layer out of the hierarchy the moment this cover closes.
             .overlay { episodeSwapCover }
 

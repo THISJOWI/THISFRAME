@@ -13,6 +13,7 @@ final class StubLibraryClient: JellyfinLibraryProviding, @unchecked Sendable {
     var views: [LibraryView] = []
     var resumeItems: [JellyfinMediaItem] = []
     var latestItems: [JellyfinMediaItem] = []
+    var fetchItemsError: Error?
 
     /// Guards the mutable state below.
     private let lock = NSLock()
@@ -37,6 +38,7 @@ final class StubLibraryClient: JellyfinLibraryProviding, @unchecked Sendable {
         lock.lock()
         _recordedStartIndices.append(startIndex)
         lock.unlock()
+        if let fetchItemsError { throw fetchItemsError }
         return latestItems
     }
 

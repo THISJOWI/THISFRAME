@@ -56,11 +56,23 @@ private final class CachedImageLoader: ObservableObject {
     private var fallbackURL: URL?
     private var triedFallbackFor: URL?
 
-    func load(url: URL, fallback: URL? = nil) {
-        if let fallback { fallbackURL = fallback }
+    func load(url: URL?, fallback: URL? = nil) {
+        fallbackURL = fallback
+        guard let url else {
+            currentURL = nil
+            image = nil
+            isLoading = false
+            triedFallbackFor = nil
+            return
+        }
+
         // Return cached image immediately
         if let cached = ImageCache.shared.image(for: url) {
+            // Invalidate any older in-flight request before publishing the
+            // cached image, otherwise that stale request can overwrite it.
+            currentURL = url
             self.image = cached
+            isLoading = false
             return
         }
 
@@ -188,9 +200,7 @@ struct MareaImageView: View {
         // itself: it runs once per picture, never while scrolling.
         .mareaAnimation(MareaMotion.fade, value: loader.image != nil)
         .task(id: url) {
-            if let url {
-                loader.load(url: url, fallback: fallbackURL)
-            }
+            loader.load(url: url, fallback: fallbackURL)
         }
     }
 

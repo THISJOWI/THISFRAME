@@ -14,7 +14,7 @@ extension Color {
     ///
     /// On macOS the resolution follows `NSAppearance`, which is why the app
     /// also keeps `NSApp.appearance` in sync with the user's choice (see
-    /// `ThisJellyFixRootView.applyMacAppearance()`).
+    /// `ThisFrameRootView.applyMacAppearance()`).
     static func adaptive(light: Color, dark: Color) -> Color {
         #if canImport(UIKit)
         return Color(uiColor: UIColor { traits in

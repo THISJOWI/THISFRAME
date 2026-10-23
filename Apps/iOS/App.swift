@@ -3,11 +3,11 @@ import ThisJellyFixFeature
 import ThisJellyFixCast
 
 @main
-struct ThisJellyFixIOSApp: App {
+struct ThisFrameIOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        WindowGroup { ThisJellyFixRootView() }
+        WindowGroup { ThisFrameRootView() }
     }
 }
 

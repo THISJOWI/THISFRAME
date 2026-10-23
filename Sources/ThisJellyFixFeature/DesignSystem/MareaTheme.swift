@@ -22,22 +22,30 @@ enum MareaTheme {
         static let borderGlowDark = Color.white.opacity(0.18)
         static let borderGlowLight = Color.black.opacity(0.12)
 
-        /// Brand red. Identical in both variants — the identity never moves.
-        static let accent = Color(red: 0.90, green: 0.06, blue: 0.13)
-        static let accentLight = accent
-        static let accentDark = accent
+        /// Crimson Frame — the brand accent (#D9364F).
+        ///
+        /// Single source of truth for every brand-coloured icon, tint, fill
+        /// and progress bar. Identical in both variants: the identity never
+        /// moves.
+        static let crimsonFrame = Color(red: 0.851, green: 0.212, blue: 0.310)
 
-        /// The brand red used as TEXT on the page background.
+        /// Historical name for `crimsonFrame`. Kept so existing views keep
+        /// reading one value; new code should prefer `crimsonFrame`.
+        static let accent = crimsonFrame
+        static let accentLight = crimsonFrame
+        static let accentDark = crimsonFrame
+
+        /// Crimson Frame used as TEXT on the page background.
         ///
-        /// The brand red itself reaches 4.44:1 on the dark background and
-        /// 4.43:1 on the light one — just under the 4.5:1 of WCAG AA. The
-        /// TEXT variant is the SAME hue, tuned a shade per mode so it clears
-        /// AA in both: a shade deeper on light, a shade lighter on dark.
+        /// The brand accent itself reaches 4.57:1 on white but 4.28:1 on the
+        /// light page background — just under the 4.5:1 of WCAG AA. The TEXT
+        /// variant is the SAME hue, tuned a shade per mode so it clears AA in
+        /// both: a shade deeper on light, a shade lighter on dark.
         ///
-        /// Fills — buttons, progress bars, badges — keep the brand red
+        /// Fills — buttons, progress bars, badges — keep the brand accent
         /// untouched, in both modes.
-        static let accentTextLight = Color(red: 0.83, green: 0.045, blue: 0.11)
-        static let accentTextDark = Color(red: 0.93, green: 0.10, blue: 0.16)
+        static let accentTextLight = Color(red: 0.800, green: 0.199, blue: 0.291)
+        static let accentTextDark = Color(red: 0.919, green: 0.229, blue: 0.335)
 
         static let badgeNeutralDark = Color(red: 0.25, green: 0.27, blue: 0.32)
         static let badgeNeutralLight = Color(white: 0.35)
@@ -72,18 +80,23 @@ enum MareaTheme {
             light: Palette.borderGlowLight,
             dark: Palette.borderGlowDark
         )
-        /// Red used for badges and "new season" flags.
-        static let badgeRed = Color.adaptive(
-            light: Palette.accentLight,
-            dark: Palette.accentDark
+        /// Crimson Frame — the brand accent, by name.
+        ///
+        /// Use this for brand-coloured icons, tints, selected states, fills
+        /// and progress bars. Never hardcode the hex elsewhere.
+        static let crimsonFrame = Color.adaptive(
+            light: Palette.crimsonFrame,
+            dark: Palette.crimsonFrame
         )
+        /// Red used for badges and "new season" flags.
+        static let badgeRed = crimsonFrame
         /// Neutral slate for "Recién añadido" — visible without shouting.
         static let badgeNeutral = Color.adaptive(
             light: Palette.badgeNeutralLight,
             dark: Palette.badgeNeutralDark
         )
         /// Unified accent — tint, progress bars, active tab.
-        static let accent = badgeRed
+        static let accent = crimsonFrame
         /// The accent when it is used as TEXT on the page background.
         static let accentText = Color.adaptive(
             light: Palette.accentTextLight,

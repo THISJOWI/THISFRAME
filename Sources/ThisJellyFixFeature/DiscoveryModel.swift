@@ -21,12 +21,15 @@ public final class DiscoveryModel: ObservableObject {
     // Downloads
     public let coordinator: DownloadCoordinator
     /// Last refresh failure for the downloads panel banner.
-    public var downloadError: Error? { coordinator.lastRefreshError }
+    public var downloadError: Error? {
+        coordinator.lastRemovalError ?? coordinator.lastRefreshError
+    }
 
     private let config: IntegrationConfig
     private let loader: DiscoveryLoader
     private let library: () async -> [JellyfinMediaItem]
     private var pollTask: Task<Void, Never>?
+    private var catalogSearchGeneration = 0
 
     public init(
         loader: DiscoveryLoader,
@@ -109,13 +112,18 @@ public final class DiscoveryModel: ObservableObject {
     /// provider fails — the library half of Search is unaffected either way.
     public func searchCatalog(query: String) async -> [CatalogItem] {
         guard hasMetadataProvider else { return [] }
+        catalogSearchGeneration &+= 1
+        let generation = catalogSearchGeneration
         let items = await library()
+        guard generation == catalogSearchGeneration else { return [] }
         guard let results = try? await loader.search(query: query, library: items) else { return [] }
+        guard generation == catalogSearchGeneration else { return [] }
         catalogResults = results
         return results
     }
 
     public func clearCatalogResults() {
+        catalogSearchGeneration &+= 1
         catalogResults = []
     }
 

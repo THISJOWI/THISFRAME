@@ -457,7 +457,7 @@ final class LibraryModel {
         includeTypes: String?,
         limit: Int = 30,
         startIndex: Int? = nil
-    ) async -> [JellyfinMediaItem] {
+    ) async throws -> [JellyfinMediaItem] {
         do {
             return try await libraryClient.fetchItems(
                 userId: userId, serverURL: serverURL, token: token,
@@ -467,7 +467,7 @@ final class LibraryModel {
             )
         } catch {
             noteFetchFailure(error, context: "fetchPage", surfaceMessage: false)
-            return []
+            throw error
         }
     }
 

@@ -452,6 +452,30 @@ final class DownloadCoordinatorTests: XCTestCase {
         XCTAssertTrue(coordinator.entries.isEmpty)
     }
 
+    func testFailedRemoteRemovalKeepsEntryAndExposesError() async {
+        let radarr = FakeRadarr()
+        radarr.queueRecords = [
+            DownloadEntry(id: "radarr-11", service: .radarr, title: "Dune",
+                          tmdbId: "438631", remoteId: "77",
+                          state: .downloading(progress: 10))
+        ]
+        radarr.deleteError = ArrError.unreachable
+        config.radarrURL = URL(string: "http://r:7878")
+        config.radarrApiKey = "k"
+        let coordinator = DownloadCoordinator(config: config, radarr: radarr, sonarr: nil)
+
+        await coordinator.refresh()
+        let target = CatalogItem(id: "438631", kind: .movie, title: "Dune", year: 2021,
+                                 overview: nil, posterURL: nil, backdropURL: nil,
+                                 tmdbId: "438631", imdbId: nil)
+        await coordinator.removeEntries(matching: target)
+
+        XCTAssertEqual(coordinator.entries.count, 1)
+        XCTAssertEqual(coordinator.entries[0].title, "Dune")
+        XCTAssertNotNil(coordinator.lastRemovalError)
+        XCTAssertTrue(radarr.deletedIds.isEmpty)
+    }
+
     // MARK: - Availability (Jellyfin picked the file up)
 
     func testMarkAvailableFlipsCompletedEntry() async throws {
@@ -494,6 +518,7 @@ final class FakeRadarr: RadarrProviding, @unchecked Sendable {
     private(set) var queueFetchCount = 0
     private(set) var deletedIds: [String] = []
     var triggerError: Error?
+    var deleteError: Error?
     private(set) var searchTriggeredIds: [Int] = []
 
     func triggerSearch(movieId: Int) async throws {
@@ -502,6 +527,7 @@ final class FakeRadarr: RadarrProviding, @unchecked Sendable {
     }
 
     func deleteEntry(id: String) async throws {
+        if let deleteError { throw deleteError }
         deletedIds.append(id)
         queueRecords.removeAll { $0.remoteId == id }
     }

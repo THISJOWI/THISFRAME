@@ -7,7 +7,7 @@ import ThisJellyFixNetworking
 final class LibraryModelPaginationTests: XCTestCase {
     private let serverURL = URL(string: "http://localhost:8096")!
 
-    func testFetchPagePassesStartIndexToClient() async {
+    func testFetchPagePassesStartIndexToClient() async throws {
         let stub = StubLibraryClient()
         stub.latestItems = (1...30).map { i in
             JellyfinMediaItem(
@@ -22,7 +22,7 @@ final class LibraryModelPaginationTests: XCTestCase {
             libraryClient: stub, serverURL: serverURL, userId: "u1", token: "tok"
         )
 
-        let firstPage = await model.fetchPage(parentId: "v1", includeTypes: "Movie", limit: 30)
+        let firstPage = try await model.fetchPage(parentId: "v1", includeTypes: "Movie", limit: 30)
 
         XCTAssertEqual(firstPage.count, 30)
         let recorded = stub.recordedStartIndices
@@ -30,7 +30,7 @@ final class LibraryModelPaginationTests: XCTestCase {
         XCTAssertNil(recorded[0], "first page must not pass StartIndex")
     }
 
-    func testFetchPageWithStartIndexPaginates() async {
+    func testFetchPageWithStartIndexPaginates() async throws {
         let stub = StubLibraryClient()
         stub.latestItems = (31...45).map { i in
             JellyfinMediaItem(
@@ -45,11 +45,30 @@ final class LibraryModelPaginationTests: XCTestCase {
             libraryClient: stub, serverURL: serverURL, userId: "u1", token: "tok"
         )
 
-        let secondPage = await model.fetchPage(
+        let secondPage = try await model.fetchPage(
             parentId: "v1", includeTypes: "Movie", limit: 30, startIndex: 30
         )
 
         XCTAssertEqual(secondPage.count, 15, "partial page signals the end")
         XCTAssertEqual(stub.recordedStartIndices, [30])
     }
+
+    func testFetchPagePropagatesClientErrorInsteadOfReturningEmptyPage() async {
+        let stub = StubLibraryClient()
+        stub.fetchItemsError = TestError.unavailable
+        let model = LibraryModel(
+            libraryClient: stub, serverURL: serverURL, userId: "u1", token: "tok"
+        )
+
+        do {
+            _ = try await model.fetchPage(parentId: "v1", includeTypes: "Movie", limit: 30)
+            XCTFail("Expected the page request to preserve its error")
+        } catch {
+            XCTAssertEqual(error as? TestError, .unavailable)
+        }
+    }
+}
+
+private enum TestError: Error, Equatable {
+    case unavailable
 }
