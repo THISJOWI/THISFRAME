@@ -31,10 +31,10 @@ struct HomeActionPill: View {
             } label: {
                 ZStack(alignment: .bottomTrailing) {
                     CastIcon()
-                        .stroke(Color.primary, lineWidth: 0)
-                        .foregroundStyle(.primary)
+                        .stroke(MareaTheme.Colors.crimsonFrame, lineWidth: 0)
+                        .foregroundStyle(MareaTheme.Colors.crimsonFrame)
                         .frame(width: 20, height: 15)
-                        .overlay(CastIcon().stroke(Color.primary, style: StrokeStyle(lineWidth: 2, lineCap: .round)))
+                        .overlay(CastIcon().stroke(MareaTheme.Colors.crimsonFrame, style: StrokeStyle(lineWidth: 2, lineCap: .round)))
                         .frame(width: 36, height: 36)
                     if cast.manager.state.isConnected {
                         Circle()

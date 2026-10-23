@@ -729,8 +729,8 @@ private struct ServerConnectionView: View {
                 Image("AppIcon")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 80, height: 80)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .frame(width: 64, height: 64)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
                     .shadow(color: MareaTheme.Colors.accent.opacity(0.3), radius: 12)
 
                 VStack(spacing: 8) {

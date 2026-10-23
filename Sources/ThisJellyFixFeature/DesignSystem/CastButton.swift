@@ -56,10 +56,10 @@ struct CastButton: View {
         Button(action: onTap) {
             ZStack(alignment: .bottomTrailing) {
                 CastIcon()
-                    .stroke(.white, lineWidth: 0)
-                    .foregroundStyle(.white)
+                    .stroke(MareaTheme.Colors.crimsonFrame, lineWidth: 0)
+                    .foregroundStyle(MareaTheme.Colors.crimsonFrame)
                     .frame(width: 22, height: 16)
-                    .overlay(CastIcon().stroke(.white, style: StrokeStyle(lineWidth: 2, lineCap: .round)))
+                    .overlay(CastIcon().stroke(MareaTheme.Colors.crimsonFrame, style: StrokeStyle(lineWidth: 2, lineCap: .round)))
                     .frame(width: 40, height: 40)
 
                 if isConnecting {

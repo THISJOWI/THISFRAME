@@ -30,8 +30,8 @@ struct LoginView: View {
                 Image("AppIcon")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 64, height: 64)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .frame(width: 48, height: 48)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                     .shadow(color: MareaTheme.Colors.accent.opacity(0.3), radius: 10)
 
                 Text("Iniciar sesión")
