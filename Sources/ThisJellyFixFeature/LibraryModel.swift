@@ -337,8 +337,10 @@ final class LibraryModel {
     }
 
     private func publish(_ row: ContentRow) {
-        guard !row.items.isEmpty else { return }
         rows.removeAll { $0.id == row.id }
+        // A successful empty response means this shelf is now empty. Keeping
+        // its previous value made removed/played items survive every refresh.
+        guard !row.items.isEmpty else { return }
         rows.append(row)
         rows.sort {
             let l = Self.rowOrder.firstIndex(of: $0.title) ?? Self.rowOrder.count

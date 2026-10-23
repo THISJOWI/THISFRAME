@@ -42,4 +42,26 @@ final class LibraryModelCategoryTests: XCTestCase {
 
         XCTAssertTrue(model.categoryChips.isEmpty)
     }
+
+    func testSuccessfulEmptyRefreshRemovesPreviouslyLoadedRow() async {
+        let stub = StubLibraryClient()
+        stub.latestItems = [JellyfinMediaItem(
+            id: "movie-1", name: "Película", type: "Movie", overview: nil,
+            seriesName: nil, indexNumber: nil, parentIndexNumber: nil,
+            year: nil, imageTags: nil, backdropImageTags: nil,
+            officialRating: nil, communityRating: nil, genres: nil,
+            userData: nil, providerIds: nil
+        )]
+        let model = LibraryModel(
+            libraryClient: stub, serverURL: serverURL, userId: "u1", token: "tok"
+        )
+
+        await model.load()
+        XCTAssertTrue(model.rows.contains { $0.title == "Últimos agregados" })
+
+        stub.latestItems = []
+        await model.load()
+
+        XCTAssertFalse(model.rows.contains { $0.title == "Últimos agregados" })
+    }
 }

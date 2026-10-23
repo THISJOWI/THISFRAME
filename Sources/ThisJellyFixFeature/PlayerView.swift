@@ -56,6 +56,9 @@ struct PlayerView: View {
     // Next episode wiring — when provided, the credits overlay offers it
     var nextEpisode: JellyfinEpisode? = nil
     var onPlayNextEpisode: ((JellyfinEpisode) -> Void)? = nil
+    // Playback completion (real end of media, not a user exit) — parents use
+    // it to refresh server-owned episode/series state while the player is up.
+    var onPlaybackCompleted: (() -> Void)? = nil
     // Previous episode wiring — when provided, transport ⏮ offers it
     var previousEpisode: JellyfinEpisode? = nil
     var onPlayPreviousEpisode: ((JellyfinEpisode) -> Void)? = nil
@@ -126,6 +129,7 @@ struct PlayerView: View {
         audioServerIndex: Int? = nil,
         nextEpisode: JellyfinEpisode? = nil,
         onPlayNextEpisode: ((JellyfinEpisode) -> Void)? = nil,
+        onPlaybackCompleted: (() -> Void)? = nil,
         previousEpisode: JellyfinEpisode? = nil,
         onPlayPreviousEpisode: ((JellyfinEpisode) -> Void)? = nil,
         subtitle: String? = nil,
@@ -147,6 +151,7 @@ struct PlayerView: View {
         self.audioServerIndex = audioServerIndex
         self.nextEpisode = nextEpisode
         self.onPlayNextEpisode = onPlayNextEpisode
+        self.onPlaybackCompleted = onPlaybackCompleted
         self.previousEpisode = previousEpisode
         self.onPlayPreviousEpisode = onPlayPreviousEpisode
         self.subtitle = subtitle
@@ -188,6 +193,16 @@ struct PlayerView: View {
         viewModel.configureMediaStreams(mediaStreams)
         viewModel.noteServedAudioServerIndex(audioServerIndex)
         viewModel.configureNowPlaying(title: title)
+        // Real end of media: wait for the completion POST to settle, then let
+        // the parent re-read the server-owned watched state.
+        let completion = onPlaybackCompleted
+        viewModel.onPlaybackCompleted = { [weak viewModel] in
+            guard let viewModel else { return }
+            Task { @MainActor in
+                await viewModel.flushReports()
+                completion?()
+            }
+        }
         // Carried into the PiP context so a restore rebuilds the same player.
         viewModel.playerSubtitle = subtitle
         viewModel.playerMediaType = mediaType

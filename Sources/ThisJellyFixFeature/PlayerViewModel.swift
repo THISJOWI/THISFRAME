@@ -110,6 +110,10 @@ final class PlayerViewModel {
     var onPlayPreviousEpisode: (() -> Void)?
     /// true when a previous-episode action is wired (transport ⏮).
     var hasPreviousEpisode = false
+    /// Fired ONCE when the current item reaches its real end — not when the
+    /// user leaves the player. The view uses it to refresh the episode list
+    /// (and the series/season progress) while playback is still mounted.
+    var onPlaybackCompleted: (() -> Void)?
     /// true while a next-episode swap is loading — the view covers the loading
     /// gap with an in-player indicator instead of dropping back out.
     var isSwitchingEpisode = false
@@ -235,7 +239,12 @@ final class PlayerViewModel {
     var subtitleSearchTitle: String?
 
     // MARK: - Playback Reporting
-    private var reporter = JellyfinPlaybackReporter()
+    /// Injectable for tests. Reports are serialised through `reportingChain`.
+    var reporter: any JellyfinPlaybackReporting = JellyfinPlaybackReporter()
+    /// Serialises server reports so Jellyfin applies them in the order they
+    /// happened. A progress POST still in flight when the item ends must never
+    /// land AFTER the final stop and revive the resume entry.
+    private var reportingChain: Task<Void, Never>?
     private var reportingSessionId: String?
     private var hasReportedPlaying = false
     private var lastProgressReport: Date?
@@ -244,6 +253,10 @@ final class PlayerViewModel {
     private var token: String?
     private var userId: String?
     private var reportingConfigured = false
+    /// The real end of the current item was already handled. Guards against
+    /// double completion (engine notification + timer fallback, or a queued
+    /// notification arriving after an episode swap).
+    private var completionReported = false
 
     // MARK: - Handoff takeover (playback moved to another device)
     /// Name of the device that took playback of the current item away from
@@ -375,10 +388,15 @@ final class PlayerViewModel {
             rate: isPlaying ? playbackRate : Float(0)
         )
         if status.ended {
-            // El contenido terminó en el receptor. Si hay cadena de
-            // episodios, auto-avanzar EMITIENDO el siguiente en el receptor
-            // (castCarryOver lo mantiene emitiendo durante el swap; sin
-            // cadena, la salida vuelve a control local).
+            // El contenido terminó en el receptor. CastController ya envió el
+            // stop al servidor; latchearlo aquí evita que la salida de la
+            // vista mande un segundo stop local para el mismo ítem.
+            completionReported = true
+            stopReported = true
+            onPlaybackCompleted?()
+            // Si hay cadena de episodios, auto-avanzar EMITIENDO el siguiente
+            // en el receptor (castCarryOver lo mantiene emitiendo durante el
+            // swap; sin cadena, la salida vuelve a control local).
             TJFLog("cast: receptor terminó — hasNextEpisode=\(hasNextEpisode)")
             if hasNextEpisode {
                 #if os(iOS)
@@ -469,7 +487,7 @@ final class PlayerViewModel {
         }
     }
 
-    private func handleEngineState(_ state: PlaybackEngineState) {
+    func handleEngineState(_ state: PlaybackEngineState) {
         switch state {
         case .failed(let message):
             TJFLog("engine FAILED item=\(itemId ?? "nil"): \(message)")
@@ -477,13 +495,62 @@ final class PlayerViewModel {
             if errorMessage == nil {
                 errorMessage = message
             }
-        case .ended:
+        case .ended(let endedItemID):
+            // The end belongs to the item the engine actually finished. A
+            // queued notification from an episode that was already swapped
+            // out must not complete (or report) the new one.
+            guard itemId == nil || endedItemID == itemId else {
+                TJFLog("engine ENDED stale item=\(endedItemID) current=\(itemId ?? "nil") — dropped")
+                return
+            }
             // Natural end — credits/next-episode UI keep showing, no error.
             TJFLog("engine ENDED item=\(itemId ?? "nil")")
             isPlaying = false
+            finishCurrentItem()
         case .buffering, .loading, .ready, .playing, .paused, .idle:
             break
         }
+    }
+
+    /// The current item reached its REAL end. Report the completion to
+    /// Jellyfin immediately instead of waiting for the user to leave the
+    /// player: the server owns the watched flag, and until it receives the
+    /// stop every season/series progress bar keeps showing pending content.
+    private func finishCurrentItem() {
+        guard !completionReported, !engineStopped else { return }
+        completionReported = true
+
+        // The end event is authoritative. AVPlayer can expose a position a
+        // few frames short of the media duration; the server decides "played"
+        // from the final position, so report the duration actually reached.
+        let finalDuration = max(duration, engine.duration)
+        if finalDuration > 0 {
+            duration = finalDuration
+            currentTime = max(currentTime, finalDuration)
+        }
+
+        // One stop for this item. `stopReported` also blocks the exit path
+        // from sending a second, stale stop when the player is dismissed.
+        if reportStopped() {
+            stopReported = true
+        }
+
+        onPlaybackCompleted?()
+    }
+
+    /// Fallback for a playhead that sits exactly on the end without an end
+    /// notification (for example a precise seek to the duration). Only a
+    /// position that actually reached the duration qualifies — no "90%"
+    /// guesses and no arbitrary tolerance.
+    func evaluatePlaybackEnd() {
+        guard !isSeeking,
+              duration > 0,
+              currentTime >= duration,
+              !isPlaying,
+              !completionReported
+        else { return }
+        TJFLog("playback end reached without notification item=\(itemId ?? "nil")")
+        finishCurrentItem()
     }
 
     #if !os(visionOS)
@@ -597,6 +664,7 @@ final class PlayerViewModel {
             currentStreamURL = url
             engineStopped = false
             stopReported = false
+            completionReported = false
             // Apply the persisted fit/fill mode natively so subtitles stay
             // inside the visible region from the start.
             engine.setVideoFill(isFill)
@@ -904,6 +972,7 @@ final class PlayerViewModel {
         lastProgressReport = nil
         engineStopped = false
         stopReported = false
+        completionReported = false
         pendingResumePosition = nil
         lastSeekAt = nil
     }
@@ -1271,6 +1340,10 @@ final class PlayerViewModel {
                     // only when the native selection stopped matching.
                     self.engine.reconcileSubtitleSelection()
                 }
+
+                // Fallback safety net: some end paths (a seek that lands
+                // exactly on the duration) do not emit the end notification.
+                self.evaluatePlaybackEnd()
 
                 // Lock screen: elapsed/duration/rate refresh.
                 NowPlayingController.shared.update(
@@ -2259,7 +2332,7 @@ final class PlayerViewModel {
         }
         let mediaSourceId = itemId
         TJFLog("reportPlayStarted itemId=\(itemId)")
-        Task {
+        enqueueReport { [reporter] in
             await reporter.reportPlaying(
                 userId: userId, serverURL: serverURL, token: token,
                 itemId: itemId, mediaSourceId: mediaSourceId
@@ -2267,7 +2340,7 @@ final class PlayerViewModel {
         }
     }
 
-    private func reportProgress() {
+    func reportProgress() {
         reportProgress(at: currentTime)
     }
 
@@ -2291,11 +2364,12 @@ final class PlayerViewModel {
             pendingResumePosition = nil
         }
         TJFLog("reportProgress itemId=\(itemId) ticks=\(ticks)")
-        Task {
+        let isPaused = !isPlaying
+        enqueueReport { [reporter] in
             await reporter.reportProgress(
                 userId: userId, serverURL: serverURL, token: token,
                 itemId: itemId, mediaSourceId: itemId,
-                positionTicks: ticks, isPaused: !isPlaying
+                positionTicks: ticks, isPaused: isPaused
             )
         }
     }
@@ -2316,7 +2390,7 @@ final class PlayerViewModel {
             return false
         }
         TJFLog("reportStopped itemId=\(itemId) ticks=\(ticks)")
-        Task {
+        enqueueReport { [reporter] in
             await reporter.reportStopped(
                 userId: userId, serverURL: serverURL, token: token,
                 itemId: itemId, mediaSourceId: itemId,
@@ -2324,6 +2398,23 @@ final class PlayerViewModel {
             )
         }
         return true
+    }
+
+    /// Serialise a report behind every report already queued. The order the
+    /// server sees is the order playback produced, so a stop can never be
+    /// overtaken by an older progress POST.
+    private func enqueueReport(_ operation: @escaping @Sendable () async -> Void) {
+        let previous = reportingChain
+        reportingChain = Task {
+            await previous?.value
+            await operation()
+        }
+    }
+
+    /// Await every queued report. Used before refreshing server-owned UI so
+    /// the read cannot run against the pre-completion state.
+    func flushReports() async {
+        await reportingChain?.value
     }
 
     func stop() async {

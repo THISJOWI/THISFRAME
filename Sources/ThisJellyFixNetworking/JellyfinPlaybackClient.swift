@@ -249,9 +249,44 @@ public struct JellyfinSessionClient: JellyfinSessionProviding {
 
 // MARK: - Playback Reporting
 
+/// The Jellyfin playback-reporting surface. A protocol (not the concrete
+/// reporter) so the player can be tested without a network and so a future
+/// transport can replace the POSTs without touching the view model.
+public protocol JellyfinPlaybackReporting: Sendable {
+    /// Server-issued PlaySessionId from PlaybackInfo — echoed on every report.
+    var playSessionId: String? { get set }
+
+    func reportPlaying(
+        userId: String,
+        serverURL: URL,
+        token: String,
+        itemId: String,
+        mediaSourceId: String
+    ) async
+
+    func reportProgress(
+        userId: String,
+        serverURL: URL,
+        token: String,
+        itemId: String,
+        mediaSourceId: String,
+        positionTicks: Int64,
+        isPaused: Bool
+    ) async
+
+    func reportStopped(
+        userId: String,
+        serverURL: URL,
+        token: String,
+        itemId: String,
+        mediaSourceId: String,
+        positionTicks: Int64
+    ) async
+}
+
 /// Reports playback progress to Jellyfin so episodes get marked as watched.
 /// Jellyfin considers an item "watched" when progress >= 90%.
-public struct JellyfinPlaybackReporter: Sendable {
+public struct JellyfinPlaybackReporter: Sendable, JellyfinPlaybackReporting {
     private let session: any JellyfinNetworkSession
 
     /// Server-issued PlaySessionId from PlaybackInfo — echoed on every report
@@ -324,7 +359,7 @@ public struct JellyfinPlaybackReporter: Sendable {
             "IsPaused": isPaused,
             "IsMuted": false,
         ]
-        await report(
+        _ = await report(
             endpoint: "Sessions/Playing/Progress",
             userId: userId,
             serverURL: serverURL,
@@ -352,7 +387,11 @@ public struct JellyfinPlaybackReporter: Sendable {
             "MediaSourceId": mediaSourceId,
             "PositionTicks": positionTicks,
         ]
-        await report(
+        // The stop is the event that flips the item to "watched" on the
+        // server. Retry it: a momentary Wi-Fi hiccup at the end must not lose
+        // the completion (progress reports are cheap to repeat, the stop is
+        // not). The POST is idempotent server-side.
+        await reportWithRetry(
             endpoint: "Sessions/Playing/Stopped",
             userId: userId,
             serverURL: serverURL,
@@ -373,7 +412,7 @@ public struct JellyfinPlaybackReporter: Sendable {
             "ItemId": itemId,
             "MediaSourceId": mediaSourceId,
         ]
-        await report(
+        _ = await report(
             endpoint: endpoint,
             userId: userId,
             serverURL: serverURL,
@@ -382,13 +421,42 @@ public struct JellyfinPlaybackReporter: Sendable {
         )
     }
 
+    /// Stop reports are the authoritative completion event: retry a couple of
+    /// times so a transient network failure does not lose the watched flag.
+    /// Backoff is short and bounded; callers never block on it.
+    private func reportWithRetry(
+        endpoint: String,
+        userId: String,
+        serverURL: URL,
+        token: String,
+        body: [String: Any],
+        attempts: Int = 3
+    ) async {
+        for attempt in 1...attempts {
+            let delivered = await report(
+                endpoint: endpoint,
+                userId: userId,
+                serverURL: serverURL,
+                token: token,
+                body: body
+            )
+            if delivered { return }
+            guard attempt < attempts else { return }
+            TJFLog("HTTP → \(endpoint) retry \(attempt)/\(attempts - 1) after a failed attempt")
+            try? await Task.sleep(nanoseconds: UInt64(attempt) * 500_000_000)
+        }
+    }
+
+    /// - Returns: true when the server accepted the report (2xx). Never throws:
+    /// playback must not fail because reporting did.
+    @discardableResult
     private func report(
         endpoint: String,
         userId: String,
         serverURL: URL,
         token: String,
         body: [String: Any]
-    ) async {
+    ) async -> Bool {
         let url = serverURL.appendingPathComponent(endpoint)
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -411,12 +479,13 @@ public struct JellyfinPlaybackReporter: Sendable {
 
         do {
             let (data, response) = try await session.data(for: request)
-            if let http = response as? HTTPURLResponse {
-                let responseStr = String(data: data, encoding: .utf8) ?? "binary"
-                TJFLog("HTTP ← \(endpoint) status=\(http.statusCode) response=\(responseStr.prefix(300))")
-            }
+            guard let http = response as? HTTPURLResponse else { return false }
+            let responseStr = String(data: data, encoding: .utf8) ?? "binary"
+            TJFLog("HTTP ← \(endpoint) status=\(http.statusCode) response=\(responseStr.prefix(300))")
+            return (200...299).contains(http.statusCode)
         } catch {
             TJFLog("HTTP ← \(endpoint) ERROR: \(error.localizedDescription)")
+            return false
         }
     }
 }

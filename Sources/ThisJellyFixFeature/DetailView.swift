@@ -154,6 +154,14 @@ struct DetailView: View {
                     onPlayNextEpisode: { episode in
                         Task { await playNextEpisode(episode) }
                     },
+                    onPlaybackCompleted: {
+                        // The server now owns the final state. Re-read the
+                        // rows while the player is still mounted so leaving
+                        // it never shows the pre-playback progress.
+                        if detail?.type == "Series" {
+                            Task { await reloadEpisodesAfterPlayback() }
+                        }
+                    },
                     previousEpisode: previousEpisode,
                     onPlayPreviousEpisode: { episode in
                         Task { await playEpisode(episode) }
@@ -191,6 +199,14 @@ struct DetailView: View {
                         nextEpisode: nextEpisode,
                         onPlayNextEpisode: { episode in
                             Task { await playNextEpisode(episode) }
+                        },
+                        onPlaybackCompleted: {
+                            // The server now owns the final state. Re-read the
+                            // rows while the player is still mounted so leaving
+                            // it never shows the pre-playback progress.
+                            if detail?.type == "Series" {
+                                Task { await reloadEpisodesAfterPlayback() }
+                            }
                         },
                         previousEpisode: previousEpisode,
                         onPlayPreviousEpisode: { episode in

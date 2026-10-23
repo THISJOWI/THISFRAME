@@ -35,7 +35,7 @@ let package = Package(
         ),
         .testTarget(
             name: "ThisJellyFixFeatureTests",
-            dependencies: ["ThisJellyFixFeature", "ThisJellyFixCore", "ThisJellyFixNetworking"]
+            dependencies: ["ThisJellyFixFeature", "ThisJellyFixCore", "ThisJellyFixNetworking", "ThisJellyFixPlayback"]
         )
     ]
 )

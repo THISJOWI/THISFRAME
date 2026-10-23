@@ -40,7 +40,8 @@ public protocol PlaybackEngine: Sendable {
 
 /// Engine lifecycle — replaces VLCKit's state enum. `.ended` is a REAL
 /// end-of-media signal (AVPlayerItemDidPlayToEndTime), which is what killed
-/// the old `currentTime >= duration - 1.5` guess.
+/// the old `currentTime >= duration - 1.5` guess. It carries the item it
+/// belongs to so a queued notification cannot complete a swapped-in episode.
 public enum PlaybackEngineState: Sendable, Equatable {
     case idle
     case loading
@@ -48,7 +49,7 @@ public enum PlaybackEngineState: Sendable, Equatable {
     case playing
     case paused
     case buffering
-    case ended
+    case ended(itemID: String)
     case failed(String)
 }
 

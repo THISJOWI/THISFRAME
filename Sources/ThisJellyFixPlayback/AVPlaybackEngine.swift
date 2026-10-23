@@ -153,7 +153,7 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         // on episode swap.
         item.preferredForwardBufferDuration = 5
 
-        observe(item: item, generation: gen)
+        observe(item: item, generation: gen, itemID: request.itemID)
         player.replaceCurrentItem(with: item)
         TJFLog("prepare: item attached in \(Int(Date().timeIntervalSince(prepareStartedAt) * 1000)) ms")
 
@@ -577,7 +577,7 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
     }
     #endif
 
-    private func observe(item: AVPlayerItem, generation gen: Int) {
+    private func observe(item: AVPlayerItem, generation gen: Int, itemID: String) {
         itemObservations.append(
             item.observe(\.status, options: [.new]) { [weak self] observedItem, _ in
                 guard let self else { return }
@@ -618,7 +618,10 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
             object: item,
             queue: .main
         ) { [weak self] _ in
-            self?.notify(.ended)
+            // A stale item's end (queued before an episode swap) must never
+            // complete the new item.
+            guard let self, self.generation == gen else { return }
+            self.notify(.ended(itemID: itemID))
         }
 
         // presentationSize lands on the first decoded frame (KVO-able).
