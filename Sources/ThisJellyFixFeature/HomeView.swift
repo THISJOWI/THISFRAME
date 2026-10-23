@@ -263,7 +263,7 @@ struct HomeView: View {
         let base = ScrollView {
             VStack(alignment: .leading, spacing: MareaTheme.Spacing.lg) {
                 HStack {
-                    Image("HomeLogo")
+                    Image("IconoInicio")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 28, height: 28)
