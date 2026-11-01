@@ -45,6 +45,8 @@ struct DetailView: View {
     // MARK: - Seasons & Episodes
     @State private var seasons: [JellyfinSeason] = []
     @State private var selectedSeasonIndex: Int = 0
+    /// First load only: jump to the season that holds the in-progress episode.
+    @State private var didChooseInitialSeason = false
     @State private var episodes: [JellyfinEpisode] = []
     @State private var isLoadingEpisodes = false
     /// Message shown when the episode list could not be loaded or refreshed.
@@ -457,6 +459,10 @@ struct DetailView: View {
         .frame(height: heroHeight)
     }
 
+    /// Primary hero action: a single, unmistakable capsule. When there is
+    /// progress it reads "Continuar" plus the episode and time left, with a
+    /// hairline progress bar inside the capsule, so resuming is obvious
+    /// without changing what the button actually does.
     private func heroPrimaryButton(detail: JellyfinItemDetail) -> some View {
         Button {
             if detail.type == "Series" {
@@ -465,23 +471,96 @@ struct DetailView: View {
                 Task { await playMovie(detail) }
             }
         } label: {
-            Group {
-                if isPreparingPlayback {
-                    ProgressView()
-                        .tint(.white)
-                } else {
-                    Label(heroPrimaryLabel(detail: detail), systemImage: heroPrimaryIcon(detail: detail))
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(.white.opacity(0.18))
+                        .frame(width: 36, height: 36)
+                    if isPreparingPlayback {
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(.white)
+                    } else {
+                        Image(systemName: heroPrimaryIcon(detail: detail))
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(isPreparingPlayback ? "Preparando…" : heroPrimaryLabel(detail: detail))
+                        .font(.headline)
+                    if !isPreparingPlayback, let line = heroPrimaryDetailLine(detail: detail) {
+                        Text(line)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.white.opacity(0.82))
+                            .lineLimit(1)
+                    }
                 }
             }
-            .font(.headline)
-            .padding(.horizontal, 22)
-            .padding(.vertical, 12)
+            .foregroundStyle(.white)
+            .padding(.leading, 8)
+            .padding(.trailing, 18)
+            .padding(.vertical, 7)
+            .frame(minWidth: 170, minHeight: 52)
+            .background(MareaTheme.Colors.accent, in: Capsule())
+            .overlay(alignment: .bottomLeading) {
+                if let fraction = heroProgressFraction(detail: detail) {
+                    GeometryReader { proxy in
+                        Capsule()
+                            .fill(.white.opacity(0.85))
+                            .frame(width: max(6, proxy.size.width * fraction), height: 2.5)
+                    }
+                    .frame(height: 2.5)
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 4)
+                }
+            }
+            .shadow(color: MareaTheme.Colors.accent.opacity(0.3), radius: 10, y: 4)
+            .contentShape(Capsule())
         }
-        .buttonStyle(.borderedProminent)
-        .tint(MareaTheme.Colors.accent)
-        .foregroundStyle(.white)
-        .controlSize(.large)
+        .buttonStyle(.plain)
         .disabled(isPreparingPlayback)
+        .accessibilityHint(heroPrimaryAccessibilityHint(detail: detail))
+    }
+
+    /// Second line of the primary capsule: "T1 E5 · 12 min restantes" while
+    /// resuming, or just the episode label when starting from the beginning.
+    private func heroPrimaryDetailLine(detail: JellyfinItemDetail) -> String? {
+        guard detail.type == "Series", let episode = preferredEpisode else { return nil }
+        guard let resume = episode.resumePositionSeconds, resume > 0 else {
+            return episode.episodeLabel
+        }
+        guard let duration = episode.durationSeconds, duration > resume else {
+            return episode.episodeLabel
+        }
+        let remaining = max(1, Int((duration - resume) / 60))
+        return "\(episode.episodeLabel) · \(remaining) min restantes"
+    }
+
+    private func heroProgressFraction(detail: JellyfinItemDetail) -> Double? {
+        if detail.type == "Series" {
+            guard let episode = preferredEpisode,
+                  let resume = episode.resumePositionSeconds, resume > 0,
+                  let duration = episode.durationSeconds, duration > 0
+            else { return nil }
+            return min(max(resume / duration, 0.02), 1)
+        }
+        guard let resume = detail.resumePositionSeconds, resume > 0,
+              let minutes = detail.durationMinutes, minutes > 0
+        else { return nil }
+        return min(max(resume / (Double(minutes) * 60), 0.02), 1)
+    }
+
+    private func heroPrimaryAccessibilityHint(detail: JellyfinItemDetail) -> String {
+        if detail.type == "Series", let episode = preferredEpisode {
+            if let resume = episode.resumePositionSeconds, resume > 0 {
+                return "Reanuda \(episode.episodeLabel) desde donde lo dejaste"
+            }
+            return "Reproduce \(episode.episodeLabel)"
+        }
+        if detail.type == "Series" { return "Muestra los episodios de la serie" }
+        return detail.resumePositionSeconds != nil ? "Reanuda la reproducción" : "Inicia la reproducción"
     }
 
     private var heroFavoriteButton: some View {
@@ -489,12 +568,12 @@ struct DetailView: View {
             toggleFavorite()
         } label: {
             Label(
-                isFavorite ? "En tu lista" : "Añadir a mi lista",
+                isFavorite ? "En tu lista" : "Mi lista",
                 systemImage: isFavorite ? "heart.fill" : "heart"
             )
             .font(.headline)
             .foregroundStyle(.white)
-            .padding(.horizontal, 18)
+            .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(.black.opacity(0.3), in: Capsule())
             .overlay(Capsule().strokeBorder(.white.opacity(0.24), lineWidth: 0.5))
@@ -1005,13 +1084,35 @@ struct DetailView: View {
     private func loadSeasons() async {
         let libraryClient = JellyfinLibraryClient()
         do {
-            seasons = try await libraryClient.fetchSeasons(
+            async let seasonsRequest = libraryClient.fetchSeasons(
                 userId: userId,
                 serverURL: serverURL,
                 token: token,
                 seriesId: item.id
             )
+            // The in-progress episode may live in a later season: without this
+            // the hero's "Continuar" would only ever find progress in season 1.
+            async let resumeRequest = libraryClient.fetchResumeItems(
+                userId: userId,
+                serverURL: serverURL,
+                token: token,
+                limit: 50
+            )
+
+            seasons = try await seasonsRequest
             guard !seasons.isEmpty else { return }
+
+            if !didChooseInitialSeason {
+                let resumeSeason = (try? await resumeRequest)?
+                    .first(where: { $0.type == "Episode" && $0.seriesName == item.name })?
+                    .parentIndexNumber
+                if let resumeSeason,
+                   let match = seasons.firstIndex(where: { $0.indexNumber == resumeSeason }) {
+                    selectedSeasonIndex = match
+                }
+                didChooseInitialSeason = true
+            }
+
             // Keep the season the user is looking at — a refresh must not
             // throw them back to the first one.
             let index = min(max(selectedSeasonIndex, 0), seasons.count - 1)
