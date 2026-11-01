@@ -9,14 +9,25 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                SettingsGroupHeader(title: "General")
                 AppearanceSettingsSection()
+
+                SettingsGroupHeader(title: "Reproducción")
                 SkipSettingsSection()
+
+                SettingsGroupHeader(title: "Audio y subtítulos")
                 SubtitleSizeSettingsSection()
                 LanguageSettingsSection()
                 #if os(iOS) || os(macOS)
                 SubtitleProvidersSection()
+                #endif
+
+                #if os(iOS) || os(macOS)
+                SettingsGroupHeader(title: "Conexiones")
                 IntegrationsSection()
                 #endif
+
+                SettingsGroupHeader(title: "Avanzado")
                 DiagnosticsSection()
             }
             .padding(.vertical, 16)
@@ -26,6 +37,22 @@ struct SettingsView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+}
+
+private struct SettingsGroupHeader: View {
+    let title: String
+
+    var body: some View {
+        HStack {
+            Text(title.uppercased())
+                .font(.caption.weight(.bold))
+                .tracking(1.1)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 4)
     }
 }
 

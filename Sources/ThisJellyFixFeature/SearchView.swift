@@ -17,8 +17,44 @@ struct SearchView: View {
     @Environment(DiscoveryModel.self) private var discovery: DiscoveryModel?
     @State private var catalogResults: [CatalogItem] = []
     @State private var isSearchingCatalog = false
+    @State private var selectedFilter: LibraryFilter = .all
 
     private let libraryClient: any JellyfinLibraryProviding
+
+    private enum LibraryFilter: Hashable {
+        case all
+        case movies
+        case series
+        case genre(String)
+    }
+
+    private var filteredResults: [JellyfinMediaItem] {
+        switch selectedFilter {
+        case .all:
+            return results
+        case .movies:
+            return results.filter { $0.type == "Movie" }
+        case .series:
+            return results.filter { $0.type == "Series" }
+        case .genre(let genre):
+            return results.filter { item in
+                item.genres?.contains(where: { $0.caseInsensitiveCompare(genre) == .orderedSame }) ?? false
+            }
+        }
+    }
+
+    private var availableGenres: [String] {
+        var seen = Set<String>()
+        return results
+            .flatMap { $0.genres ?? [] }
+            .filter { seen.insert($0.lowercased()).inserted }
+            .sorted()
+    }
+
+    private var selectedGenre: String? {
+        if case .genre(let genre) = selectedFilter { return genre }
+        return nil
+    }
 
     init(
         serverURL: URL,
@@ -54,6 +90,7 @@ struct SearchView: View {
                             Button {
                                 query = ""
                                 results = []
+                                selectedFilter = .all
                                 searchError = nil
                                 hasSearched = false
                             } label: {
@@ -65,6 +102,10 @@ struct SearchView: View {
                     }
                     .padding(14)
                     .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 14))
+
+                    if hasSearched && !results.isEmpty {
+                        filterBar
+                    }
 
                     // Results
                     if let searchError, hasSearched && results.isEmpty && catalogResults.isEmpty
@@ -94,42 +135,59 @@ struct SearchView: View {
                         .padding(.top, 60)
                     } else {
                         if !results.isEmpty {
-                            Text("Tu biblioteca")
-                                .font(.headline)
-                                .padding(.top, 4)
-                            LazyVGrid(
-                                // Top-align cells so variable text height below
-                                // posters doesn't vertically offset them.
-                                columns: [GridItem(.adaptive(minimum: 120), spacing: 14, alignment: .top)],
-                                spacing: 20
-                            ) {
-                                ForEach(results) { item in
-                                    NavigationLink(value: item) {
-                                        MediaCardView(
-                                            item: item,
-                                            imageURL: imageURL(for: item),
-                                            // The grid column decides the width:
-                                            // a fixed card size would overflow
-                                            // the cell and overlap the next one.
-                                            flexibleWidth: true,
-                                            // Grid cells appear as the user
-                                            // scrolls: already in place.
-                                            revealWithRow: false
-                                        )
-                                    }
-                                    .buttonStyle(PressableCardStyle())
-                                }
+                            HStack(alignment: .firstTextBaseline) {
+                                Text("Tu biblioteca")
+                                    .font(.headline)
+                                Spacer()
+                                Text("\(filteredResults.count) títulos")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
-                            .padding(.horizontal, 4)
+                            .padding(.top, 4)
+
+                            if filteredResults.isEmpty {
+                                Text("No hay resultados para este filtro.")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 32)
+                            } else {
+                                LazyVGrid(
+                                    // Top-align cells so variable text height below
+                                    // posters doesn't vertically offset them.
+                                    columns: [GridItem(.adaptive(minimum: 120), spacing: 14, alignment: .top)],
+                                    spacing: 20
+                                ) {
+                                    ForEach(filteredResults) { item in
+                                        NavigationLink(value: item) {
+                                            MediaCardView(
+                                                item: item,
+                                                imageURL: imageURL(for: item),
+                                                // The grid column decides the width:
+                                                // a fixed card size would overflow
+                                                // the cell and overlap the next one.
+                                                flexibleWidth: true,
+                                                // Grid cells appear as the user
+                                                // scrolls: already in place.
+                                                revealWithRow: false
+                                            )
+                                        }
+                                        .buttonStyle(PressableCardStyle())
+                                    }
+                                }
+                                .padding(.horizontal, 4)
+                            }
                         }
 
                         #if os(iOS) || os(macOS)
-                        if isSearchingCatalog {
-                            ProgressView("Buscando en el catálogo…")
-                                .frame(maxWidth: .infinity)
-                                .padding(.top, 24)
-                        } else if !catalogResults.isEmpty {
-                            catalogSection
+                        if selectedFilter == .all {
+                            if isSearchingCatalog {
+                                ProgressView("Buscando en el catálogo…")
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.top, 24)
+                            } else if !catalogResults.isEmpty {
+                                catalogSection
+                            }
                         }
                         #endif
                     }
@@ -172,6 +230,7 @@ struct SearchView: View {
         .onChange(of: query) { _, newValue in
             searchTask?.cancel()
             let trimmed = newValue.trimmingCharacters(in: .whitespaces)
+            selectedFilter = .all
             guard trimmed.count >= 2 else {
                 results = []
                 catalogResults = []
@@ -186,10 +245,67 @@ struct SearchView: View {
         }
     }
 
+    private var filterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: MareaTheme.Spacing.sm) {
+                filterChip("Todo", filter: .all)
+                filterChip("Películas", filter: .movies)
+                filterChip("Series", filter: .series)
+
+                if !availableGenres.isEmpty {
+                    Menu {
+                        Button("Todos los géneros") { selectedFilter = .all }
+                        ForEach(availableGenres, id: \.self) { genre in
+                            Button {
+                                selectedFilter = .genre(genre)
+                            } label: {
+                                if selectedGenre == genre {
+                                    Label(genre, systemImage: "checkmark")
+                                } else {
+                                    Text(genre)
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Text(selectedGenre ?? "Géneros")
+                                .lineLimit(1)
+                            Image(systemName: "chevron.down")
+                                .font(.caption2.bold())
+                        }
+                        .font(.subheadline.weight(.medium))
+                        .padding(.horizontal, MareaTheme.Spacing.md)
+                        .padding(.vertical, MareaTheme.Spacing.xs + 2)
+                        .background(
+                            Capsule().fill(
+                                selectedGenre == nil
+                                    ? MareaTheme.Colors.glass
+                                    : MareaTheme.Colors.accent
+                            )
+                        )
+                        .foregroundStyle(selectedGenre == nil ? Color.primary : Color.black)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 1)
+        }
+    }
+
+    private func filterChip(_ title: String, filter: LibraryFilter) -> some View {
+        Button {
+            selectedFilter = filter
+        } label: {
+            ChipView(title: title, isSelected: selectedFilter == filter)
+        }
+        .buttonStyle(.plain)
+    }
+
     private func beginSearch(_ queryValue: String) {
         searchTask?.cancel()
         let trimmed = queryValue.trimmingCharacters(in: .whitespaces)
         guard trimmed.count >= 2 else { return }
+        selectedFilter = .all
         searchError = nil
         results = []
         catalogResults = []
