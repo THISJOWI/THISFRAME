@@ -1,62 +1,111 @@
 import SwiftUI
 import ThisJellyFixCore
 
-/// Cinematic featured banner used at the top of Home.
+/// A series plus the episode the viewer would resume, if any.
 ///
-/// The artwork is real Jellyfin content: the same item the row below can play
-/// or open. It deliberately reuses the app's existing accent, typography and
-/// image renderer instead of introducing a second visual language.
-struct FeaturedHeroView: View {
-    let items: [JellyfinMediaItem]
+/// Home feeds this from the real Jellyfin rows: the series itself comes from
+/// the Series / recently-added shelves, the episode from "Estás viendo".
+struct FeaturedSeries: Identifiable {
+    let series: JellyfinMediaItem
+    let resumeEpisode: JellyfinMediaItem?
+
+    var id: String { series.id }
+}
+
+/// Cinematic banner at the top of Home, dedicated to recommended series.
+///
+/// The brand header (icon, wordmark, action pill) is part of the same
+/// composition: it sits on the artwork behind a top scrim instead of in a
+/// separate bar above it. Artwork, copy and actions all come from Jellyfin.
+struct FeaturedHeroView<Header: View>: View {
+    let items: [FeaturedSeries]
     let serverURL: URL
-    /// Direct playback for movies/episodes, or the detail screen for series.
-    let onPrimaryAction: (JellyfinMediaItem) -> Void
-    /// Opens the title's detail screen when the primary action is playback.
-    let onMoreInfo: (JellyfinMediaItem) -> Void
+    /// Plays the in-progress episode, or opens the series when there is none.
+    let onPrimaryAction: (FeaturedSeries) -> Void
+    /// Opens the series detail screen.
+    let onMoreInfo: (FeaturedSeries) -> Void
+    /// Brand header rendered inside the hero (logo, wordmark, action pill).
+    @ViewBuilder let header: () -> Header
 
     @State private var selectedID: JellyfinMediaItem.ID?
 
     var body: some View {
         if !items.isEmpty {
-            ScrollView(.horizontal) {
-                LazyHStack(spacing: 0) {
-                    ForEach(items) { item in
-                        FeaturedHeroCard(
-                            item: item,
-                            imageURL: heroImageURL(for: item),
-                            posterURL: item.artworkURL(serverURL: serverURL, shape: .poster),
-                            onPrimaryAction: { onPrimaryAction(item) },
-                            onMoreInfo: { onMoreInfo(item) }
-                        )
-                        .containerRelativeFrame(.horizontal)
-                        .id(item.id)
+            ZStack(alignment: .top) {
+                ScrollView(.horizontal) {
+                    LazyHStack(spacing: 0) {
+                        ForEach(items) { item in
+                            FeaturedHeroCard(
+                                item: item,
+                                imageURL: heroImageURL(for: item),
+                                posterURL: item.series.artworkURL(serverURL: serverURL, shape: .poster),
+                                onPrimaryAction: { onPrimaryAction(item) },
+                                onMoreInfo: { onMoreInfo(item) }
+                            )
+                            .containerRelativeFrame(.horizontal)
+                            .id(item.id)
+                        }
                     }
+                    .scrollTargetLayout()
                 }
-                .scrollTargetLayout()
-            }
-            .scrollIndicators(.hidden)
-            .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $selectedID)
-            .frame(height: heroHeight)
-            .overlay(alignment: .topTrailing) {
+                .scrollIndicators(.hidden)
+                .scrollTargetBehavior(.paging)
+                .scrollPosition(id: $selectedID)
+                .frame(height: heroHeight)
+
+                // Top scrim: keeps the integrated brand header legible on any
+                // artwork, in both appearances.
+                LinearGradient(
+                    stops: [
+                        .init(color: .black.opacity(0.62), location: 0),
+                        .init(color: .black.opacity(0.22), location: 0.6),
+                        .init(color: .clear, location: 1),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 150)
+                .allowsHitTesting(false)
+
+                header()
+                    .padding(.horizontal, MareaTheme.Spacing.lg)
+                    .padding(.top, MareaTheme.Spacing.sm)
+
                 if items.count > 1 {
                     pageIndicator
-                        .padding(MareaTheme.Spacing.md)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.trailing, MareaTheme.Spacing.lg)
+                        .padding(.top, 64)
                 }
             }
+            .frame(height: heroHeight)
             .onAppear {
                 if selectedID == nil { selectedID = items.first?.id }
             }
         }
     }
 
-    private func heroImageURL(for item: JellyfinMediaItem) -> URL? {
-        JellyfinArtwork.url(
-            for: item,
+    private func heroImageURL(for item: FeaturedSeries) -> URL? {
+        // The series backdrop is the cinematic shot; fall back to the resume
+        // episode's backdrop and finally to the poster.
+        if let url = JellyfinArtwork.url(
+            for: item.series,
             serverURL: serverURL,
             shape: .landscape,
             targetWidth: 900
-        )
+        ) {
+            return url
+        }
+        if let episode = item.resumeEpisode,
+           let url = JellyfinArtwork.url(
+               for: episode,
+               serverURL: serverURL,
+               shape: .landscape,
+               targetWidth: 900
+           ) {
+            return url
+        }
+        return item.series.artworkURL(serverURL: serverURL, shape: .poster)
     }
 
     private var pageIndicator: some View {
@@ -76,21 +125,23 @@ struct FeaturedHeroView: View {
 
     private var heroHeight: CGFloat {
         #if os(tvOS)
-        560
+        620
         #elseif os(macOS) || os(visionOS)
-        500
+        540
         #else
-        460
+        520
         #endif
     }
 }
 
 private struct FeaturedHeroCard: View {
-    let item: JellyfinMediaItem
+    let item: FeaturedSeries
     let imageURL: URL?
     let posterURL: URL?
     let onPrimaryAction: () -> Void
     let onMoreInfo: () -> Void
+
+    private var series: JellyfinMediaItem { item.series }
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -104,13 +155,13 @@ private struct FeaturedHeroCard: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
 
-            // The scrim is intentionally heavier at the bottom: title,
-            // metadata and actions stay legible on any artwork, in both modes.
+            // Heavier at the bottom: title, metadata and actions stay legible
+            // on any artwork and melt into the page background.
             LinearGradient(
                 stops: [
-                    .init(color: .black.opacity(0.05), location: 0),
-                    .init(color: .black.opacity(0.18), location: 0.38),
-                    .init(color: .black.opacity(0.78), location: 0.78),
+                    .init(color: .black.opacity(0.02), location: 0),
+                    .init(color: .black.opacity(0.18), location: 0.42),
+                    .init(color: .black.opacity(0.74), location: 0.78),
                     .init(color: MareaTheme.Colors.background, location: 1),
                 ],
                 startPoint: .top,
@@ -121,23 +172,24 @@ private struct FeaturedHeroCard: View {
                 if let eyebrow {
                     Text(eyebrow.uppercased())
                         .font(.caption.weight(.bold))
-                        .tracking(1.4)
-                        .foregroundStyle(.white.opacity(0.72))
+                        .tracking(1.5)
+                        .foregroundStyle(.white.opacity(0.74))
+                        .lineLimit(2)
                 }
 
                 Text(displayTitle)
-                    .font(.system(size: titleSize, weight: .heavy, design: .default))
+                    .font(.system(size: titleSize, weight: .heavy))
                     .foregroundStyle(.white)
                     .lineLimit(2)
-                    .minimumScaleFactor(0.72)
-                    .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
+                    .minimumScaleFactor(0.7)
+                    .shadow(color: .black.opacity(0.4), radius: 10, y: 3)
 
                 Text(metadataLine)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.82))
+                    .foregroundStyle(.white.opacity(0.84))
                     .lineLimit(1)
 
-                if let overview = item.overview, !overview.isEmpty {
+                if let overview = series.overview, !overview.isEmpty {
                     Text(overview)
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.76))
@@ -147,7 +199,7 @@ private struct FeaturedHeroCard: View {
                 }
 
                 actions
-                    .padding(.top, 2)
+                    .padding(.top, 4)
             }
             .padding(.horizontal, MareaTheme.Spacing.lg)
             .padding(.bottom, MareaTheme.Spacing.lg)
@@ -159,61 +211,70 @@ private struct FeaturedHeroCard: View {
     private var actions: some View {
         HStack(spacing: MareaTheme.Spacing.sm) {
             Button(action: onPrimaryAction) {
-                Label(primaryLabel, systemImage: primaryIcon)
-                    .font(.headline)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 11)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(MareaTheme.Colors.accent)
-            .foregroundStyle(.white)
-
-            if item.type != "Series" {
-                Button(action: onMoreInfo) {
-                    Label("Más información", systemImage: "info.circle")
+                HStack(spacing: 9) {
+                    Image(systemName: primaryIcon)
+                        .font(.system(size: 15, weight: .bold))
+                    Text(primaryLabel)
                         .font(.headline)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 11)
-                        .background(.black.opacity(0.3), in: Capsule())
-                        .overlay(Capsule().strokeBorder(.white.opacity(0.24), lineWidth: 0.5))
                 }
-                .buttonStyle(.plain)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 22)
+                .padding(.vertical, 13)
+                .background(MareaTheme.Colors.accent, in: Capsule())
+                .shadow(color: MareaTheme.Colors.accent.opacity(0.35), radius: 10, y: 4)
+                .contentShape(Capsule())
             }
+            .buttonStyle(.plain)
+
+            Button(action: onMoreInfo) {
+                HStack(spacing: 8) {
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("Más información")
+                        .font(.headline)
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 13)
+                .background(.black.opacity(0.28), in: Capsule())
+                .overlay(Capsule().strokeBorder(.white.opacity(0.22), lineWidth: 0.5))
+                .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
         }
     }
 
     private var displayTitle: String {
-        item.type == "Episode" ? (item.seriesName ?? item.name) : item.name
+        series.name
     }
 
     private var eyebrow: String? {
-        if item.type == "Episode" {
-            return item.episodeDisplayTitle
+        if let episode = item.resumeEpisode {
+            return "\(episode.episodeLabel) · \(episode.name)"
         }
-        return item.type == "Movie" ? "Película destacada" : "Serie destacada"
+        if let genres = series.genres, !genres.isEmpty {
+            return genres.prefix(2).joined(separator: " · ")
+        }
+        return "Serie recomendada"
     }
 
     private var metadataLine: String {
         var parts: [String] = []
-        if let year = item.year { parts.append(String(year)) }
-        if let rating = item.officialRating, !rating.isEmpty { parts.append(rating) }
-        if let genres = item.genres, !genres.isEmpty {
+        if let year = series.year { parts.append(String(year)) }
+        if let rating = series.officialRating, !rating.isEmpty { parts.append(rating) }
+        if let genres = series.genres, !genres.isEmpty {
             parts.append(genres.prefix(2).joined(separator: ", "))
         }
-        if parts.isEmpty {
-            parts.append(item.type == "Movie" ? "Película" : "Serie")
-        }
+        if parts.isEmpty { parts.append("Serie") }
         return parts.joined(separator: " · ")
     }
 
     private var primaryLabel: String {
-        if item.type == "Series" { return "Ver episodios" }
-        return item.resumePositionSeconds != nil ? "Continuar" : "Reproducir"
+        item.resumeEpisode != nil ? "Continuar" : "Ver episodios"
     }
 
     private var primaryIcon: String {
-        item.type == "Series" ? "list.bullet" : "play.fill"
+        item.resumeEpisode != nil ? "play.fill" : "list.bullet"
     }
 
     private var titleSize: CGFloat {

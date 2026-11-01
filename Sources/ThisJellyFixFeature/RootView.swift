@@ -408,8 +408,7 @@ public struct ThisFrameRootView: View {
                         token: token,
                         userId: userId,
                         userName: userName,
-                        onLogout: { authModel.logout(); libraryModel = nil },
-                        onSearch: { selectedTab = .search }
+                        onLogout: { authModel.logout(); libraryModel = nil }
                     )
                 }
 
@@ -441,8 +440,7 @@ public struct ThisFrameRootView: View {
                         token: token,
                         userId: userId,
                         userName: userName,
-                        onLogout: { authModel.logout(); libraryModel = nil },
-                        onSearch: { selectedTab = .search }
+                        onLogout: { authModel.logout(); libraryModel = nil }
                     )
                     .toolbar(.hidden, for: .tabBar)
                     .tag(MareaTab.home)
@@ -487,8 +485,7 @@ public struct ThisFrameRootView: View {
                 token: token,
                 userId: userId,
                 userName: userName,
-                onLogout: { authModel.logout(); libraryModel = nil },
-                onSearch: { selectedTab = .search }
+                onLogout: { authModel.logout(); libraryModel = nil }
             )
             .tabItem { Label("Inicio", systemImage: "house.fill") }
             .tag(MareaTab.home)

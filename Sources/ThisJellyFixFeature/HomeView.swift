@@ -11,9 +11,6 @@ struct HomeView: View {
     let userId: String
     let userName: String
     let onLogout: () -> Void
-    /// Jumps to the Search tab when the floating header's magnifier is tapped.
-    /// Nil on platforms where Home has no sibling search tab.
-    var onSearch: (() -> Void)? = nil
 
     /// Episode or movie tapped on a card — played directly, without pushing DetailView.
     @State private var directItem: JellyfinMediaItem?
@@ -268,8 +265,6 @@ struct HomeView: View {
         #endif
         let base = ScrollView {
             VStack(alignment: .leading, spacing: MareaTheme.Spacing.lg) {
-                homeHeader
-
                 // E4: dead token — the retry button can never succeed, so the
                 // banner (and the empty-state button) offer a real way out.
                 if libraryModel.sessionExpired {
@@ -313,13 +308,18 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 60)
                 } else {
-                    if !heroItems.isEmpty {
+                    if !heroSeries.isEmpty {
                         FeaturedHeroView(
-                            items: heroItems,
+                            items: heroSeries,
                             serverURL: serverURL,
                             onPrimaryAction: openHero,
-                            onMoreInfo: openHeroDetail
+                            onMoreInfo: openHeroDetail,
+                            header: { heroHeader(onArtwork: true) }
                         )
+                    } else {
+                        heroHeader(onArtwork: false)
+                            .padding(.horizontal, MareaTheme.Spacing.lg)
+                            .padding(.top, MareaTheme.Spacing.sm)
                     }
 
                     #if os(iOS) || os(macOS)
@@ -374,7 +374,6 @@ struct HomeView: View {
                 forYouShelf
                 #endif
             }
-            .padding(.top, MareaTheme.Spacing.md)
         }
         .background(MareaTheme.Colors.background)
         .refreshable {
@@ -430,91 +429,98 @@ struct HomeView: View {
 
     // MARK: - Premium home pieces
 
-    private var homeHeader: some View {
-        HStack(spacing: 12) {
+    /// Brand header integrated into the hero artwork. The action pill is the
+    /// same real one used before (settings, cast, downloads) — only its
+    /// placement moved, so nothing here is decorative.
+    private func heroHeader(onArtwork: Bool) -> some View {
+        HStack(spacing: 11) {
             Image("IconoInicio")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 30, height: 30)
-                .clipShape(RoundedRectangle(cornerRadius: 7))
+                .frame(width: 32, height: 32)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 0) {
                 Text("ThisFrame")
-                    .font(.title2.bold())
+                    .font(.title3.bold())
+                    .foregroundStyle(onArtwork ? Color.white : Color.primary)
                 Text("Inicio")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(onArtwork ? Color.white.opacity(0.68) : Color.secondary)
             }
 
             Spacer()
 
-            if let searchAction {
-                Button(action: searchAction) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .frame(width: 38, height: 38)
-                        .background(MareaTheme.Colors.glass, in: Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Buscar")
-            }
-
             HomeActionPill(discovery: discovery)
         }
-        .padding(.horizontal, MareaTheme.Spacing.xl)
     }
 
-    /// Real library items that can carry a cinematic banner. Resume items lead
-    /// because they are the most immediate action on Home; duplicates from the
-    /// same series are dropped so the carousel never repeats a show.
-    private var heroItems: [JellyfinMediaItem] {
-        let priority = [
-            "Estás viendo", "Nuevos episodios", "Últimos agregados",
-            "Películas", "Series", "Visto recientemente",
-        ]
+    /// Series that can carry the banner. Resume episodes lead (most immediate
+    /// action), then local recommendations, then the newest series in the
+    /// library. Every entry maps back to a real Jellyfin item.
+    private var heroSeries: [FeaturedSeries] {
+        let resumeRows = ["Estás viendo", "Nuevos episodios"]
+        let resumeEpisodes = resumeRows
+            .compactMap { title in libraryModel.rows.first(where: { $0.title == title }) }
+            .flatMap(\.items)
+            .filter { $0.type == "Episode" && $0.resumePositionSeconds != nil }
+
+        var pool: [JellyfinMediaItem] = []
         var seen = Set<String>()
-        var items: [JellyfinMediaItem] = []
 
-        for title in priority {
+        func append(_ item: JellyfinMediaItem) {
+            guard item.type == "Series" else { return }
+            guard seen.insert(item.id).inserted else { return }
+            guard item.hasImage
+                || !(item.backdropImageTags ?? []).isEmpty
+                || resumeEpisodes.contains(where: { $0.seriesName == item.name })
+            else { return }
+            pool.append(item)
+        }
+
+        // 1. Series the viewer is already watching.
+        for episode in resumeEpisodes {
+            guard let series = libraryModel.allItems.first(where: {
+                $0.type == "Series" && $0.name == episode.seriesName
+            }) else { continue }
+            append(series)
+        }
+
+        // 2. Local recommendations, series only.
+        #if os(iOS) || os(macOS)
+        for pick in LibraryRecommender.recommend(from: libraryModel.allItems) {
+            append(pick.item)
+        }
+        #endif
+
+        // 3. Newest and recently added series from the server rows.
+        for title in ["Series", "Últimos agregados", "Visto recientemente"] {
             guard let row = libraryModel.rows.first(where: { $0.title == title }) else { continue }
-            for item in row.items {
-                let key = item.type == "Episode"
-                    ? "series:\(item.seriesName ?? item.id)"
-                    : item.id
-                guard seen.insert(key).inserted else { continue }
-                guard item.hasImage || !(item.backdropImageTags ?? []).isEmpty else { continue }
-                items.append(item)
-                if items.count == 5 { return items }
-            }
+            row.items.forEach(append)
         }
-        return items
+
+        return pool.prefix(5).map { series in
+            FeaturedSeries(
+                series: series,
+                resumeEpisode: resumeEpisodes.first(where: { $0.seriesName == series.name })
+            )
+        }
     }
 
-    private func openHero(_ item: JellyfinMediaItem) {
-        if item.type == "Movie" || item.type == "Episode" {
-            directItem = item
+    private func openHero(_ item: FeaturedSeries) {
+        if let episode = item.resumeEpisode {
+            directItem = episode
         } else {
-            navigationPath.append(item)
+            navigationPath.append(item.series)
         }
     }
 
-    private func openHeroDetail(_ item: JellyfinMediaItem) {
-        navigationPath.append(item)
+    private func openHeroDetail(_ item: FeaturedSeries) {
+        navigationPath.append(item.series)
     }
 
     private func displayTitle(for rowTitle: String) -> String {
         rowTitle == "Estás viendo" ? "Continuar viendo" : rowTitle
-    }
-
-    /// macOS has its own sidebar selection; iOS/tvOS receive the tab jump from
-    /// the root because Home does not own their TabView.
-    private var searchAction: (() -> Void)? {
-        #if os(macOS)
-        { selectedTab = .search }
-        #else
-        onSearch
-        #endif
     }
 
     #if os(iOS) || os(macOS)
