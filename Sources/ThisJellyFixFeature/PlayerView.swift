@@ -474,7 +474,13 @@ struct PlayerView: View {
                 }
                 #endif
             },
-            onAirPlayPresenting: onAirPlayPresenting
+            onAirPlayPresenting: onAirPlayPresenting,
+            hasPreviousEpisode: previousEpisode != nil,
+            hasNextEpisode: nextEpisode != nil,
+            hasEpisodeList: !seasonEpisodes.isEmpty,
+            onPlayPrevious: { viewModel.playPreviousEpisode() },
+            onPlayNext: { viewModel.playNextNow() },
+            onShowEpisodeList: { showingEpisodeList = true }
         )
         .opacity(viewModel.showControls ? 1 : 0)
         .allowsHitTesting(viewModel.showControls)
@@ -1237,6 +1243,14 @@ private struct ControlsOverlay: View {
     /// freeze the controls auto-hide while the sheet is on screen.
     var onAirPlayPresenting: (Bool) -> Void = { _ in }
 
+    // MARK: Episode navigation (bottom bar)
+    var hasPreviousEpisode: Bool = false
+    var hasNextEpisode: Bool = false
+    var hasEpisodeList: Bool = false
+    var onPlayPrevious: (() -> Void)? = nil
+    var onPlayNext: (() -> Void)? = nil
+    var onShowEpisodeList: (() -> Void)? = nil
+
     var body: some View {
         VStack(spacing: 0) {
             topBar
@@ -1393,8 +1407,61 @@ private struct ControlsOverlay: View {
 
     // MARK: Bottom bar
 
+    private var episodeNavigationRow: some View {
+        HStack(spacing: 0) {
+            if hasPreviousEpisode {
+                Button(action: { onPlayPrevious?() }) {
+                    Label("Ep. anterior", systemImage: "backward.end.alt.fill")
+                        .labelStyle(.iconOnly)
+                        .font(.system(size: 18))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .frame(width: 44, height: 36)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Spacer().frame(width: 44)
+            }
+
+            Spacer()
+
+            if hasEpisodeList {
+                Button(action: { onShowEpisodeList?() }) {
+                    Label("Episodios", systemImage: "list.bullet")
+                        .labelStyle(.titleAndIcon)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.white.opacity(0.12), in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+
+            Spacer()
+
+            if hasNextEpisode {
+                Button(action: { onPlayNext?() }) {
+                    Label("Sig. ep.", systemImage: "forward.end.alt.fill")
+                        .labelStyle(.iconOnly)
+                        .font(.system(size: 18))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .frame(width: 44, height: 36)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Spacer().frame(width: 44)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 4)
+    }
+
     private var bottomBar: some View {
         VStack(spacing: 8) {
+            if hasPreviousEpisode || hasNextEpisode || hasEpisodeList {
+                episodeNavigationRow
+            }
+
             SeekBar(
                 currentTime: viewModel.currentTime,
                 duration: viewModel.duration,

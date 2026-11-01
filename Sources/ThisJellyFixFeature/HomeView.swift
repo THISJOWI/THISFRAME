@@ -45,6 +45,7 @@ struct HomeView: View {
                 }
                 #endif
         }
+        .toolbar(.hidden, for: .navigationBar)
         // Publish a Handoff activity so the user can continue browsing on
         // another Apple device. YIELDS while playback owns Handoff (two
         // eligible activities competing is how the Mac Dock advertised
