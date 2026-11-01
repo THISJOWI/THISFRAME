@@ -297,12 +297,16 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
 public enum LibraryError: LocalizedError, Equatable {
     case invalidResponse
     case unauthorized
+    /// The server understood the request but the user is not allowed to do it
+    /// (e.g. renaming a playlist or a user without elevation).
+    case forbidden
     case serverError(Int)
 
     public var errorDescription: String? {
         switch self {
         case .invalidResponse: "Respuesta inválida del servidor."
         case .unauthorized: "Sesión expirada. Inicia sesión de nuevo."
+        case .forbidden: "Tu servidor Jellyfin no permite esta acción."
         case .serverError(let code): "Error del servidor (código \(code))."
         }
     }

@@ -27,6 +27,11 @@ public struct JellyfinMediaItem: Codable, Sendable, Equatable, Identifiable, Has
     /// Raw ISO8601 original air/release date (always present in the DTO).
     /// Distinguishes a true premiere from a late incorporation into the library.
     public let premiereDate: String?
+    /// Entry id inside a playlist (`GET /Playlists/{id}/Items`). Removing an
+    /// item needs THIS id, not the media id — the same movie can appear twice.
+    public let playlistItemId: String?
+    /// Server-reported number of children (playlists, collections, seasons).
+    public let childCount: Int?
 
     public init(
         id: String,
@@ -46,7 +51,9 @@ public struct JellyfinMediaItem: Codable, Sendable, Equatable, Identifiable, Has
         providerIds: [String: String]? = nil,
         dateCreated: String? = nil,
         dateLastMediaAdded: String? = nil,
-        premiereDate: String? = nil
+        premiereDate: String? = nil,
+        playlistItemId: String? = nil,
+        childCount: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -66,6 +73,8 @@ public struct JellyfinMediaItem: Codable, Sendable, Equatable, Identifiable, Has
         self.dateCreated = dateCreated
         self.dateLastMediaAdded = dateLastMediaAdded
         self.premiereDate = premiereDate
+        self.playlistItemId = playlistItemId
+        self.childCount = childCount
     }
 
     enum CodingKeys: String, CodingKey {
@@ -87,6 +96,8 @@ public struct JellyfinMediaItem: Codable, Sendable, Equatable, Identifiable, Has
         case dateCreated = "DateCreated"
         case dateLastMediaAdded = "DateLastMediaAdded"
         case premiereDate = "PremiereDate"
+        case playlistItemId = "PlaylistItemId"
+        case childCount = "ChildCount"
     }
 
     /// Value for an external provider key, case-insensitive (`Tmdb`/`tmdb`).
