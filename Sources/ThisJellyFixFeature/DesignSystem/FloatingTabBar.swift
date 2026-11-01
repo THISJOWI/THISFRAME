@@ -16,7 +16,7 @@ struct FloatingTabBar: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Favorites lives inside Home rows; the pill mirrors the native tabs.
-    private var tabs: [MareaTab] { [.home, .search, .profile] }
+    private var tabs: [MareaTab] { [.home, .search, .listas, .profile] }
 
     var body: some View {
         HStack(spacing: MareaTheme.Spacing.lg) {

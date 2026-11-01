@@ -416,7 +416,15 @@ public struct ThisFrameRootView: View {
                     SearchView(serverURL: server.baseURL, token: token, userId: userId)
                 }
 
-                Tab("Perfil", systemImage: "person.fill", value: MareaTab.profile) {
+                Tab("Listas", systemImage: "list.bullet", value: MareaTab.listas) {
+                    ListsView(
+                        serverURL: server.baseURL,
+                        token: token,
+                        userId: userId
+                    )
+                }
+
+                Tab("Perfil y Ajustes", systemImage: "person.fill", value: MareaTab.profile) {
                     ProfileView(
                         userName: userName,
                         onLogout: { authModel.logout(); libraryModel = nil },
@@ -448,6 +456,14 @@ public struct ThisFrameRootView: View {
                     SearchView(serverURL: server.baseURL, token: token, userId: userId)
                         .toolbar(.hidden, for: .tabBar)
                         .tag(MareaTab.search)
+
+                    ListsView(
+                        serverURL: server.baseURL,
+                        token: token,
+                        userId: userId
+                    )
+                    .toolbar(.hidden, for: .tabBar)
+                    .tag(MareaTab.listas)
 
                     ProfileView(
                         userName: userName,
@@ -493,6 +509,14 @@ public struct ThisFrameRootView: View {
             SearchView(serverURL: server.baseURL, token: token, userId: userId)
                 .tabItem { Label("Buscar", systemImage: "magnifyingglass") }
                 .tag(MareaTab.search)
+
+            ListsView(
+                serverURL: server.baseURL,
+                token: token,
+                userId: userId
+            )
+            .tabItem { Label("Listas", systemImage: "list.bullet") }
+            .tag(MareaTab.listas)
 
             ProfileView(
                 userName: userName,

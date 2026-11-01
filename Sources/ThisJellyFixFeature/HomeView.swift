@@ -207,6 +207,12 @@ struct HomeView: View {
             }
         case .search:
             SearchView(serverURL: serverURL, token: token, userId: userId)
+        case .listas:
+            ListsView(
+                serverURL: serverURL,
+                token: token,
+                userId: userId
+            )
         case .favorites:
             // Favorites removed from sidebar — redirect to home
             NavigationStack {

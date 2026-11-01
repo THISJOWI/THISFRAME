@@ -3,6 +3,7 @@ import SwiftUI
 enum MareaTab: Int, CaseIterable, Hashable {
     case home
     case search
+    case listas
     case favorites
     case profile
 
@@ -10,6 +11,7 @@ enum MareaTab: Int, CaseIterable, Hashable {
         switch self {
         case .home: "house.fill"
         case .search: "magnifyingglass"
+        case .listas: "list.bullet"
         case .favorites: "heart.fill"
         case .profile: "person.fill"
         }
@@ -19,8 +21,9 @@ enum MareaTab: Int, CaseIterable, Hashable {
         switch self {
         case .home: "Inicio"
         case .search: "Buscar"
+        case .listas: "Listas"
         case .favorites: "Favoritos"
-        case .profile: "Perfil"
+        case .profile: "Perfil y Ajustes"
         }
     }
 
