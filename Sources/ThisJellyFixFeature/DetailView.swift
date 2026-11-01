@@ -259,17 +259,7 @@ struct DetailView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         hero(detail: detail)
 
-                        VStack(alignment: .leading, spacing: 16) {
-                            titleSection(detail: detail)
-
-                            if let genres = detail.genres, !genres.isEmpty {
-                                genreBadges(genres)
-                            }
-
-                            if detail.type != "Series" {
-                                playButton(detail: detail)
-                            }
-
+                        VStack(alignment: .leading, spacing: 20) {
                             errorBanners
 
                             if !videoChips.isEmpty {
@@ -279,7 +269,7 @@ struct DetailView: View {
                             if let overview = detail.overview, !overview.isEmpty {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Sinopsis")
-                                        .font(.headline)
+                                        .font(.title3.bold())
                                     Text(overview)
                                         .font(.body)
                                         .foregroundStyle(.secondary)
@@ -293,7 +283,7 @@ struct DetailView: View {
                             }
                         }
                         .padding(.horizontal, 24)
-                        .padding(.top, 16)
+                        .padding(.top, 20)
                         .frame(maxWidth: contentMaxWidth, alignment: .leading)
 
                         // Spacer ensures scroll area extends beyond content
@@ -355,55 +345,58 @@ struct DetailView: View {
 
     // MARK: - Navigation bar actions
 
-    /// Play / jump-to-episodes / watched / favorite — lives in the navigation bar.
+    /// Secondary actions live in one native menu instead of a row of separate
+    /// icons. The primary Play / Continue action stays visible in the hero.
     private var actionPill: some View {
-        HStack(spacing: 16) {
+        Menu {
             if let detail {
                 if detail.type != "Series" {
-                    pillButton("play.fill", label: "Reproducir") {
+                    Button {
                         Task { await playMovie(detail) }
+                    } label: {
+                        Label(
+                            detail.resumePositionSeconds != nil ? "Continuar" : "Reproducir",
+                            systemImage: "play.fill"
+                        )
                     }
                 } else {
-                    pillButton("list.bullet", label: "Episodios") {
+                    Button {
                         scrollToEpisodesToken += 1
+                    } label: {
+                        Label("Episodios", systemImage: "list.bullet")
                     }
                 }
+                Divider()
             }
 
-            pillButton(
-                isPlayed ? "checkmark.circle.fill" : "checkmark.circle",
-                label: isPlayed ? "Marcar como no visto" : "Marcar como visto",
-                busy: isSavingPlayed
-            ) {
+            Button {
                 togglePlayed()
+            } label: {
+                Label(
+                    isPlayed ? "Marcar como no visto" : "Marcar como visto",
+                    systemImage: isPlayed ? "checkmark.circle.fill" : "checkmark.circle"
+                )
             }
+            .disabled(isSavingPlayed)
 
-            pillButton(
-                isFavorite ? "heart.fill" : "heart",
-                label: isFavorite ? "Quitar de favoritos" : "Añadir a favoritos",
-                busy: isSavingFavorite
-            ) {
+            Button {
                 toggleFavorite()
+            } label: {
+                Label(
+                    isFavorite ? "Quitar de favoritos" : "Añadir a favoritos",
+                    systemImage: isFavorite ? "heart.fill" : "heart"
+                )
             }
+            .disabled(isSavingFavorite)
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 17, weight: .semibold))
+                .frame(width: 30, height: 30)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 5)
         }
-        .font(.system(size: 16, weight: .semibold))
-        .padding(.horizontal, 16)
-        .padding(.vertical, 9)
+        .accessibilityLabel("Más acciones")
         .actionPillBackground()
-    }
-
-    private func pillButton(
-        _ icon: String,
-        label: String,
-        busy: Bool = false,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Image(systemName: icon)
-        }
-        .accessibilityLabel(label)
-        .disabled(busy)
-        .opacity(busy ? 0.4 : 1)
     }
 
     // MARK: - Hero
@@ -413,30 +406,151 @@ struct DetailView: View {
             ZStack(alignment: .bottomLeading) {
                 backdropImage(detail: detail, width: proxy.size.width)
 
-                // Bottom scrim keeps the badges readable on light artwork and blends
-                // the image into the content below. The last stop is the app
-                // background, so the artwork melts into the page in either mode.
+                // Bottom scrim keeps the title and actions readable on light
+                // artwork and melts the image into the content below. The last
+                // stop is the app background, so there is no hard seam in
+                // either appearance.
                 LinearGradient(
-                    colors: [
-                        .clear,
-                        .clear,
-                        .black.opacity(0.3),
-                        .black.opacity(0.7),
-                        .black.opacity(0.95),
-                        MareaTheme.Colors.background
+                    stops: [
+                        .init(color: .clear, location: 0),
+                        .init(color: .black.opacity(0.12), location: 0.38),
+                        .init(color: .black.opacity(0.62), location: 0.72),
+                        .init(color: .black.opacity(0.92), location: 0.9),
+                        .init(color: MareaTheme.Colors.background, location: 1),
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
 
-                heroBadges(detail: detail)
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 16)
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(detail.type == "Series" ? "SERIE" : "PELÍCULA")
+                        .font(.caption.weight(.bold))
+                        .tracking(1.5)
+                        .foregroundStyle(.white.opacity(0.7))
+
+                    Text(detail.name)
+                        .font(.system(size: heroTitleSize, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.72)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .shadow(color: .black.opacity(0.4), radius: 8, y: 3)
+
+                    Text(metadataLine(detail))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.82))
+                        .lineLimit(2)
+
+                    HStack(spacing: MareaTheme.Spacing.sm) {
+                        heroPrimaryButton(detail: detail)
+                        heroFavoriteButton
+                    }
+                    .padding(.top, 2)
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 26)
+                .frame(maxWidth: 760, alignment: .leading)
             }
             .frame(width: proxy.size.width, height: heroHeight)
             .clipped()
         }
         .frame(height: heroHeight)
+    }
+
+    private func heroPrimaryButton(detail: JellyfinItemDetail) -> some View {
+        Button {
+            if detail.type == "Series" {
+                continueSeries()
+            } else {
+                Task { await playMovie(detail) }
+            }
+        } label: {
+            Group {
+                if isPreparingPlayback {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Label(heroPrimaryLabel(detail: detail), systemImage: heroPrimaryIcon(detail: detail))
+                }
+            }
+            .font(.headline)
+            .padding(.horizontal, 22)
+            .padding(.vertical, 12)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(MareaTheme.Colors.accent)
+        .foregroundStyle(.white)
+        .controlSize(.large)
+        .disabled(isPreparingPlayback)
+    }
+
+    private var heroFavoriteButton: some View {
+        Button {
+            toggleFavorite()
+        } label: {
+            Label(
+                isFavorite ? "En tu lista" : "Añadir a mi lista",
+                systemImage: isFavorite ? "heart.fill" : "heart"
+            )
+            .font(.headline)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .background(.black.opacity(0.3), in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.24), lineWidth: 0.5))
+        }
+        .buttonStyle(.plain)
+        .disabled(isSavingFavorite)
+    }
+
+    private func heroPrimaryLabel(detail: JellyfinItemDetail) -> String {
+        if detail.type == "Series" {
+            return preferredEpisode == nil ? "Ver episodios" : (preferredEpisode?.resumePositionSeconds != nil ? "Continuar" : "Reproducir")
+        }
+        return detail.resumePositionSeconds != nil ? "Continuar" : "Reproducir"
+    }
+
+    private func heroPrimaryIcon(detail: JellyfinItemDetail) -> String {
+        detail.type == "Series" && preferredEpisode == nil ? "list.bullet" : "play.fill"
+    }
+
+    private func metadataLine(_ detail: JellyfinItemDetail) -> String {
+        var parts: [String] = []
+        if let year = detail.year { parts.append(String(year)) }
+        if let rating = detail.officialRating, !rating.isEmpty { parts.append(rating) }
+        if let minutes = detail.durationMinutes { parts.append(Self.durationLabel(minutes)) }
+        if let genres = detail.genres, !genres.isEmpty {
+            parts.append(genres.prefix(2).joined(separator: ", "))
+        }
+        if parts.isEmpty {
+            parts.append(detail.type == "Series" ? "Serie" : "Película")
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    /// The episode a "Continuar" tap should resume: an in-progress episode
+    /// first, otherwise the first unwatched one in the selected season.
+    private var preferredEpisode: JellyfinEpisode? {
+        episodes.first(where: { ($0.resumePositionSeconds ?? 0) > 0 })
+            ?? episodes.first(where: { !$0.isPlayed })
+    }
+
+    private func continueSeries() {
+        guard let episode = preferredEpisode else {
+            scrollToEpisodesToken += 1
+            return
+        }
+        Task { await playEpisode(episode) }
+    }
+
+    private var heroTitleSize: CGFloat {
+        #if os(tvOS)
+        52
+        #elseif os(macOS) || os(visionOS)
+        46
+        #else
+        36
+        #endif
     }
 
     @ViewBuilder
@@ -479,38 +593,6 @@ struct DetailView: View {
         }
     }
 
-    private func heroBadges(detail: JellyfinItemDetail) -> some View {
-        HStack(spacing: 8) {
-            if let certification = detail.officialRating {
-                badge(certification)
-            }
-            if let rating = detail.formattedRating {
-                HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .foregroundStyle(.yellow)
-                    Text(rating)
-                }
-                .font(.subheadline)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(.black.opacity(0.55), in: Capsule())
-                .foregroundStyle(.white)
-            }
-            if let minutes = detail.durationMinutes {
-                badge(Self.durationLabel(minutes))
-            }
-        }
-    }
-
-    private func badge(_ text: String) -> some View {
-        Text(text)
-            .font(.subheadline)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(.black.opacity(0.55), in: Capsule())
-            .foregroundStyle(.white)
-    }
-
     private func posterURL(for detail: JellyfinItemDetail) -> URL? {
         guard detail.hasPoster else { return nil }
         return serverURL
@@ -522,58 +604,6 @@ struct DetailView: View {
     }
 
     // MARK: - Content sections
-
-    @ViewBuilder
-    private func titleSection(detail: JellyfinItemDetail) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(detail.name)
-                .font(.largeTitle.bold())
-                .foregroundStyle(.primary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if let year = detail.year {
-                Text(String(year))
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    @ViewBuilder
-    private func playButton(detail: JellyfinItemDetail) -> some View {
-        Button {
-            Task { await playMovie(detail) }
-        } label: {
-            if isPreparingPlayback {
-                ProgressView()
-                    .tint(.black)
-                    .frame(maxWidth: .infinity)
-            } else {
-                HStack(spacing: 10) {
-                    Image(systemName: "play.fill")
-                    Text(playLabel(detail: detail))
-                }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .buttonStyle(.borderedProminent)
-        .tint(MareaTheme.Colors.accent)
-        .controlSize(.large)
-        .disabled(isPreparingPlayback)
-    }
-
-    /// "1h 38m" from scratch, "Continuar · 52 min" when there's saved progress.
-    private func playLabel(detail: JellyfinItemDetail) -> String {
-        let total = detail.durationMinutes
-        guard let resume = resumeSeconds(detail), resume > 0 else {
-            return total.map(Self.durationLabel) ?? "Reproducir"
-        }
-        let elapsed = Int(resume / 60)
-        guard let total else { return "Continuar · \(elapsed) min" }
-        return "Continuar · \(max(total - elapsed, 0)) min"
-    }
 
     @ViewBuilder
     private var errorBanners: some View {
@@ -619,28 +649,55 @@ struct DetailView: View {
         }
     }
 
-    @ViewBuilder
-    private func genreBadges(_ genres: [String]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(genres, id: \.self) { genre in
-                    Text(genre)
-                        .font(.caption)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(MareaTheme.Colors.accent.opacity(0.2), in: Capsule())
-                        .foregroundStyle(MareaTheme.Colors.accent)
-                }
-            }
-        }
-    }
-
     // MARK: - Episodes Section (Series)
 
     private var episodesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Episodios")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Episodios")
+                        .font(.title3.bold())
+                    if seasons.indices.contains(selectedSeasonIndex) {
+                        Text(seasons[selectedSeasonIndex].displayName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if !seasons.isEmpty {
+                    Menu {
+                        ForEach(Array(seasons.enumerated()), id: \.element.id) { index, season in
+                            Button {
+                                selectSeason(at: index)
+                            } label: {
+                                if index == selectedSeasonIndex {
+                                    Label(season.displayName, systemImage: "checkmark")
+                                } else {
+                                    Text(season.displayName)
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(seasons.indices.contains(selectedSeasonIndex)
+                                 ? seasons[selectedSeasonIndex].displayName
+                                 : "Temporada")
+                                .font(.subheadline.weight(.semibold))
+                            Image(systemName: "chevron.down")
+                                .font(.caption.bold())
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(MareaTheme.Colors.glass, in: Capsule())
+                        .overlay(Capsule().strokeBorder(MareaTheme.Colors.borderGlow, lineWidth: 0.5))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isLoadingEpisodes)
+                    .accessibilityLabel("Seleccionar temporada")
+                }
+            }
 
             if seasons.isEmpty && isLoadingEpisodes {
                 ProgressView("Cargando temporadas…")
@@ -650,32 +707,6 @@ struct DetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
-                // Season picker
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(Array(seasons.enumerated()), id: \.element.id) { index, season in
-                            Button {
-                                selectedSeasonIndex = index
-                                episodesError = nil
-                                Task { await loadEpisodes(for: season) }
-                            } label: {
-                                Text(season.displayName)
-                                    .font(.subheadline.weight(.medium))
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 6)
-                                    .background(
-                                        index == selectedSeasonIndex
-                                            ? MareaTheme.Colors.accent
-                                            : MareaTheme.Colors.overlayFill,
-                                        in: Capsule()
-                                    )
-                                    .foregroundStyle(index == selectedSeasonIndex ? Color.black : Color.primary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-
                 // Episode list. The spinner is for the FIRST load only — a
                 // refresh keeps the list on screen instead of blanking it.
                 if episodes.isEmpty, isLoadingEpisodes {
@@ -690,7 +721,7 @@ struct DetailView: View {
                             .foregroundStyle(.secondary)
                     }
                 } else {
-                    LazyVStack(alignment: .leading, spacing: 8) {
+                    LazyVStack(alignment: .leading, spacing: 10) {
                         ForEach(episodes) { episode in
                             EpisodeRow(
                                 episode: episode,
@@ -708,6 +739,13 @@ struct DetailView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func selectSeason(at index: Int) {
+        guard seasons.indices.contains(index) else { return }
+        selectedSeasonIndex = index
+        episodesError = nil
+        Task { await loadEpisodes(for: seasons[index]) }
     }
 
     // MARK: - Playback
@@ -1163,58 +1201,57 @@ private struct EpisodeRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Episode thumbnail
-            thumbnail
+        Button(action: onPlay) {
+            HStack(alignment: .top, spacing: 14) {
+                thumbnail
 
-            // Episode info.
-            // `.frame(maxWidth: .infinity)` is not cosmetic: without it a long
-            // episode title reports its unwrapped width, the HStack grows past
-            // the screen and the vertical ScrollView becomes pannable sideways.
-            VStack(alignment: .leading, spacing: 4) {
-                // "T1 E3 · Nombre del episodio" — number and title together so
-                // the viewer never has to read two lines to get the full story.
-                // episodeLabel falls back to "Especial N" for season-0 items and
-                // to the raw name when numbering metadata is absent.
-                Text(episode.displayTitle)
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                    // A watched episode reads as "done" without relying on the
-                    // colour of the icon alone.
-                    .foregroundStyle(isWatched ? Color.secondary : Color.primary)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(episode.displayTitle)
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .foregroundStyle(isWatched ? Color.secondary : Color.primary)
 
-                if let status {
-                    Text(status)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    if let status {
+                        Text(status)
+                            .font(.caption2.weight(.medium))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    if let overview = episode.overview, !overview.isEmpty {
+                        Text(overview)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                    }
+
+                    if case .inProgress(let fraction) = watchState, let fraction {
+                        ProgressBarView(fraction: fraction)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 2)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(1)
 
-                // Progress line — only when there is a real share to show.
-                if case .inProgress(let fraction) = watchState, let fraction {
-                    ProgressBarView(fraction: fraction)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 2)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(1)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(accessibilityLabel)
-
-            Spacer(minLength: 4)
-
-            // Play button
-            Button(action: onPlay) {
-                Image(systemName: "play.circle.fill")
+                Image(systemName: isWatched ? "checkmark.circle.fill" : "play.circle.fill")
                     .font(.title2)
-                    .foregroundStyle(MareaTheme.Colors.accent)
+                    .foregroundStyle(isWatched ? MareaTheme.Colors.accent : MareaTheme.Colors.accent)
+                    .padding(.top, 2)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Reproducir \(episode.displayTitle)")
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: MareaTheme.Radius.card))
+            .overlay(
+                RoundedRectangle(cornerRadius: MareaTheme.Radius.card)
+                    .strokeBorder(MareaTheme.Colors.borderGlow, lineWidth: 0.5)
+            )
         }
-        .padding(.vertical, 4)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityHint("Reproducir")
     }
 
     // MARK: - Thumbnail
@@ -1225,14 +1262,14 @@ private struct EpisodeRow: View {
                 for: episode,
                 serverURL: serverURL,
                 shape: .landscape,
-                targetWidth: 120
+                targetWidth: 160
             ) {
-                MareaImageView(url: thumbURL, width: 120, height: 68)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                MareaImageView(url: thumbURL, width: thumbWidth, height: thumbHeight)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(MareaTheme.Colors.surfaceElevated)
-                    .frame(width: 120, height: 68)
+                    .frame(width: thumbWidth, height: thumbHeight)
                     .overlay {
                         Image(systemName: "film")
                             .foregroundStyle(.secondary)
@@ -1246,12 +1283,22 @@ private struct EpisodeRow: View {
                     .font(.system(size: 18))
                     .foregroundStyle(MareaTheme.Colors.accent)
                     .shadow(color: .black.opacity(0.5), radius: 2)
-                    .offset(x: 5, y: -5)
+                    .padding(6)
                     .transition(.scale.combined(with: .opacity))
             }
         }
         .accessibilityHidden(true)
     }
+
+    private var thumbWidth: CGFloat {
+        #if os(macOS)
+        176
+        #else
+        136
+        #endif
+    }
+
+    private var thumbHeight: CGFloat { thumbWidth * 9 / 16 }
 
     // MARK: - Text
 
