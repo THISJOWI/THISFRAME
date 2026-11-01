@@ -208,40 +208,57 @@ private struct FeaturedHeroCard: View {
         .accessibilityElement(children: .contain)
     }
 
+    /// Side by side when the width allows it, stacked on narrow phones so the
+    /// labels never truncate or push past the safe area.
     private var actions: some View {
-        HStack(spacing: MareaTheme.Spacing.sm) {
-            Button(action: onPrimaryAction) {
-                HStack(spacing: 9) {
-                    Image(systemName: primaryIcon)
-                        .font(.system(size: 15, weight: .bold))
-                    Text(primaryLabel)
-                        .font(.headline)
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 22)
-                .padding(.vertical, 13)
-                .background(MareaTheme.Colors.accent, in: Capsule())
-                .shadow(color: MareaTheme.Colors.accent.opacity(0.35), radius: 10, y: 4)
-                .contentShape(Capsule())
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: MareaTheme.Spacing.sm) {
+                primaryActionButton
+                moreInfoButton
             }
-            .buttonStyle(.plain)
-
-            Button(action: onMoreInfo) {
-                HStack(spacing: 8) {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 15, weight: .semibold))
-                    Text("Más información")
-                        .font(.headline)
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 13)
-                .background(.black.opacity(0.28), in: Capsule())
-                .overlay(Capsule().strokeBorder(.white.opacity(0.22), lineWidth: 0.5))
-                .contentShape(Capsule())
+            VStack(alignment: .leading, spacing: MareaTheme.Spacing.sm) {
+                primaryActionButton
+                moreInfoButton
             }
-            .buttonStyle(.plain)
         }
+    }
+
+    private var primaryActionButton: some View {
+        Button(action: onPrimaryAction) {
+            HStack(spacing: 9) {
+                Image(systemName: primaryIcon)
+                    .font(.system(size: 15, weight: .bold))
+                Text(primaryLabel)
+                    .font(.headline)
+                    .lineLimit(1)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 22)
+            .padding(.vertical, 13)
+            .background(MareaTheme.Colors.accent, in: Capsule())
+            .shadow(color: MareaTheme.Colors.accent.opacity(0.35), radius: 10, y: 4)
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var moreInfoButton: some View {
+        Button(action: onMoreInfo) {
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 15, weight: .semibold))
+                Text("Más información")
+                    .font(.headline)
+                    .lineLimit(1)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 13)
+            .background(.black.opacity(0.28), in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.22), lineWidth: 0.5))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     private var displayTitle: String {
