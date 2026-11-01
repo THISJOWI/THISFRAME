@@ -54,7 +54,8 @@ struct FeaturedHeroView<Header: View>: View {
                 .frame(height: heroHeight)
 
                 // Top scrim: keeps the integrated brand header legible on any
-                // artwork, in both appearances.
+                // artwork, in both appearances. Extends into the status bar
+                // on iOS so the artwork is edge-to-edge.
                 LinearGradient(
                     stops: [
                         .init(color: .black.opacity(0.62), location: 0),
@@ -66,23 +67,44 @@ struct FeaturedHeroView<Header: View>: View {
                 )
                 .frame(height: 150)
                 .allowsHitTesting(false)
+                .ignoresSafeArea(.container, edges: .top)
 
                 header()
                     .padding(.horizontal, MareaTheme.Spacing.lg)
-                    .padding(.top, MareaTheme.Spacing.sm)
+                    .padding(.top, headerTopPadding)
 
                 if items.count > 1 {
                     pageIndicator
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .padding(.trailing, MareaTheme.Spacing.lg)
-                        .padding(.top, 64)
+                        .padding(.top, pageIndicatorTopPadding)
                 }
             }
             .frame(height: heroHeight)
+            .ignoresSafeArea(.container, edges: .top)
             .onAppear {
                 if selectedID == nil { selectedID = items.first?.id }
             }
         }
+    }
+
+    /// Top padding for the brand header so it clears the iOS status bar
+    /// while the artwork stays edge-to-edge behind it.
+    private var headerTopPadding: CGFloat {
+        #if os(iOS)
+        MareaTheme.Spacing.sm + 8
+        #else
+        MareaTheme.Spacing.sm
+        #endif
+    }
+
+    /// Top padding for the page indicator so it clears the iOS status bar.
+    private var pageIndicatorTopPadding: CGFloat {
+        #if os(iOS)
+        64 + 8
+        #else
+        64
+        #endif
     }
 
     private func heroImageURL(for item: FeaturedSeries) -> URL? {

@@ -62,6 +62,10 @@ struct PlayerView: View {
     // Previous episode wiring — when provided, transport ⏮ offers it
     var previousEpisode: JellyfinEpisode? = nil
     var onPlayPreviousEpisode: ((JellyfinEpisode) -> Void)? = nil
+    /// Play any episode from the season list panel.
+    var onPlayEpisode: ((JellyfinEpisode) -> Void)? = nil
+    /// All episodes of the current season — used for the episode list panel.
+    var seasonEpisodes: [JellyfinEpisode] = []
     /// Series name shown under the episode/movie title in the controls.
     var subtitle: String? = nil
     /// true when this playback session started from a received handoff
@@ -88,6 +92,9 @@ struct PlayerView: View {
     /// no UI. Cancelled in `onDisappear`.
     @State private var playbackTask: Task<Void, Never>?
     @State private var episodeSwapTask: Task<Void, Never>?
+    /// Episode list panel: shows all episodes of the current season so the
+    /// user can switch without leaving the player.
+    @State private var showingEpisodeList = false
 
     /// Subtitle size preference (UserDefaults key from SubtitleSizeSettings).
     /// @AppStorage watches UserDefaults live — the overlay updates the moment
@@ -376,11 +383,74 @@ struct PlayerView: View {
                 Label("Siguiente episodio", systemImage: "forward.end.alt.fill")
             }
         }
+
+        // Episode list panel: all episodes of the current season.
+        if !seasonEpisodes.isEmpty {
+            Divider()
+            Button {
+                showingEpisodeList = true
+            } label: {
+                Label("Todos los episodios", systemImage: "list.bullet")
+            }
+        }
     }
 
     private var playbackSpeedLabel: String {
         let rate = viewModel.playbackRate
         return rate == 1 ? "1×" : String(format: "%.2g×", rate)
+    }
+
+    /// Episode list panel: all episodes of the current season, with the
+    /// playing one highlighted. Tapping an episode swaps playback in place.
+    @ViewBuilder
+    private var episodeListView: some View {
+        List {
+            ForEach(Array(seasonEpisodes.enumerated()), id: \.element.id) { _, episode in
+                Button {
+                    showingEpisodeList = false
+                    onPlayEpisode?(episode)
+                } label: {
+                    HStack(spacing: 12) {
+                        if let url = episode.artworkURL(serverURL: serverURL ?? URL(string: "http://localhost")!) {
+                            MareaImageView(
+                                url: url,
+                                placeholder: String(episode.name.prefix(1)),
+                                width: 0,
+                                height: 0
+                            )
+                            .frame(width: 56, height: 56)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        } else {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(MareaTheme.Colors.overlayFill.opacity(0.3))
+                                .frame(width: 56, height: 56)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(episode.name)
+                                .font(.subheadline.weight(.semibold))
+                                .lineLimit(1)
+                            Text(episode.episodeLabel)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer(minLength: 0)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .navigationTitle("Episodios")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cerrar") { showingEpisodeList = false }
+            }
+        }
     }
 
     /// Full controls overlay, mounted only while shown.
@@ -833,6 +903,11 @@ struct PlayerView: View {
                 current: viewModel.selectedQuality
             ) { quality in
                 Task { await viewModel.switchQuality(quality) }
+            }
+        }
+        .sheet(isPresented: $showingEpisodeList) {
+            NavigationStack {
+                episodeListView
             }
         }
         #if os(iOS)

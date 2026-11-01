@@ -72,6 +72,10 @@ struct DirectPlayer: View {
                     onPlayPreviousEpisode: { episode in
                         Task { await play(episode) }
                     },
+                    onPlayEpisode: { episode in
+                        Task { await play(episode) }
+                    },
+                    seasonEpisodes: seasonEpisodes,
                     subtitle: playerSubtitle
                 )
                 .ignoresSafeArea()
