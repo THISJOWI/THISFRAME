@@ -22,11 +22,6 @@ struct SettingsView: View {
                 SubtitleProvidersSection()
                 #endif
 
-                #if os(iOS) || os(macOS)
-                SettingsGroupHeader(title: "Conexiones")
-                IntegrationsSection()
-                #endif
-
                 SettingsGroupHeader(title: "Avanzado")
                 DiagnosticsSection()
             }

@@ -19,13 +19,6 @@ struct HomeActionPill: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            NavigationLink(destination: SettingsView()) {
-                Image(systemName: "gearshape.fill")
-                    .pillIcon()
-                    .foregroundStyle(MareaTheme.Colors.crimsonFrame)
-            }
-            .accessibilityLabel("Ajustes")
-
             #if os(iOS)
             Button {
                 showCastPicker = true
