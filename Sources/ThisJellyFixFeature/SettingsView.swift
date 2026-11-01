@@ -63,7 +63,7 @@ private struct SettingsGroupHeader: View {
 /// The value lives in `UserDefaults` (Core) so the root view reacts to it
 /// live: `AppearanceSettings.Appearance.system` resolves to `nil`, which
 /// leaves the scheme to the operating system instead of forcing one.
-private struct AppearanceSettingsSection: View {
+struct AppearanceSettingsSection: View {
     @AppStorage(AppearanceSettings.Key.appearance)
     private var rawAppearance: String = AppearanceSettings.Appearance.system.rawValue
 
@@ -98,7 +98,7 @@ private struct AppearanceSettingsSection: View {
 
 // MARK: - Diagnostics
 
-private struct DiagnosticsSection: View {
+struct DiagnosticsSection: View {
     private var logURL: URL? {
         let path = TJFLogExport.filePath
         return FileManager.default.fileExists(atPath: path) ? URL(fileURLWithPath: path) : nil
@@ -136,7 +136,7 @@ private struct DiagnosticsSection: View {
 
 // MARK: - Skip Settings
 
-private struct SkipSettingsSection: View {
+struct SkipSettingsSection: View {
     // @AppStorage inside @Observable-adjacent views: plain @State-free view,
     // so no @ObservationIgnored needed here.
     @AppStorage(SkipSettings.Key.autoSkip) private var autoSkip = true
@@ -172,7 +172,7 @@ private struct SkipSettingsSection: View {
 
 // MARK: - Language Settings
 
-private struct LanguageSettingsSection: View {
+struct LanguageSettingsSection: View {
     @AppStorage(LanguagePreferences.Key.audio) private var preferredAudio: String?
     @AppStorage(LanguagePreferences.Key.subtitles) private var preferredSubtitles: String?
 
@@ -234,7 +234,7 @@ private struct LanguageSettingsSection: View {
 
 // MARK: - Subtitle Size Settings
 
-private struct SubtitleSizeSettingsSection: View {
+struct SubtitleSizeSettingsSection: View {
     /// The raw Double value (e.g. 1.0, 1.35) stored via @AppStorage.
     /// Bridged to SubtitleSizeSettings.RelativeSize in the picker.
     @AppStorage(SubtitleSizeSettings.Key.relativeSize) private var rawSize: Double = 1.0

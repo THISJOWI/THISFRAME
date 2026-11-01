@@ -6,6 +6,9 @@ struct FavoritesView: View {
     let serverURL: URL
     let token: String
     let userId: String
+    /// Embedded in Profile & Settings: no NavigationStack/ScrollView of its
+    /// own, so the host screen owns scrolling and navigation.
+    var embedded: Bool = false
 
     @State private var favoriteMovies: [JellyfinMediaItem] = []
     @State private var favoriteSeries: [JellyfinMediaItem] = []
@@ -18,17 +21,53 @@ struct FavoritesView: View {
         serverURL: URL,
         token: String,
         userId: String,
+        embedded: Bool = false,
         libraryClient: any JellyfinLibraryProviding = JellyfinLibraryClient()
     ) {
         self.serverURL = serverURL
         self.token = token
         self.userId = userId
+        self.embedded = embedded
         self.libraryClient = libraryClient
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
+        if embedded {
+            content
+                .navigationDestination(for: JellyfinMediaItem.self) { item in
+                    DetailView(
+                        item: item,
+                        serverURL: serverURL,
+                        token: token,
+                        userId: userId
+                    )
+                }
+                .task { await loadFavorites() }
+        } else {
+            NavigationStack {
+                ScrollView {
+                    content
+                }
+                .background(MareaTheme.Colors.surfaceOverlay)
+                .refreshable { await loadFavorites() }
+                .navigationTitle("Favoritos")
+                #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                #endif
+                .navigationDestination(for: JellyfinMediaItem.self) { item in
+                    DetailView(
+                        item: item,
+                        serverURL: serverURL,
+                        token: token,
+                        userId: userId
+                    )
+                }
+                .task { await loadFavorites() }
+            }
+        }
+    }
+
+    private var content: some View {
                 VStack(alignment: .leading, spacing: 24) {
                     if isLoading {
                         ProgressView("Cargando favoritos…")
@@ -76,25 +115,8 @@ struct FavoritesView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 16)
-            }
-            .background(MareaTheme.Colors.surfaceOverlay)
-            .refreshable { await loadFavorites() }
-            .navigationTitle("Favoritos")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .navigationDestination(for: JellyfinMediaItem.self) { item in
-                DetailView(
-                    item: item,
-                    serverURL: serverURL,
-                    token: token,
-                    userId: userId
-                )
-            }
-            .task { await loadFavorites() }
-        }
+                .padding(.horizontal, embedded ? 0 : 24)
+                .padding(.top, embedded ? 0 : 16)
     }
 
     private func favoritesSection(title: String, items: [JellyfinMediaItem]) -> some View {
