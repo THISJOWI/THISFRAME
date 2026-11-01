@@ -1146,10 +1146,9 @@ private struct ControlsOverlay: View {
                     .disabled(!viewModel.isPlaying && viewModel.currentTime <= 0)
                 }
                 #endif
-                clusterButton("4k.tv", disabled: false) {
-                    viewModel.showQualityPicker = true
-                }
-                // Favorite (P7): real server flag, optimistic toggle + rollback.
+
+                // Favorite stays one tap away; the rest of the playback options
+                // are grouped behind one settings menu instead of six icons.
                 clusterButton(
                     viewModel.isFavorite ? "heart.fill" : "heart",
                     disabled: viewModel.isTogglingFavorite
@@ -1157,21 +1156,9 @@ private struct ControlsOverlay: View {
                     Task { await viewModel.toggleFavorite() }
                 }
                 .accessibilityLabel(viewModel.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos")
-                clusterButton("gauge", disabled: false) {
-                    viewModel.showSpeedPicker = true
-                }
-                clusterButton(
-                    "speaker.wave.2",
-                    disabled: viewModel.availableAudioTracks.isEmpty
-                ) {
-                    viewModel.showAudioPicker = true
-                }
-                clusterButton(
-                    "text.bubble",
-                    disabled: viewModel.availableSubtitleTracks.isEmpty && viewModel.unavailableSubtitleTracks.isEmpty
-                ) {
-                    viewModel.showSubtitlePicker = true
-                }
+
+                settingsMenu
+
                 #if os(iOS) || os(macOS)
                 AirPlayRoutePicker(onPresentingChanged: onAirPlayPresenting)
                     .frame(width: 40, height: 40)
@@ -1213,19 +1200,59 @@ private struct ControlsOverlay: View {
         .disabled(disabled)
     }
 
+    /// One native menu for the options that used to occupy a separate circle
+    /// each. The pickers and their behavior are the existing ones.
+    private var settingsMenu: some View {
+        Menu {
+            Button {
+                viewModel.showQualityPicker = true
+            } label: {
+                Label("Calidad · \(viewModel.selectedQuality.label)", systemImage: "4k.tv")
+            }
+
+            Button {
+                viewModel.showSpeedPicker = true
+            } label: {
+                Label("Velocidad · \(speedLabel)", systemImage: "gauge")
+            }
+
+            Divider()
+
+            Button {
+                viewModel.showAudioPicker = true
+            } label: {
+                Label("Audio", systemImage: "speaker.wave.2")
+            }
+            .disabled(viewModel.availableAudioTracks.isEmpty)
+
+            Button {
+                viewModel.showSubtitlePicker = true
+            } label: {
+                Label("Subtítulos", systemImage: "text.bubble")
+            }
+            .disabled(
+                viewModel.availableSubtitleTracks.isEmpty
+                    && viewModel.unavailableSubtitleTracks.isEmpty
+            )
+        } label: {
+            Image(systemName: "slider.horizontal.3")
+                .font(.title3)
+                .foregroundStyle(.white)
+                .frame(width: 40, height: 40)
+                .background(.black.opacity(0.4), in: Circle())
+        }
+        .accessibilityLabel("Ajustes de reproducción")
+    }
+
+    private var speedLabel: String {
+        let rate = viewModel.playbackRate
+        return rate == 1 ? "1×" : String(format: "%.2g×", rate)
+    }
+
     // MARK: Transport
 
     private var transportRow: some View {
-        HStack(spacing: 36) {
-            // ⏮ previous episode — only when DetailView/DirectPlayer wired one.
-            transportButton(
-                icon: "backward.end.alt.fill",
-                size: 26,
-                disabled: !viewModel.hasPreviousEpisode
-            ) {
-                viewModel.playPreviousEpisode()
-            }
-
+        HStack(spacing: 40) {
             transportButton(icon: "gobackward.15", size: 34, disabled: false) {
                 let target = max(0, viewModel.currentTime - 15)
                 Task { await viewModel.seek(to: target) }
@@ -1242,15 +1269,6 @@ private struct ControlsOverlay: View {
             transportButton(icon: "goforward.30", size: 34, disabled: false) {
                 let target = min(viewModel.duration, viewModel.currentTime + 30)
                 Task { await viewModel.seek(to: target) }
-            }
-
-            // ⏭ next episode — jumps right away (an explicit tap is deliberate).
-            transportButton(
-                icon: "forward.end.alt.fill",
-                size: 26,
-                disabled: !viewModel.hasNextEpisode
-            ) {
-                viewModel.playNextNow()
             }
         }
     }
@@ -1296,6 +1314,36 @@ private struct ControlsOverlay: View {
             }
             .font(.caption)
             .foregroundStyle(.white)
+
+            HStack(spacing: MareaTheme.Spacing.lg) {
+                Button {
+                    viewModel.showSpeedPicker = true
+                } label: {
+                    Label(speedLabel, systemImage: "gauge")
+                }
+                .accessibilityLabel("Velocidad de reproducción")
+
+                if viewModel.hasPreviousEpisode {
+                    Button {
+                        viewModel.playPreviousEpisode()
+                    } label: {
+                        Label("Anterior", systemImage: "backward.end.alt.fill")
+                    }
+                }
+
+                if viewModel.hasNextEpisode {
+                    Button {
+                        viewModel.playNextNow()
+                    } label: {
+                        Label("Siguiente", systemImage: "forward.end.alt.fill")
+                    }
+                }
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.9))
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 2)
 
             if let endsAt {
                 Text("Termina a las \(endsAt)")
