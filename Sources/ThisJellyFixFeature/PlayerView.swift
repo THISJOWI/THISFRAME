@@ -302,6 +302,87 @@ struct PlayerView: View {
         }
     }
 
+    /// Options that used to occupy circles in the control bars. Reachable by
+    /// long-pressing the video, so the bars stay clean without losing any
+    /// playback feature.
+    @ViewBuilder
+    private var playbackOptionsMenu: some View {
+        Button {
+            viewModel.showQualityPicker = true
+        } label: {
+            Label("Calidad · \(viewModel.selectedQuality.label)", systemImage: "4k.tv")
+        }
+
+        Button {
+            viewModel.showSpeedPicker = true
+        } label: {
+            Label("Velocidad · \(playbackSpeedLabel)", systemImage: "gauge")
+        }
+
+        Divider()
+
+        Button {
+            viewModel.showAudioPicker = true
+        } label: {
+            Label("Audio", systemImage: "speaker.wave.2")
+        }
+        .disabled(viewModel.availableAudioTracks.isEmpty)
+
+        Button {
+            viewModel.showSubtitlePicker = true
+        } label: {
+            Label("Subtítulos", systemImage: "text.bubble")
+        }
+        .disabled(
+            viewModel.availableSubtitleTracks.isEmpty
+                && viewModel.unavailableSubtitleTracks.isEmpty
+        )
+
+        #if os(iOS)
+        Divider()
+        Button {
+            if viewModel.isCastConnected {
+                Task { await viewModel.castCurrentItem() }
+            } else {
+                viewModel.showCastPicker = true
+            }
+        } label: {
+            Label {
+                Text(viewModel.isCastConnected ? "Google Cast conectado" : "Google Cast")
+            } icon: {
+                CastIcon()
+                    .stroke(.primary, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                    .frame(width: 18, height: 14)
+            }
+        }
+        #endif
+
+        if viewModel.hasPreviousEpisode || viewModel.hasNextEpisode {
+            Divider()
+        }
+
+        if viewModel.hasPreviousEpisode {
+            Button {
+                viewModel.playPreviousEpisode()
+            } label: {
+                Label("Episodio anterior", systemImage: "backward.end.alt.fill")
+            }
+        }
+
+        if viewModel.hasNextEpisode {
+            Button {
+                viewModel.playNextNow()
+            } label: {
+                Label("Siguiente episodio", systemImage: "forward.end.alt.fill")
+            }
+        }
+    }
+
+    private var playbackSpeedLabel: String {
+        let rate = viewModel.playbackRate
+        return rate == 1 ? "1×" : String(format: "%.2g×", rate)
+    }
+
     /// Full controls overlay, mounted only while shown.
     @ViewBuilder
     /// Controls are ALWAYS mounted and hidden with opacity instead of being
@@ -374,6 +455,9 @@ struct PlayerView: View {
                             controlsTimer?.invalidate()
                         }
                     }
+                    // The top and bottom bars stay visually clean; the
+                    // existing playback options remain reachable here.
+                    .contextMenu { playbackOptionsMenu }
             }
 
             // Subtitles with dark background (single renderer).
@@ -1121,13 +1205,14 @@ private struct ControlsOverlay: View {
 
             Spacer(minLength: 8)
 
-            // Right cluster — every button drives a real action. AirPlay is a
-            // system AVRoutePickerView (no public "present" API): it lives HERE,
-            // mounted for the player's whole lifetime, so its glyph sits exactly
-            // on the cluster baseline and the controls auto-hide never unmounts
-            // it (remounting mid-presentation leaves the route sheet dead).
+            // Top-right cluster, deliberately reduced to the three essentials:
+            // PiP, favorite and the real AirPlay route picker. Everything else
+            // (quality, speed, audio, subtitles, Google Cast) lives in the
+            // player's context menu, so the functionality stays reachable
+            // without adding visible chrome.
             HStack(spacing: 6) {
                 #if os(macOS)
+                // macOS equivalent of the PiP slot: the window control.
                 clusterButton("arrow.up.left.and.arrow.down.right", action: onToggleFullscreen)
                 #endif
                 #if os(iOS)
@@ -1147,8 +1232,6 @@ private struct ControlsOverlay: View {
                 }
                 #endif
 
-                // Favorite stays one tap away; the rest of the playback options
-                // are grouped behind one settings menu instead of six icons.
                 clusterButton(
                     viewModel.isFavorite ? "heart.fill" : "heart",
                     disabled: viewModel.isTogglingFavorite
@@ -1157,26 +1240,13 @@ private struct ControlsOverlay: View {
                 }
                 .accessibilityLabel(viewModel.isFavorite ? "Quitar de favoritos" : "Añadir a favoritos")
 
-                settingsMenu
-
                 #if os(iOS) || os(macOS)
+                // AVRoutePickerView draws Apple's own AirPlay glyph
+                // (airplayvideo) and opens the system route sheet.
                 AirPlayRoutePicker(onPresentingChanged: onAirPlayPresenting)
                     .frame(width: 40, height: 40)
                     .background(.black.opacity(0.4), in: Circle())
-                #endif
-                #if os(iOS)
-                // Cast: tecnología DIFERENTE de AirPlay (glifo propio, flujo
-                // propio). Conectado → emite directo; sin sesión → selector.
-                CastButton(
-                    isConnected: viewModel.isCastConnected,
-                    isConnecting: viewModel.castController?.isConnecting ?? false
-                ) {
-                    if viewModel.isCastConnected {
-                        Task { await viewModel.castCurrentItem() }
-                    } else {
-                        viewModel.showCastPicker = true
-                    }
-                }
+                    .accessibilityLabel("AirPlay")
                 #endif
             }
         }
@@ -1198,55 +1268,6 @@ private struct ControlsOverlay: View {
                 .opacity(disabled ? 0.35 : 1)
         }
         .disabled(disabled)
-    }
-
-    /// One native menu for the options that used to occupy a separate circle
-    /// each. The pickers and their behavior are the existing ones.
-    private var settingsMenu: some View {
-        Menu {
-            Button {
-                viewModel.showQualityPicker = true
-            } label: {
-                Label("Calidad · \(viewModel.selectedQuality.label)", systemImage: "4k.tv")
-            }
-
-            Button {
-                viewModel.showSpeedPicker = true
-            } label: {
-                Label("Velocidad · \(speedLabel)", systemImage: "gauge")
-            }
-
-            Divider()
-
-            Button {
-                viewModel.showAudioPicker = true
-            } label: {
-                Label("Audio", systemImage: "speaker.wave.2")
-            }
-            .disabled(viewModel.availableAudioTracks.isEmpty)
-
-            Button {
-                viewModel.showSubtitlePicker = true
-            } label: {
-                Label("Subtítulos", systemImage: "text.bubble")
-            }
-            .disabled(
-                viewModel.availableSubtitleTracks.isEmpty
-                    && viewModel.unavailableSubtitleTracks.isEmpty
-            )
-        } label: {
-            Image(systemName: "slider.horizontal.3")
-                .font(.title3)
-                .foregroundStyle(.white)
-                .frame(width: 40, height: 40)
-                .background(.black.opacity(0.4), in: Circle())
-        }
-        .accessibilityLabel("Ajustes de reproducción")
-    }
-
-    private var speedLabel: String {
-        let rate = viewModel.playbackRate
-        return rate == 1 ? "1×" : String(format: "%.2g×", rate)
     }
 
     // MARK: Transport
@@ -1314,36 +1335,6 @@ private struct ControlsOverlay: View {
             }
             .font(.caption)
             .foregroundStyle(.white)
-
-            HStack(spacing: MareaTheme.Spacing.lg) {
-                Button {
-                    viewModel.showSpeedPicker = true
-                } label: {
-                    Label(speedLabel, systemImage: "gauge")
-                }
-                .accessibilityLabel("Velocidad de reproducción")
-
-                if viewModel.hasPreviousEpisode {
-                    Button {
-                        viewModel.playPreviousEpisode()
-                    } label: {
-                        Label("Anterior", systemImage: "backward.end.alt.fill")
-                    }
-                }
-
-                if viewModel.hasNextEpisode {
-                    Button {
-                        viewModel.playNextNow()
-                    } label: {
-                        Label("Siguiente", systemImage: "forward.end.alt.fill")
-                    }
-                }
-            }
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.white.opacity(0.9))
-            .buttonStyle(.plain)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 2)
 
             if let endsAt {
                 Text("Termina a las \(endsAt)")
