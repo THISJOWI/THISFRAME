@@ -11,6 +11,9 @@ struct HomeView: View {
     let userId: String
     let userName: String
     let onLogout: () -> Void
+    /// Jumps to the Search tab when the floating header's magnifier is tapped.
+    /// Nil on platforms where Home has no sibling search tab.
+    var onSearch: (() -> Void)? = nil
 
     /// Episode or movie tapped on a card — played directly, without pushing DetailView.
     @State private var directItem: JellyfinMediaItem?
@@ -260,21 +263,12 @@ struct HomeView: View {
         let resumeIds = Set(
             libraryModel.rows.first(where: { $0.title == "Estás viendo" })?.items.map(\.id) ?? []
         )
+        #if os(iOS) || os(macOS)
+        let picks = LibraryRecommender.recommend(from: libraryModel.allItems)
+        #endif
         let base = ScrollView {
             VStack(alignment: .leading, spacing: MareaTheme.Spacing.lg) {
-                HStack {
-                    Image("IconoInicio")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 28, height: 28)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                    Text("Inicio")
-                        .font(.largeTitle.bold())
-                    Spacer()
-
-                    HomeActionPill(discovery: discovery)
-                }
-                .padding(.horizontal, MareaTheme.Spacing.xl)
+                homeHeader
 
                 // E4: dead token — the retry button can never succeed, so the
                 // banner (and the empty-state button) offer a real way out.
@@ -319,6 +313,15 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top, 60)
                 } else {
+                    if !heroItems.isEmpty {
+                        FeaturedHeroView(
+                            items: heroItems,
+                            serverURL: serverURL,
+                            onPrimaryAction: openHero,
+                            onMoreInfo: openHeroDetail
+                        )
+                    }
+
                     #if os(iOS) || os(macOS)
                     categoryChips
                     if libraryModel.rows.isEmpty {
@@ -328,7 +331,7 @@ struct HomeView: View {
 
                     ForEach(Array(libraryModel.rows.enumerated()), id: \.element.id) { index, row in
                         RowSection(
-                            title: row.title,
+                            title: displayTitle(for: row.title),
                             items: row.items,
                             wide: row.title == "Estás viendo",
                             badgeFor: {
@@ -346,35 +349,22 @@ struct HomeView: View {
                             onSeeAll: seeAllAction(for: row.title),
                         )
 
-                        // Trending sits right after "Estás viendo" so fresh
-                        // content shows up at the top of Home.
+                        // Keep the editorial order of the reference: local
+                        // picks and fresh trending content both sit high, just
+                        // after the continue-watching shelf.
                         #if os(iOS) || os(macOS)
                         if index == 0 {
+                            if !picks.isEmpty {
+                                recommendationsRow(picks, resumeIds: resumeIds)
+                            }
                             trendingShelf
                         }
                         #endif
                     }
 
-                    // Local picks from YOUR library (P10): genre affinity over
-                    // favorites/watched/in-progress + rating tiebreak. Works
-                    // with no TMDB key, no network beyond Jellyfin itself.
                     #if os(iOS) || os(macOS)
-                    let picks = LibraryRecommender.recommend(from: libraryModel.allItems)
-                    if !picks.isEmpty {
-                        RowSection(
-                            title: "Recomendado para ti",
-                            items: picks.map(\.item),
-                            badgeFor: {
-                                CardBadge.badge(
-                                    for: $0,
-                                    resumeItems: resumeIds,
-                                    verifiedNewSeasonIDs: libraryModel.verifiedNewSeasonIDs
-                                )
-                            },
-                            imageURL: { libraryModel.imageURL(for: $0, wide: false) },
-                            onPlayDirect: { item in directItem = item },
-                            subtitle: picks.first?.reason
-                        )
+                    if libraryModel.rows.isEmpty && !picks.isEmpty {
+                        recommendationsRow(picks, resumeIds: resumeIds)
                     }
                     #endif
                 }
@@ -440,7 +430,114 @@ struct HomeView: View {
 
     // MARK: - Premium home pieces
 
+    private var homeHeader: some View {
+        HStack(spacing: 12) {
+            Image("IconoInicio")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 30, height: 30)
+                .clipShape(RoundedRectangle(cornerRadius: 7))
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text("ThisFrame")
+                    .font(.title2.bold())
+                Text("Inicio")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if let searchAction {
+                Button(action: searchAction) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .frame(width: 38, height: 38)
+                        .background(MareaTheme.Colors.glass, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Buscar")
+            }
+
+            HomeActionPill(discovery: discovery)
+        }
+        .padding(.horizontal, MareaTheme.Spacing.xl)
+    }
+
+    /// Real library items that can carry a cinematic banner. Resume items lead
+    /// because they are the most immediate action on Home; duplicates from the
+    /// same series are dropped so the carousel never repeats a show.
+    private var heroItems: [JellyfinMediaItem] {
+        let priority = [
+            "Estás viendo", "Nuevos episodios", "Últimos agregados",
+            "Películas", "Series", "Visto recientemente",
+        ]
+        var seen = Set<String>()
+        var items: [JellyfinMediaItem] = []
+
+        for title in priority {
+            guard let row = libraryModel.rows.first(where: { $0.title == title }) else { continue }
+            for item in row.items {
+                let key = item.type == "Episode"
+                    ? "series:\(item.seriesName ?? item.id)"
+                    : item.id
+                guard seen.insert(key).inserted else { continue }
+                guard item.hasImage || !(item.backdropImageTags ?? []).isEmpty else { continue }
+                items.append(item)
+                if items.count == 5 { return items }
+            }
+        }
+        return items
+    }
+
+    private func openHero(_ item: JellyfinMediaItem) {
+        if item.type == "Movie" || item.type == "Episode" {
+            directItem = item
+        } else {
+            navigationPath.append(item)
+        }
+    }
+
+    private func openHeroDetail(_ item: JellyfinMediaItem) {
+        navigationPath.append(item)
+    }
+
+    private func displayTitle(for rowTitle: String) -> String {
+        rowTitle == "Estás viendo" ? "Continuar viendo" : rowTitle
+    }
+
+    /// macOS has its own sidebar selection; iOS/tvOS receive the tab jump from
+    /// the root because Home does not own their TabView.
+    private var searchAction: (() -> Void)? {
+        #if os(macOS)
+        { selectedTab = .search }
+        #else
+        onSearch
+        #endif
+    }
+
     #if os(iOS) || os(macOS)
+    private func recommendationsRow(
+        _ picks: [LibraryRecommendation],
+        resumeIds: Set<String>
+    ) -> some View {
+        RowSection(
+            title: "Recomendado para ti",
+            items: picks.map(\.item),
+            badgeFor: {
+                CardBadge.badge(
+                    for: $0,
+                    resumeItems: resumeIds,
+                    verifiedNewSeasonIDs: libraryModel.verifiedNewSeasonIDs
+                )
+            },
+            imageURL: { libraryModel.imageURL(for: $0, wide: false) },
+            onPlayDirect: { item in directItem = item },
+            subtitle: picks.first?.reason
+        )
+    }
+
     /// Netflix-style category chips (Películas, Series, …) — each opens the
     /// paginated grid for that server view.
     private var categoryChips: some View {

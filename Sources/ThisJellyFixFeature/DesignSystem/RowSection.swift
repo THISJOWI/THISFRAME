@@ -28,23 +28,24 @@ struct RowSection: View {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.title3.bold())
+                        .font(.title2.bold())
                     if let subtitle {
                         Text(subtitle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
                     }
                 }
                 Spacer()
                 if let onSeeAll {
                     Button(action: onSeeAll) {
-                        HStack(spacing: 2) {
+                        HStack(spacing: 3) {
                             Text("Ver todo")
                                 .font(.subheadline.weight(.semibold))
                             Image(systemName: "chevron.right")
                                 .font(.caption.bold())
                         }
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(MareaTheme.Colors.accentText)
                     }
                     .buttonStyle(.plain)
                 }

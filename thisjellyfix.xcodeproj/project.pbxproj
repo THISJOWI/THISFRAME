@@ -105,6 +105,7 @@
 		2FA18B01DA75DE4E0D9B61BB /* JellyfinPlaybackClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 708CC6C4AD140C5FD530E54A /* JellyfinPlaybackClient.swift */; };
 		2FC679D3A90C5EEA80C5A69C /* IntegrationsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1129D7EB9075EC47D94476 /* IntegrationsSection.swift */; };
 		2FCA1EF38BB9E1BC6D984761 /* Networking-tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 51695B1995A40FA7BE06F2FD /* Networking-tvOS.framework */; };
+		3094A4C7DC950BF0357EE04B /* FeaturedHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FDA539E4552315DA82AAB6 /* FeaturedHeroView.swift */; };
 		30C39CE45B886D4555031BD5 /* DownloadCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF10F8D4613F087EAA9548D6 /* DownloadCoordinator.swift */; };
 		319F04140AF38F2BC036A4B7 /* SubtitleProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6107840D522FE9CE4312C61A /* SubtitleProvider.swift */; };
 		31C087E352386E11BC52EE65 /* SubtitleProviderEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2586FCD37D5D9175D416E612 /* SubtitleProviderEditor.swift */; };
@@ -207,6 +208,7 @@
 		59C3CA883B1551D153684B68 /* TrackNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E34C20DAE1EE3FED70F1446 /* TrackNaming.swift */; };
 		59C54CB298024240076BAB42 /* VideoInfoChips.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCE4E11908708CF8E935D275 /* VideoInfoChips.swift */; };
 		5AF5DD0C0A413FB0AD0CC371 /* SpotlightIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06CCF4862B340A13FF9A2B50 /* SpotlightIndexer.swift */; };
+		5B0B40FE274C378598268A9E /* FeaturedHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FDA539E4552315DA82AAB6 /* FeaturedHeroView.swift */; };
 		5B486F6E90EEB28E97F9D522 /* JellyfinSegmentClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1736573B5EC3AC5FB9B075 /* JellyfinSegmentClient.swift */; };
 		5B92DFDF278A24ABC0072F94 /* LibraryGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F87CDCAE9FC0160557A33C /* LibraryGridView.swift */; };
 		5C2A213D78D8128479E9CD5A /* Feature-visionOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E1730F8F94BE102A9E8DE78C /* Feature-visionOS.framework */; };
@@ -356,6 +358,7 @@
 		93E5A042C1DD72FB893D7ACC /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0070D0D9221BE56B2567FE64 /* PlayerViewModel.swift */; };
 		944F20DA1791A48E7FC9828F /* JellyfinItemDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EE3D2B8C7BBD9638113273F /* JellyfinItemDetail.swift */; };
 		9489C1859C6F6416E386835B /* JellyfinServerProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA95529E78948EB1C050098F /* JellyfinServerProbe.swift */; };
+		96F4968362CAC1691F69F915 /* FeaturedHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FDA539E4552315DA82AAB6 /* FeaturedHeroView.swift */; };
 		974769D1BA5F0ECBADBFF024 /* JellyfinDate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BF3A4DC6E40C71A45C0AEE7 /* JellyfinDate.swift */; };
 		97968A415A3BDC30E661150F /* Networking-visionOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A974A29AA43C3493A45094B0 /* Networking-visionOS.framework */; };
 		986090525AE75DBFC0304734 /* AirPlayRouteState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51A886EEBA41B779079A5E7 /* AirPlayRouteState.swift */; };
@@ -442,6 +445,7 @@
 		C5453505C2D1924A3EF86FDF /* BadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76772C32B1E56C8EF7597A68 /* BadgeView.swift */; };
 		C54A9F76073C81A173C0519F /* ChipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD8966043EC34B37438FF4A0 /* ChipView.swift */; };
 		C60CE39CEA3F109463ED2642 /* SubtitleProviderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3397D0451FC0B8DDED1CDAEC /* SubtitleProviderStore.swift */; };
+		C6A7DFB2023E743F5086BEED /* FeaturedHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1FDA539E4552315DA82AAB6 /* FeaturedHeroView.swift */; };
 		C79236421AF66F146C5D6691 /* Core-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7D37A490B1735CF546E5317 /* Core-iOS.framework */; };
 		C8B2BD052E5372AE4F184CF6 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB4C1DE92983F2B02F9FAF05 /* LoginView.swift */; };
 		C8C4584F81C48B6DACE69555 /* DownloadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010E594C024E41161B0DBF4 /* DownloadQueue.swift */; };
@@ -1172,6 +1176,7 @@
 		DF5712F71FAA17FACEDFD639 /* AppearanceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSettings.swift; sourceTree = "<group>"; };
 		DF7E2974B1A8BEE37248B88E /* CastSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastSessionState.swift; sourceTree = "<group>"; };
 		E1730F8F94BE102A9E8DE78C /* Feature-visionOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Feature-visionOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E1FDA539E4552315DA82AAB6 /* FeaturedHeroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeaturedHeroView.swift; sourceTree = "<group>"; };
 		E39CFC19AA8E51100A6C3ECC /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		E54B3E1A9A057B9D8B2D3E78 /* SkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonView.swift; sourceTree = "<group>"; };
 		E7EB0EE4EE654F6D5845ED31 /* DetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailView.swift; sourceTree = "<group>"; };
@@ -1406,6 +1411,7 @@
 				2C03D736722E3CB8ABABE72B /* CardEntrance.swift */,
 				C772B22757960B1AE2602062 /* CastButton.swift */,
 				AD8966043EC34B37438FF4A0 /* ChipView.swift */,
+				E1FDA539E4552315DA82AAB6 /* FeaturedHeroView.swift */,
 				AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */,
 				EB1633FC2CF06CB0CBF1BD61 /* MacAppearance.swift */,
 				B1F1F56FBAE5B47C8F09263E /* MareaMotion.swift */,
@@ -2417,6 +2423,7 @@
 				FF38982FE69FF7A788D218B5 /* DownloadsButton.swift in Sources */,
 				490B93060111A96F06815BD2 /* DownloadsView.swift in Sources */,
 				66C8F3B1C9E3F924254CAB33 /* FavoritesView.swift in Sources */,
+				96F4968362CAC1691F69F915 /* FeaturedHeroView.swift in Sources */,
 				472FF1140F38488A12E58149 /* FloatingTabBar.swift in Sources */,
 				339A6AED7F324B87512A4CA9 /* HomeActionPill.swift in Sources */,
 				6ADFEDADB6206B335A7A7DC7 /* HomeView.swift in Sources */,
@@ -2601,6 +2608,7 @@
 				A26C0F37AE4DC7D1A187EDCA /* DownloadsButton.swift in Sources */,
 				5FF077FC331885471BDD9F88 /* DownloadsView.swift in Sources */,
 				EF1EB2256E1FC837538136A7 /* FavoritesView.swift in Sources */,
+				C6A7DFB2023E743F5086BEED /* FeaturedHeroView.swift in Sources */,
 				7134A1331677D0F8D548C0D8 /* FloatingTabBar.swift in Sources */,
 				CFC3CDA6E4CDE3244922FCFD /* HomeActionPill.swift in Sources */,
 				8ED42876B2BBF33403BE7C85 /* HomeView.swift in Sources */,
@@ -2689,6 +2697,7 @@
 				60AB5493DD48C3A95AF5F9A8 /* DownloadsButton.swift in Sources */,
 				BB6E2C4C4A6415BFA6D845D1 /* DownloadsView.swift in Sources */,
 				BBC8783AF68A55EE2F87CDEE /* FavoritesView.swift in Sources */,
+				3094A4C7DC950BF0357EE04B /* FeaturedHeroView.swift in Sources */,
 				2A732C59D007F6F37CCE4239 /* FloatingTabBar.swift in Sources */,
 				A99580FB96D0B182F6CEE08B /* HomeActionPill.swift in Sources */,
 				34DB2688B85445F043B37964 /* HomeView.swift in Sources */,
@@ -2972,6 +2981,7 @@
 				B68B8196A2A54102D550F6F5 /* DownloadsButton.swift in Sources */,
 				D67A9163974970FC4A51CBF8 /* DownloadsView.swift in Sources */,
 				87A080E17BB282C20C06C3B5 /* FavoritesView.swift in Sources */,
+				5B0B40FE274C378598268A9E /* FeaturedHeroView.swift in Sources */,
 				7993FFE58140E59EB5FC5162 /* FloatingTabBar.swift in Sources */,
 				A588ED9E8A40B241DB947829 /* HomeActionPill.swift in Sources */,
 				58D32FE225B92CEF7C5E82F7 /* HomeView.swift in Sources */,

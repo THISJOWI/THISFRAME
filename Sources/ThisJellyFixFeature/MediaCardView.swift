@@ -142,7 +142,7 @@ struct MediaCardView: View {
         } else {
             cardWidth {
                 Text(item.name)
-                    .font(.caption)
+                    .font(.subheadline.weight(.semibold))
                     .lineLimit(2)
             }
 
