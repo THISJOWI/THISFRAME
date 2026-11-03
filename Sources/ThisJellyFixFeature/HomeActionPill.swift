@@ -4,21 +4,30 @@ import ThisJellyFixCore
 import ThisJellyFixCast
 #endif
 
-/// Home action pill (P8): gear settings + transmit entry (+ downloads when
-/// a download service exists). Every destination is reused — no new flows,
-/// no Cast re-implementation: the transmit button only opens the existing
-/// device picker. Profile lives in its own tab, so the pill carries no
-/// profile button.
+/// Home action pill: profile avatar + transmit entry (+ downloads when available).
 struct HomeActionPill: View {
     var discovery: DiscoveryModel?
+    var userName: String = ""
+    var serverURL: URL? = nil
+    var token: String? = nil
+    var userId: String? = nil
+    var onLogout: () -> Void = {}
 
     @State private var showCastPicker = false
+    @State private var showProfile = false
     #if os(iOS)
     @ObservedObject private var cast = CastController.shared
     #endif
 
+    private var avatarURL: URL? {
+        guard let serverURL, let userId, let token, !token.isEmpty else { return nil }
+        return serverURL
+            .appendingPathComponent("Users/\(userId)/Images/Primary")
+            .appending(queryItems: [URLQueryItem(name: "api_key", value: token)])
+    }
+
     var body: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: 4) {
             #if os(iOS)
             Button {
                 showCastPicker = true
@@ -28,12 +37,12 @@ struct HomeActionPill: View {
                         .foregroundStyle(MareaTheme.Colors.crimsonFrame)
                         .frame(width: 20, height: 15)
                         .overlay(CastIcon().stroke(MareaTheme.Colors.crimsonFrame, style: StrokeStyle(lineWidth: 2, lineCap: .round)))
-                        .frame(width: 36, height: 36)
+                        .frame(width: 34, height: 34)
                     if cast.manager.state.isConnected {
                         Circle()
                             .fill(MareaTheme.Colors.accent)
                             .frame(width: 8, height: 8)
-                            .offset(x: -4, y: -4)
+                            .offset(x: -3, y: -3)
                     }
                 }
             }
@@ -49,6 +58,49 @@ struct HomeActionPill: View {
                 DownloadsButton(discovery: discovery)
             }
             #endif
+
+            // Profile button directly beside the transmit icon
+            Button {
+                showProfile = true
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(MareaTheme.Colors.accent.opacity(0.2))
+                        .frame(width: 26, height: 26)
+                    AsyncImage(url: avatarURL) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        default:
+                            if !userName.isEmpty {
+                                Text(String(userName.prefix(1)).uppercased())
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(MareaTheme.Colors.accentText)
+                            } else {
+                                Image(systemName: "person.fill")
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(MareaTheme.Colors.accent)
+                            }
+                        }
+                    }
+                    .frame(width: 26, height: 26)
+                    .clipShape(Circle())
+                }
+                .frame(width: 34, height: 34)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Perfil de \(userName)")
+            .sheet(isPresented: $showProfile) {
+                ProfileView(
+                    userName: userName,
+                    onLogout: onLogout,
+                    serverURL: serverURL,
+                    token: token,
+                    userId: userId
+                )
+            }
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 4)

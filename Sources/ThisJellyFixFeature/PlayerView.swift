@@ -95,6 +95,8 @@ struct PlayerView: View {
     /// Episode list panel: shows all episodes of the current season so the
     /// user can switch without leaving the player.
     @State private var showingEpisodeList = false
+    /// Playback settings sheet: quality, speed, audio and subtitles in one place.
+    @State private var showingPlaybackSettings = false
 
     /// Subtitle size preference (UserDefaults key from SubtitleSizeSettings).
     /// @AppStorage watches UserDefaults live — the overlay updates the moment
@@ -139,6 +141,8 @@ struct PlayerView: View {
         onPlaybackCompleted: (() -> Void)? = nil,
         previousEpisode: JellyfinEpisode? = nil,
         onPlayPreviousEpisode: ((JellyfinEpisode) -> Void)? = nil,
+        onPlayEpisode: ((JellyfinEpisode) -> Void)? = nil,
+        seasonEpisodes: [JellyfinEpisode] = [],
         subtitle: String? = nil,
         receivedViaHandoff: Bool = false,
         restoredViewModel: PlayerViewModel? = nil
@@ -161,6 +165,8 @@ struct PlayerView: View {
         self.onPlaybackCompleted = onPlaybackCompleted
         self.previousEpisode = previousEpisode
         self.onPlayPreviousEpisode = onPlayPreviousEpisode
+        self.onPlayEpisode = onPlayEpisode
+        self.seasonEpisodes = seasonEpisodes
         self.subtitle = subtitle
         self.receivedViaHandoff = receivedViaHandoff
         #if os(iOS)
@@ -411,7 +417,7 @@ struct PlayerView: View {
                     onPlayEpisode?(episode)
                 } label: {
                     HStack(spacing: 12) {
-                        if let url = episode.artworkURL(serverURL: serverURL ?? URL(string: "http://localhost")!) {
+                        if let serverURL, let url = JellyfinArtwork.url(for: episode, serverURL: serverURL, shape: .landscape, targetWidth: 200) {
                             MareaImageView(
                                 url: url,
                                 placeholder: String(episode.name.prefix(1)),
@@ -480,7 +486,8 @@ struct PlayerView: View {
             hasEpisodeList: !seasonEpisodes.isEmpty,
             onPlayPrevious: { viewModel.playPreviousEpisode() },
             onPlayNext: { viewModel.playNextNow() },
-            onShowEpisodeList: { showingEpisodeList = true }
+            onShowEpisodeList: { showingEpisodeList = true },
+            onShowPlaybackSettings: { showingPlaybackSettings = true }
         )
         .opacity(viewModel.showControls ? 1 : 0)
         .allowsHitTesting(viewModel.showControls)
@@ -916,6 +923,9 @@ struct PlayerView: View {
                 episodeListView
             }
         }
+        .sheet(isPresented: $showingPlaybackSettings) {
+            PlaybackSettingsSheet(viewModel: viewModel)
+        }
         #if os(iOS)
         .modifier(CastPickerSheetModifier(viewModel: viewModel))
         #endif
@@ -1250,6 +1260,7 @@ private struct ControlsOverlay: View {
     var onPlayPrevious: (() -> Void)? = nil
     var onPlayNext: (() -> Void)? = nil
     var onShowEpisodeList: (() -> Void)? = nil
+    var onShowPlaybackSettings: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1337,6 +1348,37 @@ private struct ControlsOverlay: View {
                     .background(.black.opacity(0.4), in: Circle())
                     .accessibilityLabel("AirPlay")
                 #endif
+
+                #if os(iOS)
+                Button {
+                    if viewModel.isCastConnected {
+                        Task { await viewModel.castCurrentItem() }
+                    } else {
+                        viewModel.showCastPicker = true
+                    }
+                } label: {
+                    ZStack(alignment: .bottomTrailing) {
+                        CastIcon()
+                            .stroke(.white, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                            .frame(width: 20, height: 16)
+                        if viewModel.isCastConnected {
+                            Circle()
+                                .fill(MareaTheme.Colors.accent)
+                                .frame(width: 6, height: 6)
+                                .offset(x: 2, y: 2)
+                        }
+                    }
+                    .frame(width: 40, height: 40)
+                    .background(.black.opacity(0.4), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Transmitir con Google Cast")
+                #endif
+
+                clusterButton("gearshape") {
+                    onShowPlaybackSettings?()
+                }
+                .accessibilityLabel("Ajustes de reproducción")
             }
         }
         .padding(.horizontal, 16)
@@ -1407,27 +1449,11 @@ private struct ControlsOverlay: View {
 
     // MARK: Bottom bar
 
-    private var episodeNavigationRow: some View {
-        HStack(spacing: 0) {
+    private var bottomActionsRow: some View {
+        HStack(spacing: 8) {
             if hasPreviousEpisode {
                 Button(action: { onPlayPrevious?() }) {
-                    Label("Ep. anterior", systemImage: "backward.end.alt.fill")
-                        .labelStyle(.iconOnly)
-                        .font(.system(size: 18))
-                        .foregroundStyle(.white.opacity(0.85))
-                        .frame(width: 44, height: 36)
-                }
-                .buttonStyle(.plain)
-            } else {
-                Spacer().frame(width: 44)
-            }
-
-            Spacer()
-
-            if hasEpisodeList {
-                Button(action: { onShowEpisodeList?() }) {
-                    Label("Episodios", systemImage: "list.bullet")
-                        .labelStyle(.titleAndIcon)
+                    Label("Anterior", systemImage: "backward.end.alt.fill")
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.white.opacity(0.85))
                         .padding(.horizontal, 10)
@@ -1435,22 +1461,36 @@ private struct ControlsOverlay: View {
                         .background(.white.opacity(0.12), in: Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Episodio anterior")
             }
 
-            Spacer()
+            if hasEpisodeList {
+                Button(action: { onShowEpisodeList?() }) {
+                    Label("Episodios", systemImage: "list.bullet")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.white.opacity(0.12), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Lista de episodios")
+            }
 
             if hasNextEpisode {
                 Button(action: { onPlayNext?() }) {
-                    Label("Sig. ep.", systemImage: "forward.end.alt.fill")
-                        .labelStyle(.iconOnly)
-                        .font(.system(size: 18))
+                    Label("Siguiente", systemImage: "forward.end.alt.fill")
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(.white.opacity(0.85))
-                        .frame(width: 44, height: 36)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.white.opacity(0.12), in: Capsule())
                 }
                 .buttonStyle(.plain)
-            } else {
-                Spacer().frame(width: 44)
+                .accessibilityLabel("Siguiente episodio")
             }
+
+            Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 4)
@@ -1459,7 +1499,7 @@ private struct ControlsOverlay: View {
     private var bottomBar: some View {
         VStack(spacing: 8) {
             if hasPreviousEpisode || hasNextEpisode || hasEpisodeList {
-                episodeNavigationRow
+                bottomActionsRow
             }
 
             SeekBar(
@@ -1659,6 +1699,154 @@ private struct SkipSegmentOverlay: View {
             .foregroundStyle(.white)
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Playback Settings Sheet
+
+private struct PlaybackSettingsSheet: View {
+    @Bindable var viewModel: PlayerViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Reproducción") {
+                    Button {
+                        viewModel.showQualityPicker = true
+                    } label: {
+                        HStack {
+                            Label("Calidad", systemImage: "4k.tv")
+                            Spacer()
+                            Text(viewModel.selectedQuality.label)
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.bold())
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        viewModel.showSpeedPicker = true
+                    } label: {
+                        HStack {
+                            Label("Velocidad", systemImage: "gauge")
+                            Spacer()
+                            Text(speedLabel)
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.bold())
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Section("Audio y Subtítulos") {
+                    Button {
+                        viewModel.showAudioPicker = true
+                    } label: {
+                        HStack {
+                            Label("Audio", systemImage: "speaker.wave.2")
+                            Spacer()
+                            Text(currentAudioLabel)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.bold())
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(viewModel.availableAudioTracks.isEmpty)
+
+                    Button {
+                        viewModel.showSubtitlePicker = true
+                    } label: {
+                        HStack {
+                            Label("Subtítulos", systemImage: "text.bubble")
+                            Spacer()
+                            Text(currentSubtitleLabel)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.bold())
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(
+                        viewModel.availableSubtitleTracks.isEmpty
+                            && viewModel.unavailableSubtitleTracks.isEmpty
+                    )
+                }
+
+                #if os(iOS)
+                Section("Transmisión") {
+                    Button {
+                        if viewModel.isCastConnected {
+                            Task { await viewModel.castCurrentItem() }
+                            dismiss()
+                        } else {
+                            dismiss()
+                            viewModel.showCastPicker = true
+                        }
+                    } label: {
+                        HStack {
+                            Label {
+                                Text(viewModel.isCastConnected ? "Google Cast (Conectado)" : "Google Cast")
+                            } icon: {
+                                CastIcon()
+                                    .stroke(.primary, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                                    .frame(width: 18, height: 14)
+                            }
+                            Spacer()
+                            if viewModel.isCastConnected {
+                                Image(systemName: "checkmark").foregroundStyle(MareaTheme.Colors.accent)
+                            } else {
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                #endif
+            }
+            .navigationTitle("Ajustes de reproducción")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Listo") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private var speedLabel: String {
+        let rate = viewModel.playbackRate
+        return rate == 1 ? "1×" : String(format: "%.2g×", rate)
+    }
+
+    private var currentAudioLabel: String {
+        guard let selected = viewModel.selectedAudioTrackIndex,
+              let track = viewModel.availableAudioTracks.first(where: { $0.id == selected })
+        else {
+            return viewModel.availableAudioTracks.first?.name ?? "Predeterminado"
+        }
+        return track.name
+    }
+
+    private var currentSubtitleLabel: String {
+        if let idx = viewModel.selectedSubtitleTrackIndex,
+           let track = viewModel.availableSubtitleTracks.first(where: { $0.id == idx }) {
+            return track.name
+        }
+        return "Desactivados"
     }
 }
 

@@ -90,7 +90,7 @@ struct ListDetailView: View {
 
                         LazyVGrid(
                             columns: [
-                                GridItem(.adaptive(minimum: 120, maximum: 180), spacing: MareaTheme.Spacing.md)
+                                GridItem(.adaptive(minimum: 140, maximum: 200), spacing: MareaTheme.Spacing.md)
                             ],
                             spacing: MareaTheme.Spacing.md
                         ) {
@@ -110,9 +110,10 @@ struct ListDetailView: View {
                                         Button {
                                             Task { await removeItem(at: index) }
                                         } label: {
-                                            Image(systemName: "minus.circle.fill")
+                                            Label("Eliminar de la lista", systemImage: "minus.circle.fill")
+                                                .labelStyle(.iconOnly)
                                                 .font(.title3)
-                                                .foregroundStyle(.red)
+                                                .foregroundStyle(.red.opacity(0.85))
                                         }
                                         .buttonStyle(.plain)
                                         .accessibilityLabel("Eliminar de la lista")
@@ -121,7 +122,6 @@ struct ListDetailView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 20)
                 }
             }
             .padding(.horizontal, 20)
@@ -257,7 +257,7 @@ struct ListDetailView: View {
 
         do {
             async let itemsTask = client.fetchPlaylistItems(
-                playlistId: playlist.id ?? "",
+                playlistId: playlist.id,
                 userId: userId,
                 serverURL: serverURL,
                 token: token
@@ -272,7 +272,7 @@ struct ListDetailView: View {
     private func loadItems() async {
         do {
             items = try await client.fetchPlaylistItems(
-                playlistId: playlist.id ?? "",
+                playlistId: playlist.id,
                 userId: userId,
                 serverURL: serverURL,
                 token: token
@@ -290,7 +290,7 @@ struct ListDetailView: View {
 
         do {
             try await client.removeItems(
-                playlistId: playlist.id ?? "",
+                playlistId: playlist.id,
                 entryIds: [entryId],
                 serverURL: serverURL,
                 token: token
@@ -307,7 +307,7 @@ struct ListDetailView: View {
 
         do {
             try await client.deletePlaylist(
-                playlistId: playlist.id ?? "",
+                playlistId: playlist.id,
                 serverURL: serverURL,
                 token: token
             )

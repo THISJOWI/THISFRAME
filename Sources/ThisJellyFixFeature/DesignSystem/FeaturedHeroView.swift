@@ -31,7 +31,7 @@ struct FeaturedHeroView<Header: View>: View {
 
     var body: some View {
         if !items.isEmpty {
-            ZStack(alignment: .top) {
+            ZStack(alignment: .bottom) {
                 ScrollView(.horizontal) {
                     LazyHStack(spacing: 0) {
                         ForEach(items) { item in
@@ -53,31 +53,32 @@ struct FeaturedHeroView<Header: View>: View {
                 .scrollPosition(id: $selectedID)
                 .frame(height: heroHeight)
 
-                // Top scrim: keeps the integrated brand header legible on any
-                // artwork, in both appearances. Extends into the status bar
-                // on iOS so the artwork is edge-to-edge.
+                // Top scrim: keeps the integrated brand header and system status bar
+                // legible on any artwork. Extends into the status bar on iOS edge-to-edge.
                 LinearGradient(
                     stops: [
-                        .init(color: .black.opacity(0.62), location: 0),
-                        .init(color: .black.opacity(0.22), location: 0.6),
+                        .init(color: .black.opacity(0.72), location: 0),
+                        .init(color: .black.opacity(0.35), location: 0.55),
                         .init(color: .clear, location: 1),
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(height: 150)
+                .frame(height: 160)
                 .allowsHitTesting(false)
                 .ignoresSafeArea(.container, edges: .top)
+                .frame(maxHeight: .infinity, alignment: .top)
 
                 header()
                     .padding(.horizontal, MareaTheme.Spacing.lg)
                     .padding(.top, headerTopPadding)
+                    .frame(maxHeight: .infinity, alignment: .top)
 
                 if items.count > 1 {
                     pageIndicator
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .padding(.trailing, MareaTheme.Spacing.lg)
-                        .padding(.top, pageIndicatorTopPadding)
+                        .padding(.bottom, 16)
                 }
             }
             .frame(height: heroHeight)
@@ -92,66 +93,19 @@ struct FeaturedHeroView<Header: View>: View {
     /// while the artwork stays edge-to-edge behind it.
     private var headerTopPadding: CGFloat {
         #if os(iOS)
-        MareaTheme.Spacing.sm + 8
+        54
         #else
         MareaTheme.Spacing.sm
         #endif
     }
 
-    /// Top padding for the page indicator so it clears the iOS status bar.
-    private var pageIndicatorTopPadding: CGFloat {
-        #if os(iOS)
-        64 + 8
-        #else
-        64
-        #endif
-    }
-
-    private func heroImageURL(for item: FeaturedSeries) -> URL? {
-        // The series backdrop is the cinematic shot; fall back to the resume
-        // episode's backdrop and finally to the poster.
-        if let url = JellyfinArtwork.url(
-            for: item.series,
-            serverURL: serverURL,
-            shape: .landscape,
-            targetWidth: 900
-        ) {
-            return url
-        }
-        if let episode = item.resumeEpisode,
-           let url = JellyfinArtwork.url(
-               for: episode,
-               serverURL: serverURL,
-               shape: .landscape,
-               targetWidth: 900
-           ) {
-            return url
-        }
-        return item.series.artworkURL(serverURL: serverURL, shape: .poster)
-    }
-
-    private var pageIndicator: some View {
-        HStack(spacing: 5) {
-            ForEach(items) { item in
-                Capsule()
-                    .fill(item.id == selectedID ? Color.white : Color.white.opacity(0.35))
-                    .frame(width: item.id == selectedID ? 18 : 6, height: 6)
-                    .animation(MareaMotion.quick, value: selectedID)
-            }
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-        .background(.black.opacity(0.35), in: Capsule())
-        .overlay(Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 0.5))
-    }
-
     private var heroHeight: CGFloat {
         #if os(tvOS)
-        620
-        #elseif os(macOS) || os(visionOS)
-        540
-        #else
         520
+        #elseif os(macOS) || os(visionOS)
+        440
+        #else
+        400
         #endif
     }
 }
@@ -177,51 +131,29 @@ private struct FeaturedHeroCard: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
 
-            // Heavier at the bottom: title, metadata and actions stay legible
+            // Heavier at the bottom: title and actions stay legible
             // on any artwork and melt into the page background.
             LinearGradient(
                 stops: [
                     .init(color: .black.opacity(0.02), location: 0),
-                    .init(color: .black.opacity(0.18), location: 0.42),
-                    .init(color: .black.opacity(0.74), location: 0.78),
+                    .init(color: .black.opacity(0.20), location: 0.45),
+                    .init(color: .black.opacity(0.78), location: 0.82),
                     .init(color: MareaTheme.Colors.background, location: 1),
                 ],
                 startPoint: .top,
                 endPoint: .bottom
             )
 
-            VStack(alignment: .leading, spacing: 12) {
-                if let eyebrow {
-                    Text(eyebrow.uppercased())
-                        .font(.caption.weight(.bold))
-                        .tracking(1.5)
-                        .foregroundStyle(.white.opacity(0.74))
-                        .lineLimit(2)
-                }
-
+            VStack(alignment: .leading, spacing: 10) {
                 Text(displayTitle)
                     .font(.system(size: titleSize, weight: .heavy))
                     .foregroundStyle(.white)
                     .lineLimit(2)
                     .minimumScaleFactor(0.7)
-                    .shadow(color: .black.opacity(0.4), radius: 10, y: 3)
-
-                Text(metadataLine)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.84))
-                    .lineLimit(1)
-
-                if let overview = series.overview, !overview.isEmpty {
-                    Text(overview)
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.76))
-                        .lineLimit(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: 620, alignment: .leading)
-                }
+                    .shadow(color: .black.opacity(0.5), radius: 8, y: 2)
 
                 actions
-                    .padding(.top, 4)
+                    .padding(.top, 2)
             }
             .padding(.horizontal, MareaTheme.Spacing.lg)
             .padding(.bottom, MareaTheme.Spacing.lg)
@@ -247,18 +179,18 @@ private struct FeaturedHeroCard: View {
 
     private var primaryActionButton: some View {
         Button(action: onPrimaryAction) {
-            HStack(spacing: 9) {
+            HStack(spacing: 7) {
                 Image(systemName: primaryIcon)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 13, weight: .bold))
                 Text(primaryLabel)
-                    .font(.headline)
+                    .font(.subheadline.weight(.bold))
                     .lineLimit(1)
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 22)
-            .padding(.vertical, 13)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 9)
             .background(MareaTheme.Colors.accent, in: Capsule())
-            .shadow(color: MareaTheme.Colors.accent.opacity(0.35), radius: 10, y: 4)
+            .shadow(color: MareaTheme.Colors.accent.opacity(0.35), radius: 8, y: 3)
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
@@ -266,18 +198,18 @@ private struct FeaturedHeroCard: View {
 
     private var moreInfoButton: some View {
         Button(action: onMoreInfo) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 Image(systemName: "info.circle")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                 Text("Más información")
-                    .font(.headline)
+                    .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
             }
             .foregroundStyle(.white)
-            .padding(.horizontal, 18)
-            .padding(.vertical, 13)
-            .background(.black.opacity(0.28), in: Capsule())
-            .overlay(Capsule().strokeBorder(.white.opacity(0.22), lineWidth: 0.5))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .background(.black.opacity(0.32), in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.24), lineWidth: 0.5))
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
@@ -285,27 +217,6 @@ private struct FeaturedHeroCard: View {
 
     private var displayTitle: String {
         series.name
-    }
-
-    private var eyebrow: String? {
-        if let episode = item.resumeEpisode {
-            return "\(episode.episodeLabel) · \(episode.name)"
-        }
-        if let genres = series.genres, !genres.isEmpty {
-            return genres.prefix(2).joined(separator: " · ")
-        }
-        return "Serie recomendada"
-    }
-
-    private var metadataLine: String {
-        var parts: [String] = []
-        if let year = series.year { parts.append(String(year)) }
-        if let rating = series.officialRating, !rating.isEmpty { parts.append(rating) }
-        if let genres = series.genres, !genres.isEmpty {
-            parts.append(genres.prefix(2).joined(separator: ", "))
-        }
-        if parts.isEmpty { parts.append("Serie") }
-        return parts.joined(separator: " · ")
     }
 
     private var primaryLabel: String {
@@ -318,11 +229,11 @@ private struct FeaturedHeroCard: View {
 
     private var titleSize: CGFloat {
         #if os(tvOS)
-        58
+        44
         #elseif os(macOS) || os(visionOS)
-        48
+        34
         #else
-        36
+        26
         #endif
     }
 }

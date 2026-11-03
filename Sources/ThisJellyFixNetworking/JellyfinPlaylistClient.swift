@@ -91,17 +91,38 @@ public struct JellyfinPlaylistClient: JellyfinPlaylistProviding {
         )!
         components.queryItems = [
             URLQueryItem(name: "userId", value: userId),
-            URLQueryItem(name: "Fields", value: "Overview,ChildCount"),
+            URLQueryItem(name: "Fields", value: "Overview,ChildCount,PrimaryImageAspectRatio"),
             URLQueryItem(name: "Limit", value: "500"),
         ]
 
-        let data = try await send(
+        if let data = try? await send(
             method: "GET",
             url: components.url!,
             token: token,
             cachePolicy: .reloadIgnoringLocalCacheData
+        ), let response = try? JSONDecoder().decode(JellyfinItemsResponse.self, from: data),
+           !response.items.isEmpty {
+            return response.items
+        }
+
+        // Fallback for BoxSets / server collections which use the standard User items endpoint
+        var parentComponents = URLComponents(
+            url: serverURL.appendingPathComponent("Users/\(userId)/Items"),
+            resolvingAgainstBaseURL: false
+        )!
+        parentComponents.queryItems = [
+            URLQueryItem(name: "ParentId", value: playlistId),
+            URLQueryItem(name: "Fields", value: "Overview,ChildCount,PrimaryImageAspectRatio"),
+            URLQueryItem(name: "Limit", value: "500"),
+        ]
+
+        let parentData = try await send(
+            method: "GET",
+            url: parentComponents.url!,
+            token: token,
+            cachePolicy: .reloadIgnoringLocalCacheData
         )
-        return try JSONDecoder().decode(JellyfinItemsResponse.self, from: data).items
+        return try JSONDecoder().decode(JellyfinItemsResponse.self, from: parentData).items
     }
 
     public func createPlaylist(

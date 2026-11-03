@@ -13,7 +13,7 @@ enum MareaTab: Int, CaseIterable, Hashable {
         case .search: "magnifyingglass"
         case .listas: "list.bullet"
         case .favorites: "heart.fill"
-        case .profile: "person.fill"
+        case .profile: "gearshape.fill"
         }
     }
 
@@ -23,7 +23,7 @@ enum MareaTab: Int, CaseIterable, Hashable {
         case .search: "Buscar"
         case .listas: "Listas"
         case .favorites: "Favoritos"
-        case .profile: "Perfil y Ajustes"
+        case .profile: "Ajustes"
         }
     }
 

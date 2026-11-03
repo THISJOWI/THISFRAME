@@ -424,14 +424,10 @@ public struct ThisFrameRootView: View {
                     )
                 }
 
-                Tab("Perfil y Ajustes", systemImage: "person.fill", value: MareaTab.profile) {
-                    ProfileView(
-                        userName: userName,
-                        onLogout: { authModel.logout(); libraryModel = nil },
-                        serverURL: server.baseURL,
-                        token: token,
-                        userId: userId
-                    )
+                Tab("Ajustes", systemImage: "gearshape.fill", value: MareaTab.profile) {
+                    NavigationStack {
+                        SettingsView()
+                    }
                 }
             }
             .tint(MareaTheme.Colors.accent)
@@ -465,13 +461,9 @@ public struct ThisFrameRootView: View {
                     .toolbar(.hidden, for: .tabBar)
                     .tag(MareaTab.listas)
 
-                    ProfileView(
-                        userName: userName,
-                        onLogout: { authModel.logout(); libraryModel = nil },
-                        serverURL: server.baseURL,
-                        token: token,
-                        userId: userId
-                    )
+                    NavigationStack {
+                        SettingsView()
+                    }
                     .toolbar(.hidden, for: .tabBar)
                     .tag(MareaTab.profile)
                 }
@@ -518,14 +510,10 @@ public struct ThisFrameRootView: View {
             .tabItem { Label("Listas", systemImage: "list.bullet") }
             .tag(MareaTab.listas)
 
-            ProfileView(
-                userName: userName,
-                onLogout: { authModel.logout(); libraryModel = nil },
-                serverURL: server.baseURL,
-                token: token,
-                userId: userId
-            )
-            .tabItem { Label("Perfil", systemImage: "person.fill") }
+            NavigationStack {
+                SettingsView()
+            }
+            .tabItem { Label("Ajustes", systemImage: "gearshape.fill") }
             .tag(MareaTab.profile)
         }
         .tint(MareaTheme.Colors.accent)

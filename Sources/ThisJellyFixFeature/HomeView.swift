@@ -26,6 +26,7 @@ struct HomeView: View {
         #else
         NavigationStack(path: $navigationPath) {
             scrollContent
+                .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(for: JellyfinMediaItem.self) { item in
                     detailDestination(for: item)
                 }
@@ -422,7 +423,12 @@ struct HomeView: View {
             }
         }
         #else
-        return base.fullScreenCover(item: $directItem) { item in
+        let configuredBase = base
+            #if os(iOS)
+            .ignoresSafeArea(.container, edges: .top)
+            #endif
+
+        return configuredBase.fullScreenCover(item: $directItem) { item in
             DirectPlayer(
                 item: item,
                 serverURL: serverURL,
@@ -458,7 +464,14 @@ struct HomeView: View {
 
             Spacer()
 
-            HomeActionPill(discovery: discovery)
+            HomeActionPill(
+                discovery: discovery,
+                userName: userName,
+                serverURL: serverURL,
+                token: token,
+                userId: userId,
+                onLogout: onLogout
+            )
         }
     }
 
