@@ -45,8 +45,6 @@ struct ProfileView: View {
                     .padding(.top, 8)
 
                     logoutButton
-
-                    aboutFooter
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
@@ -143,23 +141,5 @@ struct ProfileView: View {
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
         return version.map { "ThisFrame \($0)" } ?? "ThisFrame"
-    }
-
-    private var aboutFooter: some View {
-        HStack(spacing: 8) {
-            Image("IconoInicio")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 20, height: 20)
-                .clipShape(RoundedRectangle(cornerRadius: 5))
-            Text(appVersion)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Spacer()
-            Text("Cliente nativo de Jellyfin")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-        }
-        .padding(.horizontal, 4)
     }
 }

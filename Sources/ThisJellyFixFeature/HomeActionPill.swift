@@ -35,7 +35,7 @@ struct HomeActionPill: View {
                 ZStack(alignment: .bottomTrailing) {
                     CastIcon()
                         .foregroundStyle(MareaTheme.Colors.crimsonFrame)
-                        .frame(width: 20, height: 15)
+                        .frame(width: 24, height: 18)
                         .overlay(CastIcon().stroke(MareaTheme.Colors.crimsonFrame, style: StrokeStyle(lineWidth: 2, lineCap: .round)))
                         .frame(width: 34, height: 34)
                     if cast.manager.state.isConnected {
@@ -93,7 +93,7 @@ struct HomeActionPill: View {
             .buttonStyle(.plain)
             .accessibilityLabel("Perfil de \(userName)")
             .sheet(isPresented: $showProfile) {
-                ProfileView(
+                ProfileSettingsView(
                     userName: userName,
                     onLogout: onLogout,
                     serverURL: serverURL,

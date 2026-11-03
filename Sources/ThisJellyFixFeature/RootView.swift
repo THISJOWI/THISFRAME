@@ -416,13 +416,7 @@ public struct ThisFrameRootView: View {
                     SearchView(serverURL: server.baseURL, token: token, userId: userId)
                 }
 
-                Tab("Listas", systemImage: "list.bullet", value: MareaTab.listas) {
-                    ListsView(
-                        serverURL: server.baseURL,
-                        token: token,
-                        userId: userId
-                    )
-                }
+                // Lists removed from tab bar — reachable from Profile.
 
                 Tab("Ajustes", systemImage: "gearshape.fill", value: MareaTab.profile) {
                     NavigationStack {
@@ -453,14 +447,6 @@ public struct ThisFrameRootView: View {
                     SearchView(serverURL: server.baseURL, token: token, userId: userId)
                         .toolbar(.hidden, for: .tabBar)
                         .tag(MareaTab.search)
-
-                    ListsView(
-                        serverURL: server.baseURL,
-                        token: token,
-                        userId: userId
-                    )
-                    .toolbar(.hidden, for: .tabBar)
-                    .tag(MareaTab.listas)
 
                     NavigationStack {
                         SettingsView()
@@ -503,14 +489,6 @@ public struct ThisFrameRootView: View {
             SearchView(serverURL: server.baseURL, token: token, userId: userId)
                 .tabItem { Label("Buscar", systemImage: "magnifyingglass") }
                 .tag(MareaTab.search)
-
-            ListsView(
-                serverURL: server.baseURL,
-                token: token,
-                userId: userId
-            )
-            .tabItem { Label("Listas", systemImage: "list.bullet") }
-            .tag(MareaTab.listas)
 
             NavigationStack {
                 SettingsView()

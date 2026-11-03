@@ -410,43 +410,46 @@ struct PlayerView: View {
     /// playing one highlighted. Tapping an episode swaps playback in place.
     @ViewBuilder
     private var episodeListView: some View {
-        List {
-            ForEach(Array(seasonEpisodes.enumerated()), id: \.element.id) { _, episode in
-                Button {
-                    showingEpisodeList = false
-                    onPlayEpisode?(episode)
-                } label: {
-                    HStack(spacing: 12) {
-                        if let serverURL, let url = JellyfinArtwork.url(for: episode, serverURL: serverURL, shape: .landscape, targetWidth: 200) {
-                            MareaImageView(
-                                url: url,
-                                placeholder: String(episode.name.prefix(1)),
-                                width: 0,
-                                height: 0
-                            )
-                            .frame(width: 56, height: 56)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                        } else {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(MareaTheme.Colors.overlayFill.opacity(0.3))
-                                .frame(width: 56, height: 56)
-                        }
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 16) {
+                ForEach(Array(seasonEpisodes.enumerated()), id: \.element.id) { _, episode in
+                    Button {
+                        showingEpisodeList = false
+                        onPlayEpisode?(episode)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            if let serverURL, let url = JellyfinArtwork.url(for: episode, serverURL: serverURL, shape: .landscape, targetWidth: 320) {
+                                MareaImageView(
+                                    url: url,
+                                    placeholder: String(episode.name.prefix(1)),
+                                    width: 0,
+                                    height: 0
+                                )
+                                .frame(width: 220, height: 124)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            } else {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(MareaTheme.Colors.overlayFill.opacity(0.3))
+                                    .frame(width: 220, height: 124)
+                            }
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(episode.name)
-                                .font(.subheadline.weight(.semibold))
-                                .lineLimit(1)
-                            Text(episode.episodeLabel)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(episode.name)
+                                    .font(.subheadline.weight(.semibold))
+                                    .lineLimit(2)
+                                    .frame(width: 220, alignment: .leading)
+                                Text(episode.episodeLabel)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
-
-                        Spacer(minLength: 0)
+                        .contentShape(Rectangle())
                     }
-                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
         }
         .navigationTitle("Episodios")
         #if os(iOS)

@@ -77,7 +77,8 @@ struct FeaturedHeroView<Header: View>: View {
                 if items.count > 1 {
                     pageIndicator
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.bottom, 32)
+                        .padding(.bottom, 2)
+                        .padding(.top, 8)
                 }
             }
             .frame(height: heroHeight)

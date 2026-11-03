@@ -9,19 +9,6 @@ struct SettingsView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                SettingsGroupHeader(title: "General")
-                AppearanceSettingsSection()
-
-                SettingsGroupHeader(title: "Reproducción")
-                SkipSettingsSection()
-
-                SettingsGroupHeader(title: "Audio y subtítulos")
-                SubtitleSizeSettingsSection()
-                LanguageSettingsSection()
-                #if os(iOS) || os(macOS)
-                SubtitleProvidersSection()
-                #endif
-
                 SettingsGroupHeader(title: "Avanzado")
                 DiagnosticsSection()
 

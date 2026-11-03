@@ -8,6 +8,7 @@ import ThisJellyFixNetworking
 /// "Ajustes de la app" row that opens `SettingsView`.
 struct ProfileSettingsView: View {
     let userName: String
+    var onLogout: () -> Void = {}
     var serverURL: URL? = nil
     var token: String? = nil
     var userId: String? = nil
@@ -32,12 +33,14 @@ struct ProfileSettingsView: View {
 
     init(
         userName: String,
+        onLogout: @escaping () -> Void = {},
         serverURL: URL? = nil,
         token: String? = nil,
         userId: String? = nil,
         userClient: any JellyfinUserProviding = JellyfinUserClient()
     ) {
         self.userName = userName
+        self.onLogout = onLogout
         self.serverURL = serverURL
         self.token = token
         self.userId = userId
@@ -73,15 +76,23 @@ struct ProfileSettingsView: View {
                             listsSection(serverURL: serverURL, token: token, userId: userId)
                         }
 
-                        settingsRow(
-                            icon: "gearshape",
-                            title: "Ajustes de la app",
-                            subtitle: "Apariencia, reproducción, audio y subtítulos, privacidad"
-                        ) {
-                            SettingsSectionScreen(title: "Ajustes de la app") {
-                                SettingsView()
+                        Button {
+                            onLogout()
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                Text("Cerrar sesión")
                             }
+                            .font(.subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 15)
+                            .background(Color.red.opacity(0.14), in: RoundedRectangle(cornerRadius: 14))
+                            .foregroundStyle(.red)
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+
                     }
                 }
                 .padding(.horizontal, 20)
@@ -198,52 +209,41 @@ struct ProfileSettingsView: View {
                 .font(.title3.bold())
                 .padding(.horizontal, 4)
 
-            VStack(spacing: 0) {
-                settingsRow(
-                    icon: "circle.lefthalf.filled",
-                    title: "Apariencia",
-                    subtitle: "Claro, oscuro o según el sistema"
-                ) {
-                    SettingsSectionScreen(title: "Apariencia") {
-                        AppearanceSettingsSection()
-                    }
+            settingsRow(
+                icon: "circle.lefthalf.filled",
+                title: "Apariencia",
+                subtitle: "Claro, oscuro o según el sistema"
+            ) {
+                SettingsSectionScreen(title: "Apariencia") {
+                    AppearanceSettingsSection()
                 }
+            }
 
-                rowDivider
-
-                settingsRow(
-                    icon: "play.circle",
-                    title: "Reproducción",
-                    subtitle: "Salto automático de introducción, resumen y ending"
-                ) {
-                    SettingsSectionScreen(title: "Reproducción") {
-                        SkipSettingsSection()
-                    }
+            settingsRow(
+                icon: "play.circle",
+                title: "Reproducción",
+                subtitle: "Salto automático de introducción, resumen y ending"
+            ) {
+                SettingsSectionScreen(title: "Reproducción") {
+                    SkipSettingsSection()
                 }
+            }
 
-                rowDivider
-
-                settingsRow(
-                    icon: "captions.bubble",
-                    title: "Audio y subtítulos",
-                    subtitle: "Tamaño, idioma preferido y proveedores"
-                ) {
-                    SettingsSectionScreen(title: "Audio y subtítulos") {
-                        VStack(spacing: 16) {
-                            SubtitleSizeSettingsSection()
-                            LanguageSettingsSection()
-                            #if os(iOS) || os(macOS)
-                            SubtitleProvidersSection()
-                            #endif
-                        }
+            settingsRow(
+                icon: "captions.bubble",
+                title: "Audio y subtítulos",
+                subtitle: "Tamaño, idioma preferido y proveedores"
+            ) {
+                SettingsSectionScreen(title: "Audio y subtítulos") {
+                    VStack(spacing: 16) {
+                        SubtitleSizeSettingsSection()
+                        LanguageSettingsSection()
+                        #if os(iOS) || os(macOS)
+                        SubtitleProvidersSection()
+                        #endif
                     }
                 }
             }
-            .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .strokeBorder(MareaTheme.Colors.borderGlow, lineWidth: 0.5)
-            )
         }
     }
 
@@ -336,6 +336,11 @@ struct ProfileSettingsView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 11)
+            .background(MareaTheme.Colors.overlayFill, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(MareaTheme.Colors.borderGlow, lineWidth: 0.5)
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
