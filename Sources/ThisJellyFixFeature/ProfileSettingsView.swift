@@ -126,80 +126,48 @@ struct ProfileSettingsView: View {
 
     @ViewBuilder
     private var profileHeader: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(MareaTheme.Colors.accent.opacity(0.2))
-                        .frame(width: 88, height: 88)
-                    AsyncImage(url: avatarURL) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        default:
-                            Image(systemName: "person.fill")
-                                .font(.system(size: 40))
-                                .foregroundStyle(MareaTheme.Colors.accent)
-                        }
-                    }
-                    .frame(width: 88, height: 88)
-                    .clipShape(Circle())
-
-                    changePhotoButton
-                        .offset(x: 28, y: 28)
+        HStack(spacing: 14) {
+            AsyncImage(url: avatarURL) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                default:
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(MareaTheme.Colors.accent)
                 }
+            }
+            .frame(width: 64, height: 64)
+            .clipShape(Circle())
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(displayName.isEmpty ? (profile?.name ?? userName) : displayName)
-                        .font(.title2.bold())
-                        .lineLimit(1)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(displayName.isEmpty ? (profile?.name ?? userName) : displayName)
+                    .font(.title3.bold())
+                    .lineLimit(1)
 
-                    if let profile, profile.isAdministrator {
-                        Label("Administrador", systemImage: "shield.fill")
-                            .font(.caption2)
-                            .foregroundStyle(MareaTheme.Colors.accentText)
-                    }
-
-                    if let lastLogin = profile?.lastLoginDate {
-                        Label("Última sesión: \(lastLogin)", systemImage: "clock")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
+                if let profile, profile.isAdministrator {
+                    Label("Administrador", systemImage: "shield.fill")
+                        .font(.caption2)
+                        .foregroundStyle(MareaTheme.Colors.accentText)
                 }
-
-                Spacer(minLength: 0)
-
-                Button {
-                    showingEditName = true
-                } label: {
-                    Image(systemName: "pencil")
-                        .font(.caption.bold())
-                        .foregroundStyle(.tertiary)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Editar nombre")
             }
 
-            Divider()
-        }
-    }
+            Spacer(minLength: 0)
 
-    @ViewBuilder
-    private var changePhotoButton: some View {
-        Button {
-            // Photo picker integration would go here (PHPickerViewController).
-            // Requires UIKit bridging — not yet wired.
-        } label: {
-            Image(systemName: "camera")
-                .font(.title3)
-                .foregroundStyle(.white)
-                .frame(width: 32, height: 32)
-                .background(MareaTheme.Colors.accent, in: Circle())
+            Button {
+                showingEditName = true
+            } label: {
+                Image(systemName: "pencil")
+                    .font(.caption.bold())
+                    .foregroundStyle(.tertiary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Editar nombre")
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Cambiar foto de perfil")
+
+        Divider()
     }
 
     @ViewBuilder
