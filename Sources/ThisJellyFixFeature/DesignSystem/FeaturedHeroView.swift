@@ -76,9 +76,8 @@ struct FeaturedHeroView<Header: View>: View {
 
                 if items.count > 1 {
                     pageIndicator
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .padding(.trailing, MareaTheme.Spacing.lg)
-                        .padding(.bottom, 16)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.bottom, 32)
                 }
             }
             .frame(height: heroHeight)
@@ -99,13 +98,49 @@ struct FeaturedHeroView<Header: View>: View {
         #endif
     }
 
+    private func heroImageURL(for item: FeaturedSeries) -> URL? {
+        if let url = JellyfinArtwork.url(
+            for: item.series,
+            serverURL: serverURL,
+            shape: .landscape,
+            targetWidth: 900
+        ) {
+            return url
+        }
+        if let episode = item.resumeEpisode,
+           let url = JellyfinArtwork.url(
+               for: episode,
+               serverURL: serverURL,
+               shape: .landscape,
+               targetWidth: 900
+           ) {
+            return url
+        }
+        return item.series.artworkURL(serverURL: serverURL, shape: .poster)
+    }
+
+    private var pageIndicator: some View {
+        HStack(spacing: 5) {
+            ForEach(items) { item in
+                Capsule()
+                    .fill(item.id == selectedID ? Color.white : Color.white.opacity(0.35))
+                    .frame(width: item.id == selectedID ? 18 : 6, height: 6)
+                    .animation(MareaMotion.quick, value: selectedID)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(.black.opacity(0.35), in: Capsule())
+        .overlay(Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 0.5))
+    }
+
     private var heroHeight: CGFloat {
         #if os(tvOS)
         520
         #elseif os(macOS) || os(visionOS)
         440
         #else
-        400
+        440
         #endif
     }
 }
@@ -233,7 +268,7 @@ private struct FeaturedHeroCard: View {
         #elseif os(macOS) || os(visionOS)
         34
         #else
-        26
+        22
         #endif
     }
 }

@@ -58,6 +58,7 @@ struct DetailView: View {
     /// One flag per action: a slow or failing request must not lock the whole
     /// pill, and the other action stays usable.
     @State private var isSavingFavorite = false
+    @State private var showingAddToList = false
     @State private var isSavingPlayed = false
     @State private var userActionError: String?
     @State private var videoChips: [VideoChip] = []
@@ -343,6 +344,14 @@ struct DetailView: View {
             }
             #endif
         }
+        .sheet(isPresented: $showingAddToList) {
+            AddToPlaylistPickerView(
+                itemId: item.id,
+                serverURL: serverURL,
+                token: token,
+                userId: userId
+            )
+        }
     }
 
     // MARK: - Navigation bar actions
@@ -390,6 +399,12 @@ struct DetailView: View {
                 )
             }
             .disabled(isSavingFavorite)
+
+            Button {
+                showingAddToList = true
+            } label: {
+                Label("Añadir a una lista", systemImage: "list.bullet.badge.plus")
+            }
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 17, weight: .semibold))

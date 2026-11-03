@@ -428,6 +428,7 @@ public struct ThisFrameRootView: View {
                     NavigationStack {
                         SettingsView()
                     }
+                    .environment(discoveryModel)
                 }
             }
             .tint(MareaTheme.Colors.accent)
@@ -464,6 +465,7 @@ public struct ThisFrameRootView: View {
                     NavigationStack {
                         SettingsView()
                     }
+                    .environment(discoveryModel)
                     .toolbar(.hidden, for: .tabBar)
                     .tag(MareaTab.profile)
                 }
@@ -513,6 +515,7 @@ public struct ThisFrameRootView: View {
             NavigationStack {
                 SettingsView()
             }
+            .environment(discoveryModel)
             .tabItem { Label("Ajustes", systemImage: "gearshape.fill") }
             .tag(MareaTab.profile)
         }

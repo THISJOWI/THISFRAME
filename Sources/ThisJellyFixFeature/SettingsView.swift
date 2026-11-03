@@ -24,6 +24,11 @@ struct SettingsView: View {
 
                 SettingsGroupHeader(title: "Avanzado")
                 DiagnosticsSection()
+
+                #if os(iOS) || os(macOS)
+                SettingsGroupHeader(title: "Integraciones")
+                IntegrationsSection()
+                #endif
             }
             .padding(.vertical, 16)
         }

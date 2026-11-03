@@ -70,7 +70,6 @@ struct ProfileSettingsView: View {
                         preferencesGroup
 
                         if let serverURL, let token, let userId {
-                            favoritesSection(serverURL: serverURL, token: token, userId: userId)
                             listsSection(serverURL: serverURL, token: token, userId: userId)
                         }
 
@@ -245,27 +244,6 @@ struct ProfileSettingsView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .strokeBorder(MareaTheme.Colors.borderGlow, lineWidth: 0.5)
             )
-        }
-    }
-
-    @ViewBuilder
-    private func favoritesSection(
-        serverURL: URL,
-        token: String,
-        userId: String
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Favoritos")
-                .font(.title3.bold())
-                .padding(.horizontal, 4)
-
-            FavoritesView(
-                serverURL: serverURL,
-                token: token,
-                userId: userId,
-                embedded: true
-            )
-            .frame(height: 260)
         }
     }
 

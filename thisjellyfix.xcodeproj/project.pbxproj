@@ -184,6 +184,7 @@
 		4FDB6598712BFECF45A15232 /* JellyfinUserClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF13F994D35A0DCCECC8B241 /* JellyfinUserClient.swift */; };
 		4FDC4281FCB8443606E6E367 /* ArrClients.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CCEBE8191BD631CB2D6664D /* ArrClients.swift */; };
 		4FDC6B7750D1521A70A67FE3 /* SubtitleProviderEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2586FCD37D5D9175D416E612 /* SubtitleProviderEditor.swift */; };
+		503D8C1713B88A54DE7534C6 /* AddToPlaylistPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00C2DE6566C4D943E126274 /* AddToPlaylistPickerView.swift */; };
 		505A648BCF34E8F95EC6F757 /* SubtitleSearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 997AD6ED1DBB67B4AECB20DB /* SubtitleSearchResult.swift */; };
 		50BF247455D84A4846F69D4F /* HandoffResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBBD2C4E8CBC681A8161FEE4 /* HandoffResolver.swift */; };
 		50C6E33594CAFCC746D65CCC /* Core-tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33C1AB1B257B262905CD0C17 /* Core-tvOS.framework */; };
@@ -260,6 +261,7 @@
 		67ABDE11E18E40F35BC7A020 /* JellyfinPlaylistClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EB221CEE75203F5EE23AE8A /* JellyfinPlaylistClient.swift */; };
 		67E91877A1EBC96A616F2C58 /* JellyfinSegmentClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E1736573B5EC3AC5FB9B075 /* JellyfinSegmentClient.swift */; };
 		68943B90D066F1588D9219A5 /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32AABCCCB0DE1978AAC1A80 /* Logging.swift */; };
+		68AF31D8762FF8268B926BC2 /* AddToPlaylistPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00C2DE6566C4D943E126274 /* AddToPlaylistPickerView.swift */; };
 		692D2DEB73E8CD6A9C5DF9AD /* CastSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF7E2974B1A8BEE37248B88E /* CastSessionState.swift */; };
 		694DFA354EE5A1DE12F3E71D /* SubtitleCue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A24BC16265B62686EBD9A1B6 /* SubtitleCue.swift */; };
 		6999136D8DBE253803823E87 /* Playback-tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08D186E415A343598A9C5A82 /* Playback-tvOS.framework */; };
@@ -427,6 +429,7 @@
 		AE14D702ABE989806FB19A7E /* SubtitleProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6107840D522FE9CE4312C61A /* SubtitleProvider.swift */; };
 		AE7346F33667CF4216217CB2 /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D969DEC8BCB5D66E75AF00D2 /* ImageView.swift */; };
 		AED16D27EC79899634525474 /* JellyfinUserClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF13F994D35A0DCCECC8B241 /* JellyfinUserClient.swift */; };
+		B06BD278F7B3B722E57243E8 /* AddToPlaylistPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00C2DE6566C4D943E126274 /* AddToPlaylistPickerView.swift */; };
 		B1E9E7272E02CB80FC137D1B /* Playback-tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08D186E415A343598A9C5A82 /* Playback-tvOS.framework */; };
 		B279529B6A375F27EF3DF3DA /* SubtitleSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD8C3C0F1C8346A94B99DDA /* SubtitleSelection.swift */; };
 		B2890E76911056F70BABF631 /* SubtitleProvidersSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70CD3E6E34747A9234081146 /* SubtitleProvidersSection.swift */; };
@@ -549,6 +552,7 @@
 		E2186BFEB1FDFA51EC8E998D /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D150E40E2CA61714BB72C24F /* SearchView.swift */; };
 		E22A5F396526CCAB4098B8F9 /* TrackNaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E34C20DAE1EE3FED70F1446 /* TrackNaming.swift */; };
 		E268D368B2A7E8F785A9327B /* SubtitleCue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A24BC16265B62686EBD9A1B6 /* SubtitleCue.swift */; };
+		E3C4C3C3B2093FEB506FBE32 /* AddToPlaylistPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00C2DE6566C4D943E126274 /* AddToPlaylistPickerView.swift */; };
 		E3FB9F625CB709288D7CFDA3 /* CastButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C772B22757960B1AE2602062 /* CastButton.swift */; };
 		E47FB120D7BFCA930B89AB11 /* Core-tvOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33C1AB1B257B262905CD0C17 /* Core-tvOS.framework */; };
 		E52F527E5FCA8B4E23BD44DA /* CastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEDD19830DDC03C57EA3EC90 /* CastManager.swift */; };
@@ -1196,6 +1200,7 @@
 		BB3A0A16B843E324C3DA2694 /* TMDBMetadataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TMDBMetadataProvider.swift; sourceTree = "<group>"; };
 		BEDD19830DDC03C57EA3EC90 /* CastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastManager.swift; sourceTree = "<group>"; };
 		BF13F994D35A0DCCECC8B241 /* JellyfinUserClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyfinUserClient.swift; sourceTree = "<group>"; };
+		C00C2DE6566C4D943E126274 /* AddToPlaylistPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddToPlaylistPickerView.swift; sourceTree = "<group>"; };
 		C32AABCCCB0DE1978AAC1A80 /* Logging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logging.swift; sourceTree = "<group>"; };
 		C367D29B7E0E5AE6415CDB42 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		C4CED8DE05CD1EF647589637 /* Discovery-iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Discovery-iOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1611,6 +1616,7 @@
 			isa = PBXGroup;
 			children = (
 				532760C8DC369F725EA2E522 /* AddToListView.swift */,
+				C00C2DE6566C4D943E126274 /* AddToPlaylistPickerView.swift */,
 				771C356E05590A913549B4C7 /* AuthModel.swift */,
 				46F3393D23846F61BDCC33AF /* CastDevicePickerSheet.swift */,
 				1F570A623B27EFB00434F42C /* CatalogCardView.swift */,
@@ -2455,6 +2461,7 @@
 			files = (
 				D30D590EB32A78FF966C63AB /* AdaptiveColor.swift in Sources */,
 				6C8F829C5A0BB6811E7B538A /* AddToListView.swift in Sources */,
+				E3C4C3C3B2093FEB506FBE32 /* AddToPlaylistPickerView.swift in Sources */,
 				38B5686DDBB3A2AA8752D8AD /* AuthModel.swift in Sources */,
 				C5453505C2D1924A3EF86FDF /* BadgeView.swift in Sources */,
 				8A8D4E78A5901C96C7CF9530 /* CardBadge.swift in Sources */,
@@ -2650,6 +2657,7 @@
 			files = (
 				8B399410D77DBE401E51A7CE /* AdaptiveColor.swift in Sources */,
 				558300795380D447D8E92166 /* AddToListView.swift in Sources */,
+				B06BD278F7B3B722E57243E8 /* AddToPlaylistPickerView.swift in Sources */,
 				1426AB289255A8663046C0BC /* AuthModel.swift in Sources */,
 				A2397FE5BB3DA9537D68BB37 /* BadgeView.swift in Sources */,
 				11989A108E7B1534CABA8986 /* CardBadge.swift in Sources */,
@@ -2744,6 +2752,7 @@
 			files = (
 				C1010C5FEE0991C549410EA9 /* AdaptiveColor.swift in Sources */,
 				E1B117F379E4F580A2F1C895 /* AddToListView.swift in Sources */,
+				503D8C1713B88A54DE7534C6 /* AddToPlaylistPickerView.swift in Sources */,
 				DC5ABAD1FC79AFF5D417324F /* AuthModel.swift in Sources */,
 				FB0362E9E7883A6B4FE8A752 /* BadgeView.swift in Sources */,
 				7632651FE35A6391F6A72980 /* CardBadge.swift in Sources */,
@@ -3038,6 +3047,7 @@
 			files = (
 				14312621D00F0D8BBE2D0204 /* AdaptiveColor.swift in Sources */,
 				E8BEF7F91925DEB54D542FDC /* AddToListView.swift in Sources */,
+				68AF31D8762FF8268B926BC2 /* AddToPlaylistPickerView.swift in Sources */,
 				8262173985F2D997771C6EEA /* AuthModel.swift in Sources */,
 				65E5F40D9781CD924E73F18D /* BadgeView.swift in Sources */,
 				0192EE4FC3B45611FD125947 /* CardBadge.swift in Sources */,

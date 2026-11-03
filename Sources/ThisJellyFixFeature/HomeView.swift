@@ -447,16 +447,15 @@ struct HomeView: View {
     /// placement moved, so nothing here is decorative.
     private func heroHeader(onArtwork: Bool) -> some View {
         HStack(spacing: 11) {
-            Image("IconoInicio")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 32, height: 32)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-
             VStack(alignment: .leading, spacing: 0) {
-                Text("ThisFrame")
-                    .font(.title3.bold())
-                    .foregroundStyle(onArtwork ? Color.white : Color.primary)
+                HStack(spacing: 0) {
+                    Text("This")
+                        .font(.title3.bold())
+                        .foregroundStyle(onArtwork ? Color.white : Color.primary)
+                    Text("Frame")
+                        .font(.title3.bold())
+                        .foregroundStyle(MareaTheme.Colors.crimsonFrame)
+                }
                 Text("Inicio")
                     .font(.caption)
                     .foregroundStyle(onArtwork ? Color.white.opacity(0.68) : Color.secondary)
