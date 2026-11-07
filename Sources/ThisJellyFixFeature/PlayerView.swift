@@ -1762,6 +1762,13 @@ private struct PlaybackSettingsSheet: View {
     @Bindable var viewModel: PlayerViewModel
     @Environment(\.dismiss) private var dismiss
 
+    /// Transport jump distances — shared with the transport row and the
+    /// options menu through the same UserDefaults keys.
+    @AppStorage(PlaybackJumpSettings.Key.backward) private var jumpBackwardRaw =
+        PlaybackJumpSettings.defaultBackward
+    @AppStorage(PlaybackJumpSettings.Key.forward) private var jumpForwardRaw =
+        PlaybackJumpSettings.defaultForward
+
     var body: some View {
         NavigationStack {
             List {
@@ -1795,6 +1802,19 @@ private struct PlaybackSettingsSheet: View {
                         }
                     }
                     .buttonStyle(.plain)
+                }
+
+                Section("Salto") {
+                    Picker("Retroceder", selection: $jumpBackwardRaw) {
+                        ForEach(PlaybackJumpSettings.allowedSeconds, id: \.self) { seconds in
+                            Text("-\(seconds) s").tag(seconds)
+                        }
+                    }
+                    Picker("Avanzar", selection: $jumpForwardRaw) {
+                        ForEach(PlaybackJumpSettings.allowedSeconds, id: \.self) { seconds in
+                            Text("+\(seconds) s").tag(seconds)
+                        }
+                    }
                 }
 
                 Section("Audio y Subtítulos") {
