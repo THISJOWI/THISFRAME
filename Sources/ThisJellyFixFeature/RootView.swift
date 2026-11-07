@@ -162,8 +162,11 @@ public struct ThisFrameRootView: View {
             // Coming back from another app/client: Home is still mounted, so
             // NO onAppear fires, and progress recorded elsewhere (web, TV,
             // another phone) never reached "Estás viendo".
+            // Full reload, not just the resume row: content deleted on the
+            // server while the app was suspended must disappear on return —
+            // a resume-only refresh kept stale cards forever.
             guard phase == .active, let lib = libraryModel else { return }
-            Task { await lib.refreshResume() }
+            Task { await lib.load() }
         }
         .onAppear {
             configureAudioSession()

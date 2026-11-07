@@ -117,9 +117,9 @@ struct LibraryGridView: View {
         }
         .background(MareaTheme.Colors.background)
         .refreshable {
-            // Reload the first page IN PLACE: emptying the grid would blank
+            // Reload IN PLACE: emptying the grid would blank
             // the screen and throw the scroll position away.
-            await reloadFirstPage()
+            await reloadAllLoadedPages()
         }
         .navigationTitle(title)
         #if os(iOS)
@@ -163,8 +163,7 @@ struct LibraryGridView: View {
     /// the user never sees an empty screen, and the scroll position survives.
     /// The pages the user already scrolled through are kept: only the first
     /// page is re-read.
-    private func reloadFirstPage() async {
-        guard !isRefreshing else { return }
+    private func reloadFirstPage() async {        guard !isRefreshing else { return }
         isRefreshing = true
         defer { isRefreshing = false }
         let page: [JellyfinMediaItem]
@@ -192,6 +191,52 @@ struct LibraryGridView: View {
         if nextStartIndex == nil {
             nextStartIndex = page.count
         }
+    }
+
+    /// Full refresh of everything the grid has loaded (depth pages included).
+    ///
+    /// `reloadFirstPage` re-reads only page 1 and splices it into the loaded
+    /// list, so items deleted on the server that lived on page 2+ survived
+    /// every refresh forever — the user saw a deleted series keep sitting in
+    /// the grid. This re-reads enough pages to cover the loaded count (the
+    /// request volume equals what was already on screen), then replaces the
+    /// list in one swap so the scroll position and the "live" grid survive.
+    private func reloadAllLoadedPages() async {
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        defer { isRefreshing = false }
+
+        // Pages needed to cover what is currently displayed (minimum one).
+        let targetCount = max(items.count, pageSize)
+        let pageCount = max(1, (targetCount + pageSize - 1) / pageSize)
+
+        var refreshed: [JellyfinMediaItem] = []
+        var libraryExhausted = false
+        do {
+            for index in 0..<pageCount {
+                let page = try await model.fetchPage(
+                    parentId: parentId,
+                    includeTypes: includeTypes,
+                    limit: pageSize,
+                    startIndex: index * pageSize
+                )
+                refreshed.append(contentsOf: page)
+                if page.count < pageSize { // exhausted the library
+                    libraryExhausted = true
+                    break
+                }
+            }
+        } catch {
+            pageError = "No se pudo actualizar la biblioteca. Comprueba la conexión y vuelve a intentarlo."
+            return
+        }
+
+        items = refreshed
+        hasMore = !libraryExhausted
+        pageError = nil
+        // The whole loaded range was re-read: the cursor now points right
+        // after it, so pagination continues without gaps or repeats.
+        nextStartIndex = refreshed.count
     }
 }
 #endif
