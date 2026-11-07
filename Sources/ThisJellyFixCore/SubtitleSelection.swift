@@ -39,6 +39,41 @@ public enum SubtitleSelection {
         return best
     }
 
+    /// Same-language rule (Outline: "si el vídeo tiene el mismo audio y los
+    /// mismos subtítulos, no ponerlos, solo forzados si los hay").
+    ///
+    /// When the preferred subtitle language matches the audio being played, a
+    /// full-dialogue track only repeats what the viewer already hears. Only a
+    /// FORCED track (foreign dialogue inside an otherwise same-language
+    /// movie) auto-enables; with no forced track the subtitles stay off.
+    /// An unknown audio language keeps the plain metadata ranking.
+    public static func bestStreamIndex(
+        in streams: [MediaStream],
+        preferred: String?,
+        audioLanguage: String?
+    ) -> Int? {
+        guard let preferred, !preferred.isEmpty else { return nil }
+        let sameAsAudio = LanguagePreferences.matches(
+            preferred: preferred,
+            trackLanguage: audioLanguage
+        )
+        guard sameAsAudio else {
+            return bestStreamIndex(in: streams, preferred: preferred)
+        }
+        var best: Int?
+        var bestScore: Score?
+        for (i, stream) in streams.enumerated() {
+            guard stream.type == "Subtitle", stream.isForced == true else { continue }
+            guard LanguagePreferences.matches(preferred: preferred, trackLanguage: stream.language) else { continue }
+            let score = Score(stream: stream, position: i)
+            if bestScore == nil || score < bestScore! {
+                bestScore = score
+                best = i
+            }
+        }
+        return best
+    }
+
     /// Rank key: smaller wins. Tuple order = priority order above.
     struct Score: Comparable, Equatable {
         let forcedPenalty: Int

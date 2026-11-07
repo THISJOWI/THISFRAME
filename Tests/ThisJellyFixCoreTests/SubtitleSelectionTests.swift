@@ -65,6 +65,71 @@ final class SubtitleSelectionTests: XCTestCase {
         XCTAssertEqual(SubtitleSelection.bestStreamIndex(in: [audio, sub], preferred: "es"), 1)
     }
 
+    // MARK: - Same-language rule (preferred subs == served audio)
+
+    func testSameLanguageFullTrackIsNotAutoEnabled() {
+        let streams = [stream(language: "es", forced: false, index: 0)]
+        XCTAssertNil(
+            SubtitleSelection.bestStreamIndex(in: streams, preferred: "es", audioLanguage: "es"),
+            "a full track in the language already being heard repeats the dialogue"
+        )
+    }
+
+    func testSameLanguageForcedTrackIsAutoEnabled() {
+        let streams = [
+            stream(language: "es", forced: false, index: 0),
+            stream(language: "es", forced: true, index: 1),
+        ]
+        XCTAssertEqual(
+            SubtitleSelection.bestStreamIndex(in: streams, preferred: "es", audioLanguage: "es"),
+            1,
+            "only the forced track (foreign dialogue) should auto-enable"
+        )
+    }
+
+    func testDifferentLanguageKeepsNormalRanking() {
+        let streams = [
+            stream(language: "es", forced: true, index: 0),
+            stream(language: "es", forced: false, index: 1),
+        ]
+        XCTAssertEqual(
+            SubtitleSelection.bestStreamIndex(in: streams, preferred: "es", audioLanguage: "en"),
+            1,
+            "subs in another language must keep the full-over-forced ranking"
+        )
+    }
+
+    func testUnknownAudioLanguageKeepsNormalRanking() {
+        let streams = [stream(language: "es", forced: false, index: 0)]
+        XCTAssertEqual(
+            SubtitleSelection.bestStreamIndex(in: streams, preferred: "es", audioLanguage: nil),
+            0
+        )
+    }
+
+    func testSameLanguageComparesRegionVariants() {
+        let streams = [
+            stream(language: "es-ES", forced: false, index: 0),
+            stream(language: "es-ES", forced: true, index: 1),
+        ]
+        XCTAssertEqual(
+            SubtitleSelection.bestStreamIndex(in: streams, preferred: "es", audioLanguage: "spa"),
+            1,
+            "region/ISO variants of the same language must trigger the rule"
+        )
+    }
+
+    func testSameLanguageWithoutForcedTrackReturnsNilEvenWithOtherLanguages() {
+        let streams = [
+            stream(language: "es", forced: false, index: 0),
+            stream(language: "en", forced: true, index: 1),
+        ]
+        XCTAssertNil(
+            SubtitleSelection.bestStreamIndex(in: streams, preferred: "es", audioLanguage: "es"),
+            "a forced track in a different language is not a same-language forced track"
+        )
+    }
+
     func testDecodesHearingImpairedFlag() throws {
         let json = """
         {"Type":"Subtitle","Language":"es","Index":2,"IsForced":false,"IsDefault":true,"IsHearingImpaired":true}

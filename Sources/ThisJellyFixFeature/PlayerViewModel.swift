@@ -1800,7 +1800,10 @@ final class PlayerViewModel {
         // the stored profile preference.
         let wanted = manualSubtitleLanguage ?? preferredSubtitles
         guard let wanted, !wanted.isEmpty else { return }
-        guard let pick = pickBestOverlayTrack(preferred: wanted) else {
+        // Same-language rule applies to the PROFILE preference only: a manual
+        // subtitle choice must survive episode swaps untouched.
+        let audioLanguage = manualSubtitleLanguage == nil ? servedAudioLanguage : nil
+        guard let pick = pickBestOverlayTrack(preferred: wanted, audioLanguage: audioLanguage) else {
             TJFLog("langPref subtitles: no match for \(wanted) among \(availableSubtitleTracks.count) tracks")
             return
         }
@@ -1808,16 +1811,37 @@ final class PlayerViewModel {
         await applySubtitleSelection(pick)
     }
 
+    /// Language of the audio actually being served. Remux/transcode can pick
+    /// a different track than the container default, so the served server
+    /// index wins over the first audio stream.
+    private var servedAudioLanguage: String? {
+        if let servedAudioServerIndex,
+           let stream = serverMediaStreams.first(where: {
+               $0.type == "Audio" && $0.index == servedAudioServerIndex
+           }) {
+            return stream.language
+        }
+        if let selectedAudioTrackIndex,
+           let track = availableAudioTracks.first(where: { $0.id == selectedAudioTrackIndex }) {
+            return track.language
+        }
+        return serverMediaStreams.first(where: { $0.type == "Audio" })?.language
+    }
+
     /// Best overlay track for `preferred` using server stream metadata.
     /// Maps the ranked server stream back to its overlay id via
     /// `externalSubServerIndices` — never reuses a stale per-episode id.
-    private func pickBestOverlayTrack(preferred: String) -> SubtitleTrack? {
+    private func pickBestOverlayTrack(preferred: String, audioLanguage: String?) -> SubtitleTrack? {
         // Overlay tracks mirror a subset of server subtitle streams (text
         // formats with parseable cues). Rank at the STREAM level so forced /
         // SDH / default flags decide, then map to the overlay track built
         // from that stream.
         let subStreams = serverMediaStreams.filter { $0.type == "Subtitle" }
-        guard let streamIdx = SubtitleSelection.bestStreamIndex(in: subStreams, preferred: preferred) else { return nil }
+        guard let streamIdx = SubtitleSelection.bestStreamIndex(
+            in: subStreams,
+            preferred: preferred,
+            audioLanguage: audioLanguage
+        ) else { return nil }
         let pickedStream = subStreams[streamIdx]
         // Prefer the overlay track built from this exact server stream.
         if let serverIndex = pickedStream.index,
