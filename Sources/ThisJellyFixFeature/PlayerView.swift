@@ -627,33 +627,49 @@ struct PlayerView: View {
 
             // Tap catcher — below controls, above video
             .overlay {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture(count: 2) {
-                        // Double-tap: toggle fit ↔ fill
-                        viewModel.setFill(!viewModel.isFill)
-                    }
-                    .onTapGesture {
-                        // The old A6 guard (`guard !isRouteSheetPresenting`)
-                        // bricked EVERY tap when the system skipped
-                        // routePickerViewDidEndPresentingRoutes — flag stuck
-                        // true, app "pillada". The route sheet is modal (its
-                        // own UI swallows touches), so the guard never
-                        // protected anything reachable; the auto-hide freeze
-                        // in onAirPlayPresenting is what keeps the host view
-                        // alive mid-presentation. Taps stay live regardless.
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            viewModel.showControls.toggle()
+                GeometryReader { geo in
+                    Color.clear
+                        .contentShape(Rectangle())
+                        // Double-tap (Outline: "doble toque para avanzar o
+                        // retroceder"): left third seeks back, right third
+                        // seeks forward, the centre keeps the old fit↔fill
+                        // toggle. SpatialTapGesture reports where the tap
+                        // landed; the plain count-2 gesture did not.
+                        .highPriorityGesture(
+                            SpatialTapGesture(count: 2)
+                                .onEnded { value in
+                                    let third = geo.size.width / 3
+                                    if value.location.x < third {
+                                        seekByDoubleTap(-Double(jumpBackwardSeconds))
+                                    } else if value.location.x > third * 2 {
+                                        seekByDoubleTap(Double(jumpForwardSeconds))
+                                    } else {
+                                        viewModel.setFill(!viewModel.isFill)
+                                    }
+                                }
+                        )
+                        .onTapGesture {
+                            // The old A6 guard (`guard !isRouteSheetPresenting`)
+                            // bricked EVERY tap when the system skipped
+                            // routePickerViewDidEndPresentingRoutes — flag stuck
+                            // true, app "pillada". The route sheet is modal (its
+                            // own UI swallows touches), so the guard never
+                            // protected anything reachable; the auto-hide freeze
+                            // in onAirPlayPresenting is what keeps the host view
+                            // alive mid-presentation. Taps stay live regardless.
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                viewModel.showControls.toggle()
+                            }
+                            if viewModel.showControls {
+                                resetControlsTimer()
+                            } else {
+                                controlsTimer?.invalidate()
+                            }
                         }
-                        if viewModel.showControls {
-                            resetControlsTimer()
-                        } else {
-                            controlsTimer?.invalidate()
-                        }
-                    }
-                    // The top and bottom bars stay visually clean; the
-                    // existing playback options remain reachable here.
-                    .contextMenu { playbackOptionsMenu }
+                        // The top and bottom bars stay visually clean; the
+                        // existing playback options remain reachable here.
+                        .contextMenu { playbackOptionsMenu }
+                }
             }
 
             // Subtitles with dark background (single renderer).
@@ -1069,18 +1085,27 @@ struct PlayerView: View {
         let vertical = value.translation.height
 
         if abs(horizontal) > abs(vertical) {
-            let delta = horizontal > 0 ? 15.0 : -15.0
-            Task {
-                await viewModel.seekRelative(delta)
-                withAnimation(MareaMotion.standard) {
-                    seekIndicator = SeekIndicator(text: delta > 0 ? "+15s" : "-15s")
-                }
-                try? await Task.sleep(for: .seconds(0.8))
-                withAnimation(MareaMotion.fade) { seekIndicator = nil }
-            }
+            // Same distances as the transport and double-tap: one preference
+            // governs every seek gesture.
+            let delta = horizontal > 0
+                ? Double(jumpForwardSeconds)
+                : -Double(jumpBackwardSeconds)
+            seekByDoubleTap(delta)
         }
     }
     #endif
+
+    /// Seek by `delta` seconds and flash the same HUD the swipe gesture uses.
+    private func seekByDoubleTap(_ delta: Double) {
+        Task {
+            await viewModel.seekRelative(delta)
+            withAnimation(MareaMotion.standard) {
+                seekIndicator = SeekIndicator(text: delta > 0 ? "+\(Int(delta))s" : "-\(Int(abs(delta)))s")
+            }
+            try? await Task.sleep(for: .seconds(0.8))
+            withAnimation(MareaMotion.fade) { seekIndicator = nil }
+        }
+    }
 
     private func resetControlsTimer() {
         controlsTimer?.invalidate()
