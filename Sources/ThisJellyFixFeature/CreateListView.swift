@@ -188,7 +188,7 @@ struct EditListView: View {
 
         do {
             try await client.updatePlaylist(
-                playlistId: playlist.id ?? "",
+                playlistId: playlist.id,
                 name: trimmed,
                 description: description.isEmpty ? nil : description,
                 serverURL: serverURL,

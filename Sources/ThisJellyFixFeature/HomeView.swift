@@ -210,11 +210,16 @@ struct HomeView: View {
         case .search:
             SearchView(serverURL: serverURL, token: token, userId: userId)
         case .listas:
-            ListsView(
-                serverURL: serverURL,
-                token: token,
-                userId: userId
-            )
+            // ListsView no longer owns a NavigationStack (it is pushed inside
+            // other stacks from the profile sheet — a stack-in-stack crashed
+            // on push). The sidebar tab provides the host stack here.
+            NavigationStack {
+                ListsView(
+                    serverURL: serverURL,
+                    token: token,
+                    userId: userId
+                )
+            }
         case .favorites:
             // Favorites removed from sidebar — redirect to home
             NavigationStack {

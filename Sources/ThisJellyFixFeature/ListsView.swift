@@ -33,88 +33,109 @@ struct ListsView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    if isLoading {
-                        ProgressView("Cargando listas…")
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 100)
-                    } else if let errorMessage {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                if isLoading {
+                    ProgressView("Cargando listas…")
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 100)
+                } else if let errorMessage {
+                    VStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 48))
+                            .foregroundStyle(.secondary)
+                        Text(errorMessage)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                        Button("Reintentar") { Task { await load() } }
+                            .buttonStyle(.bordered)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 100)
+                } else {
+                    if !playlists.isEmpty {
+                        section(title: "Tus listas", items: playlists, kind: .playlist)
+                    }
+
+                    if !collections.isEmpty {
+                        section(title: "Colecciones del servidor", items: collections, kind: .collection)
+                    }
+
+                    if playlists.isEmpty && collections.isEmpty {
                         VStack(spacing: 12) {
-                            Image(systemName: "exclamationmark.triangle.fill")
+                            Image(systemName: "list.bullet")
                                 .font(.system(size: 48))
+                                .foregroundStyle(MareaTheme.Colors.accent.opacity(0.6))
+                            Text("No hay listas aún")
+                                .font(.headline)
                                 .foregroundStyle(.secondary)
-                            Text(errorMessage)
-                                .foregroundStyle(.secondary)
+                            Text("Crea tu primera lista para organizar tus películas y series favoritas")
+                                .font(.subheadline)
+                                .foregroundStyle(.tertiary)
                                 .multilineTextAlignment(.center)
-                            Button("Reintentar") { Task { await load() } }
-                                .buttonStyle(.bordered)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.top, 100)
-                    } else {
-                        if !playlists.isEmpty {
-                            section(title: "Tus listas", items: playlists, kind: .playlist)
-                        }
-
-                        if !collections.isEmpty {
-                            section(title: "Colecciones del servidor", items: collections, kind: .collection)
-                        }
-
-                        if playlists.isEmpty && collections.isEmpty {
-                            VStack(spacing: 12) {
-                                Image(systemName: "list.bullet")
-                                    .font(.system(size: 48))
-                                    .foregroundStyle(MareaTheme.Colors.accent.opacity(0.6))
-                                Text("No hay listas aún")
-                                    .font(.headline)
-                                    .foregroundStyle(.secondary)
-                                Text("Crea tu primera lista para organizar tus películas y series favoritas")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.tertiary)
-                                    .multilineTextAlignment(.center)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 100)
-                        }
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 24)
             }
-            .background(MareaTheme.Colors.background)
-            .navigationTitle("Listas")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingCreate = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityLabel("Crear lista")
-                }
-            }
-            .sheet(isPresented: $showingCreate) {
-                CreateListView(
-                    serverURL: serverURL,
-                    token: token,
-                    userId: userId,
-                    onCreated: { Task { await load() } }
-                )
-            }
-            .task { await load() }
-            .refreshable { await load() }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 24)
         }
+        .background(MareaTheme.Colors.background)
+        .navigationTitle("Listas")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingCreate = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .accessibilityLabel("Crear lista")
+            }
+        }
+        .sheet(isPresented: $showingCreate) {
+            CreateListView(
+                serverURL: serverURL,
+                token: token,
+                userId: userId,
+                onCreated: { Task { await load() } }
+            )
+        }
+        .task { await load() }
+        .refreshable { await load() }
+        // Single destination for this host stack. Playlists and collections
+        // open ListDetailView; any media item inside them opens DetailView.
+        // (Declaring a second `navigationDestination(for: JellyfinMediaItem.self)`
+        // in ListDetailView left two registrations for one type in the same
+        // stack — ambiguous at push time and a crash source, so the dispatch
+        // happens HERE, by item type.)
         .navigationDestination(for: JellyfinMediaItem.self) { item in
+            destinationView(for: item)
+        }
+    }
+
+    /// Type-based dispatch for the stack's single media destination.
+    @ViewBuilder
+    private func destinationView(for item: JellyfinMediaItem) -> some View {
+        let kind = item.type.lowercased()
+        if kind == "playlist" || kind == "boxset" || kind == "collectionfolder" {
             ListDetailView(
                 playlist: item,
                 serverURL: serverURL,
                 token: token,
                 userId: userId
+            )
+        } else {
+            DetailView(
+                item: item,
+                serverURL: serverURL,
+                token: token,
+                userId: userId,
+                onPlayerDismiss: {}
             )
         }
     }

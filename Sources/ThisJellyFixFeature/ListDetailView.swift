@@ -94,7 +94,13 @@ struct ListDetailView: View {
                             ],
                             spacing: MareaTheme.Spacing.md
                         ) {
-                            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                            // Keyed by slot index: a playlist may legitimately
+                            // contain the same media twice (the server allows
+                            // it — `playlistItemId` documents this), so a
+                            // media-id key produces duplicate ForEach
+                            // identities and crashes SwiftUI.
+                            ForEach(items.indices, id: \.self) { index in
+                                let item = items[index]
                                 VStack(spacing: 6) {
                                     NavigationLink(value: item) {
                                         MediaCardView(
@@ -169,7 +175,7 @@ struct ListDetailView: View {
         }
         .sheet(isPresented: $showingAdd) {
             AddToListView(
-                playlistId: playlist.id ?? "",
+                playlistId: playlist.id,
                 serverURL: serverURL,
                 token: token,
                 userId: userId,
@@ -189,15 +195,10 @@ struct ListDetailView: View {
         }
         .task { await load() }
         .refreshable { await load() }
-        .navigationDestination(for: JellyfinMediaItem.self) { item in
-            DetailView(
-                item: item,
-                serverURL: serverURL,
-                token: token,
-                userId: userId,
-                onPlayerDismiss: {}
-            )
-        }
+        // NOTE: no `navigationDestination` here — the host stack (declared in
+        // ListsView) registers the single JellyfinMediaItem destination and
+        // dispatches playsets to DetailView by item type. Declaring a second
+        // registration for the same type on the same stack is ambiguous.
     }
 
     @ViewBuilder
