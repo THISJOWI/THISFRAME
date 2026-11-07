@@ -1461,11 +1461,13 @@ private struct ControlsOverlay: View {
             }
 
             Button(action: { Task { await viewModel.togglePlayPause() } }) {
-                // While buffering with playback intent, keep PAUSE on screen:
-                // showing PLAY made the video look stopped mid-load.
-                let showsPause = viewModel.isPlaying
-                    || (viewModel.isBuffering && !viewModel.userPaused)
-                Image(systemName: showsPause ? "pause.fill" : "play.fill")
+                // INTENT, not engine state: `isPlaying` reads false while
+                // AVPlayer waits on the network, which flipped the glyph to
+                // PLAY (and flickered play/pause) exactly while the video was
+                // "thinking". `userPaused` only changes on a deliberate tap,
+                // on end or on failure, so the icon is stable and tapping it
+                // always does what the glyph promises.
+                Image(systemName: viewModel.userPaused ? "play.fill" : "pause.fill")
                     .font(.system(size: 54, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(width: 84, height: 84)

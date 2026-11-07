@@ -409,6 +409,14 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         player.timeControlStatus == .playing
     }
 
+    /// The player is trying to play but is stalled on the network/decoder.
+    /// Unlike the `.buffering` notification (which only fires on a status
+    /// transition with rate > 0), this is a live read — the view model polls
+    /// it every tick, so the transport never shows PLAY mid-stall.
+    public var isBuffering: Bool {
+        player.timeControlStatus == .waitingToPlayAtSpecifiedRate
+    }
+
     public var videoSize: CGSize {
         stateLock.lock()
         defer { stateLock.unlock() }
@@ -423,10 +431,11 @@ public final class AVPlaybackEngine: PlaybackEngine, @unchecked Sendable {
         playerObservations.append(
             player.observe(\.timeControlStatus, options: [.new]) { [weak self] _, _ in
                 guard let self else { return }
-                // Buffering while rate > 0: surface it so the UI can show the
-                // spinner instead of a frozen frame with no explanation.
-                if self.player.timeControlStatus == .waitingToPlayAtSpecifiedRate,
-                   self.player.rate > 0 {
+                // Buffering while playback is requested: surface it so the UI
+                // can keep PAUSE on screen instead of a play icon mid-stall.
+                // (AVPlayer's `rate` is 0 while it waits, so the old
+                // `rate > 0` guard suppressed exactly the case it was for.)
+                if self.player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
                     self.notify(.buffering)
                 }
             }

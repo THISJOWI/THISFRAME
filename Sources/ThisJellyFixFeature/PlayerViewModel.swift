@@ -19,7 +19,13 @@ final class PlayerViewModel {
     var isBuffering = false
     /// True while playback is stopped **because the user asked for it**
     /// (play/pause control) — the auto-PiP gate must not float a pause away.
-    var userPaused = false
+    ///
+    /// This is also the transport's source of truth for the play/pause glyph.
+    /// Engine state cannot be used: `isPlaying` reads `false` every time
+    /// AVPlayer waits on the network, so the icon used to flip to PLAY (and
+    /// flicker back and forth) exactly while the video was "thinking".
+    /// Starts `true`: nothing has been requested until playback begins.
+    var userPaused = true
     /// Whether an automatic PiP handoff (view exit / background) may run.
     var canAutoHandoffToPiP: Bool {
         // Emisión Cast: la salida activa es el receptor — flotar el video
@@ -386,7 +392,13 @@ final class PlayerViewModel {
         guard !engineStopped else { return }
         if !isSeeking { currentTime = status.position }
         if let duration = status.duration { self.duration = duration }
-        if let playing = status.isPlaying { isPlaying = playing }
+        if let playing = status.isPlaying {
+            isPlaying = playing
+            // Mirror the receiver into the transport intent: while emitting,
+            // the LOCAL engine is paused, so `userPaused` cannot stay true or
+            // the icon would offer PLAY over a playing cast.
+            userPaused = !playing
+        }
         NowPlayingController.shared.update(
             time: currentTime,
             duration: duration,
@@ -448,6 +460,9 @@ final class PlayerViewModel {
                 startTime: currentTime > 5 ? currentTime : nil
             )
             castMessage = nil
+            // The receiver is playing: transport must offer PAUSE even though
+            // the local engine stays paused.
+            userPaused = false
         } catch {
             castMessage = error.localizedDescription
             TJFLog("cast: emisión fallida \(error.localizedDescription)")
@@ -498,6 +513,7 @@ final class PlayerViewModel {
             TJFLog("engine FAILED item=\(itemId ?? "nil"): \(message)")
             isPlaying = false
             isBuffering = false
+            userPaused = true
             if errorMessage == nil {
                 errorMessage = message
             }
@@ -528,6 +544,9 @@ final class PlayerViewModel {
     private func finishCurrentItem() {
         guard !completionReported, !engineStopped else { return }
         completionReported = true
+        // The item ended on its own: nothing is requested any more, so the
+        // transport must offer PLAY again (and PiP must not float it).
+        userPaused = true
 
         // The end event is authoritative. AVPlayer can expose a position a
         // few frames short of the media duration; the server decides "played"
@@ -690,14 +709,18 @@ final class PlayerViewModel {
         // Emisión Cast: el transporte va al RECEPTOR (el engine local está
         // pausado y no debe reanudarse por accidente).
         if isCastEmitting {
-            if isPlaying {
-                castController?.pause()
-                isPlaying = false
-            } else {
+            // Intent, not receiver state: the receiver reports `isPlaying`
+            // asynchronously, so basing the toggle on it made rapid taps
+            // resume instead of pausing.
+            if userPaused {
                 castController?.play()
                 isPlaying = true
+                userPaused = false
+            } else {
+                castController?.pause()
+                isPlaying = false
+                userPaused = true
             }
-            userPaused = !isPlaying
             return
         }
         #endif
@@ -709,18 +732,19 @@ final class PlayerViewModel {
             return
         }
         #endif
-        if isPlaying {
-            engine.pause()
-            userPaused = true
-        } else {
+        if userPaused {
             engine.play()
             userPaused = false
+            isPlaying = true
             // The user resumed in THIS mount: reporting is live again, so a
             // later exit may report its stop (a stale flag from a closed
             // floating window would block it).
             stopReported = false
+        } else {
+            engine.pause()
+            userPaused = true
+            isPlaying = false
         }
-        isPlaying.toggle()
     }
 
     // MARK: - Episode Switching
@@ -1342,10 +1366,12 @@ final class PlayerViewModel {
                     // made the UI look hung for the entire seek window.
                     self.duration = self.engine.duration
                     self.isPlaying = self.engine.isPlaying
+                    self.isBuffering = self.engine.isBuffering
                 } else {
                     self.currentTime = self.engine.currentTime
                     self.duration = self.engine.duration
                     self.isPlaying = self.engine.isPlaying
+                    self.isBuffering = self.engine.isBuffering
                     self.updateSubtitleText()
                     // Continuous legible-enforcement: AVPlayer can
                     // re-preselect a native subtitle after our select (the

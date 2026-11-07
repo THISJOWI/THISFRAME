@@ -31,6 +31,10 @@ public protocol PlaybackEngine: Sendable {
     var currentTime: Double { get async }
     var duration: Double { get async }
     var isPlaying: Bool { get async }
+    /// True while playback is requested but AVPlayer cannot advance yet
+    /// (`waitingToPlayAtSpecifiedRate`). The transport keeps PAUSE on screen
+    /// with this instead of flashing PLAY while the video "thinks".
+    var isBuffering: Bool { get async }
     /// Natural video size (0×0 until the first frame decodes).
     var videoSize: CGSize { get async }
     /// Layer the view must host (AVPlayerLayer for `AVPlaybackEngine`).
