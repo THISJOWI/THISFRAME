@@ -581,6 +581,10 @@ struct PlayerView: View {
 
             // Subtitles with dark background (single renderer).
             // Native AVPlayer legible rendering is permanently disabled to eliminate duplicate un-backgrounded text.
+            // No fade transition on purpose (Outline: "eliminar sus
+            // animaciones"): subtitle cues are dense, and animating every
+            // line made the text lag behind the audio. New cues replace the
+            // old ones on the same frame the parser emits them.
             .overlay(alignment: .bottom) {
                 if let text = viewModel.subtitleText {
                     Text(text)
@@ -592,11 +596,8 @@ struct PlayerView: View {
                         .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 6))
                         .padding(.bottom, viewModel.showControls ? 150 : 40)
                         .allowsHitTesting(false)
-                        .transition(.opacity)
                 }
             }
-            // The subtitle fades in and out instead of blinking on and off.
-            .mareaAnimation(MareaMotion.fade, value: viewModel.subtitleText)
 
             // Controls overlay — always the topmost hosting view. AirPlay's
             // route picker lives INSIDE it (top-right cluster slot), mounted
@@ -1558,21 +1559,28 @@ private struct ControlsOverlay: View {
                 bottomActionsRow
             }
 
-            SeekBar(
-                currentTime: viewModel.currentTime,
-                duration: viewModel.duration,
-                ticks: viewModel.segmentTicks
-            ) { newTime in
-                Task { await viewModel.seek(to: newTime) }
-            }
+            // Duration bar, shortened (Outline: "Barra de duración:
+            // acortarla"): the full-width track dominated the bottom of the
+            // screen, so the bar and its time labels keep a comfortable inset
+            // while the row above still uses the full width.
+            VStack(spacing: 6) {
+                SeekBar(
+                    currentTime: viewModel.currentTime,
+                    duration: viewModel.duration,
+                    ticks: viewModel.segmentTicks
+                ) { newTime in
+                    Task { await viewModel.seek(to: newTime) }
+                }
 
-            HStack {
-                Text(formatTime(viewModel.currentTime))
-                Spacer()
-                Text("-" + formatTime(remaining))
+                HStack {
+                    Text(formatTime(viewModel.currentTime))
+                    Spacer()
+                    Text("-" + formatTime(remaining))
+                }
+                .font(.caption)
+                .foregroundStyle(.white)
             }
-            .font(.caption)
-            .foregroundStyle(.white)
+            .padding(.horizontal, 28)
 
             if let endsAt {
                 Text("Termina a las \(endsAt)")
@@ -1714,11 +1722,12 @@ private struct SkipSegmentOverlay: View {
     var body: some View {
         VStack(alignment: .trailing, spacing: 10) {
             if segment.type == .credits {
-                // Ending: two choices — skip to the end, or jump to next episode.
-                if hasNextEpisode {
-                    skipButton(label: "Siguiente episodio", icon: "forward.end.fill", action: onPlayNext)
+                // The view model auto-advances to the next episode as soon as
+                // the credits start, so no skip offer is needed while the
+                // chain continues. Only the end of the chain still shows it.
+                if !hasNextEpisode {
+                    skipButton(label: "Saltar créditos", icon: "arrow.right.to.line", action: onSkip)
                 }
-                skipButton(label: "Saltar créditos", icon: "arrow.right.to.line", action: onSkip)
             } else {
                 skipButton(label: label, icon: "fastforward", action: onSkip)
             }

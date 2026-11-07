@@ -1532,6 +1532,18 @@ final class PlayerViewModel {
             activeSegment = nil
             segmentCountdown = nil
         case .show(let marker, let countdown):
+            // Credits with something to play next: go straight to it instead
+            // of offering "skip ending" (Outline: the ending skip is
+            // redundant when the series continues). Only the true end of the
+            // chain still offers "Saltar créditos".
+            if marker.type == .credits, hasNextEpisode {
+                segmentDetector.markSkipped(marker)
+                activeSegment = nil
+                segmentCountdown = nil
+                TJFLog("credits → auto-advance to next episode")
+                onPlayNextEpisode?()
+                return
+            }
             activeSegment = marker
             segmentCountdown = countdown
         case .triggerSkip(let marker):
