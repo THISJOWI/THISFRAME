@@ -46,4 +46,27 @@ final class LibraryModelDeletionTests: XCTestCase {
             "deleted series must not linger in the flattened item pool"
         )
     }
+
+    /// Outline: "Inicio: al recargar se ve muy mal". A refresh now swaps rows
+    /// in one shot and a refresh where every fetch failed must keep the
+    /// shelves on screen instead of blanking Home.
+    func testFailedRefreshKeepsExistingRows() async {
+        let stub = StubLibraryClient()
+        stub.views = [LibraryView(id: "tv", name: "Series", collectionType: "tvshows")]
+        stub.latestItems = [series("s1", "Alpha")]
+        let model = LibraryModel(
+            libraryClient: stub, serverURL: serverURL, userId: "u1", token: "tok"
+        )
+
+        await model.load()
+        XCTAssertFalse(model.rows.isEmpty)
+
+        stub.fetchItemsError = URLError(.notConnectedToInternet)
+        await model.load()
+
+        XCTAssertFalse(
+            model.rows.isEmpty,
+            "a refresh where every request failed must not blank the library"
+        )
+    }
 }

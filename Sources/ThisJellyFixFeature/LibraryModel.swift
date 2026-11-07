@@ -118,11 +118,33 @@ final class LibraryModel {
     /// spinner and collapses concurrent manual taps into one request.
     var isRefreshingResume = false
 
+    /// Non-nil while a REFRESH is in flight: row publishes are buffered and
+    /// swapped in one shot. Progressive publishing on a refresh made Home
+    /// flash and reorder as every shelf re-landed at a different time
+    /// (Outline: "Inicio: al recargar se ve muy mal").
+    private var bufferedRows: [ContentRow]?
+    /// Failed row fetches in the current `load()`. A refresh that produced no
+    /// rows AND had failures is a failed refresh, not an empty library.
+    private var loadFailureCount = 0
+
     func load() async {
+        // Overlapping loads would fight over the buffer: the in-flight one
+        // already reads everything, so a second trigger is redundant.
+        guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
+        loadFailureCount = 0
+        bufferedRows = rows.isEmpty ? nil : []
         defer {
             isLoading = false
+            if let buffered = bufferedRows {
+                bufferedRows = nil
+                if !buffered.isEmpty || loadFailureCount == 0 {
+                    rows = buffered.sorted(by: Self.isOrderedBefore)
+                }
+                // else: every fetch failed — keep the shelves the user is
+                // looking at instead of blanking Home.
+            }
             // M4: `hasLoaded` means "usable library", not "load() returned".
             // A failed cold launch (0 rows + error) must NOT flip this — the
             // Handoff resolver would see .loaded(itemCount: 0), consume the
@@ -337,16 +359,24 @@ final class LibraryModel {
     }
 
     private func publish(_ row: ContentRow) {
+        // Refresh in flight: buffer instead of mutating what Home renders.
+        if bufferedRows != nil {
+            bufferedRows?.removeAll { $0.id == row.id }
+            if !row.items.isEmpty { bufferedRows?.append(row) }
+            return
+        }
         rows.removeAll { $0.id == row.id }
         // A successful empty response means this shelf is now empty. Keeping
         // its previous value made removed/played items survive every refresh.
         guard !row.items.isEmpty else { return }
         rows.append(row)
-        rows.sort {
-            let l = Self.rowOrder.firstIndex(of: $0.title) ?? Self.rowOrder.count
-            let r = Self.rowOrder.firstIndex(of: $1.title) ?? Self.rowOrder.count
-            return l == r ? $0.title < $1.title : l < r
-        }
+        rows.sort(by: Self.isOrderedBefore)
+    }
+
+    private static func isOrderedBefore(_ l: ContentRow, _ r: ContentRow) -> Bool {
+        let lIndex = rowOrder.firstIndex(of: l.title) ?? rowOrder.count
+        let rIndex = rowOrder.firstIndex(of: r.title) ?? rowOrder.count
+        return lIndex == rIndex ? l.title < r.title : lIndex < rIndex
     }
 
     /// Refresh ONLY the "Estás viendo" row without touching the rest of the UI.
@@ -440,6 +470,7 @@ final class LibraryModel {
     /// screen can offer a logout that works instead of a retry that never will.
     private func noteFetchFailure(_ error: Error, context: String, surfaceMessage: Bool) {
         TJFLog("load: \(context) FAILED: \(error.localizedDescription)")
+        loadFailureCount += 1
         if let libraryError = error as? LibraryError, libraryError == .unauthorized {
             sessionExpired = true
             errorMessage = libraryError.errorDescription ?? error.localizedDescription
