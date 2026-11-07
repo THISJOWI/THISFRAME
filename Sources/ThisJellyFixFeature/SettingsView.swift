@@ -27,7 +27,7 @@ struct SettingsView: View {
     }
 }
 
-private struct SettingsGroupHeader: View {
+struct SettingsGroupHeader: View {
     let title: String
 
     var body: some View {

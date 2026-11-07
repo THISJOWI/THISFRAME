@@ -172,47 +172,21 @@ struct ProfileSettingsView: View {
 
     @ViewBuilder
     private var preferencesGroup: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Preferencias")
-                .font(.title3.bold())
-                .padding(.horizontal, 4)
+        VStack(alignment: .leading, spacing: 24) {
+            SettingsGroupHeader(title: "Apariencia")
+            AppearanceSettingsSection()
 
-            settingsRow(
-                icon: "circle.lefthalf.filled",
-                title: "Apariencia",
-                subtitle: "Claro, oscuro o según el sistema"
-            ) {
-                SettingsSectionScreen(title: "Apariencia") {
-                    AppearanceSettingsSection()
-                }
-            }
+            SettingsGroupHeader(title: "Reproducción")
+            SkipSettingsSection()
 
-            settingsRow(
-                icon: "play.circle",
-                title: "Reproducción",
-                subtitle: "Salto automático de introducción, resumen y ending"
-            ) {
-                SettingsSectionScreen(title: "Reproducción") {
-                    SkipSettingsSection()
-                }
-            }
-
-            settingsRow(
-                icon: "captions.bubble",
-                title: "Audio y subtítulos",
-                subtitle: "Tamaño, idioma preferido y proveedores"
-            ) {
-                SettingsSectionScreen(title: "Audio y subtítulos") {
-                    VStack(spacing: 16) {
-                        SubtitleSizeSettingsSection()
-                        LanguageSettingsSection()
-                        #if os(iOS) || os(macOS)
-                        SubtitleProvidersSection()
-                        #endif
-                    }
-                }
-            }
+            SettingsGroupHeader(title: "Audio y subtítulos")
+            SubtitleSizeSettingsSection()
+            LanguageSettingsSection()
+            #if os(iOS) || os(macOS)
+            SubtitleProvidersSection()
+            #endif
         }
+        .padding(.horizontal, 4)
     }
 
     @ViewBuilder
