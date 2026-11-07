@@ -103,6 +103,22 @@ struct PlayerView: View {
     /// the user changes it in Settings without restarting playback.
     @AppStorage(SubtitleSizeSettings.Key.relativeSize) private var subtitleSizeRaw: Double = 1.0
 
+    /// Transport jump distances (Outline: "Retroceso/avance: poder elegir el
+    /// tiempo de salto"). @AppStorage keeps the inline picker and the transport
+    /// row in sync live, without leaving the player.
+    @AppStorage(PlaybackJumpSettings.Key.backward) private var jumpBackwardRaw =
+        PlaybackJumpSettings.defaultBackward
+    @AppStorage(PlaybackJumpSettings.Key.forward) private var jumpForwardRaw =
+        PlaybackJumpSettings.defaultForward
+
+    /// Validated values — a stale stored number must never break the SF Symbol.
+    private var jumpBackwardSeconds: Int {
+        PlaybackJumpSettings.validated(jumpBackwardRaw)
+    }
+    private var jumpForwardSeconds: Int {
+        PlaybackJumpSettings.validated(jumpForwardRaw, fallback: PlaybackJumpSettings.defaultForward)
+    }
+
     private var subtitleFontSize: CGFloat {
         let base: CGFloat = 17
         let multiplier = CGFloat(
@@ -330,6 +346,23 @@ struct PlayerView: View {
             viewModel.showSpeedPicker = true
         } label: {
             Label("Velocidad · \(playbackSpeedLabel)", systemImage: "gauge")
+        }
+
+        // Jump distance (Outline: "Retroceso/avance: poder elegir el tiempo
+        // de salto"). In-player so the change applies to the very next tap.
+        Menu {
+            Picker("Retroceder", selection: $jumpBackwardRaw) {
+                ForEach(PlaybackJumpSettings.allowedSeconds, id: \.self) { seconds in
+                    Text("-\(seconds) s").tag(seconds)
+                }
+            }
+            Picker("Avanzar", selection: $jumpForwardRaw) {
+                ForEach(PlaybackJumpSettings.allowedSeconds, id: \.self) { seconds in
+                    Text("+\(seconds) s").tag(seconds)
+                }
+            }
+        } label: {
+            Label("Salto · -\(jumpBackwardSeconds)s / +\(jumpForwardSeconds)s", systemImage: "arrow.left.arrow.right")
         }
 
         Divider()
@@ -1265,6 +1298,20 @@ private struct ControlsOverlay: View {
     var onShowEpisodeList: (() -> Void)? = nil
     var onShowPlaybackSettings: (() -> Void)? = nil
 
+    /// Transport jump distances — same UserDefaults keys the in-player picker
+    /// writes, so a change applies to the very next tap.
+    @AppStorage(PlaybackJumpSettings.Key.backward) private var jumpBackwardRaw =
+        PlaybackJumpSettings.defaultBackward
+    @AppStorage(PlaybackJumpSettings.Key.forward) private var jumpForwardRaw =
+        PlaybackJumpSettings.defaultForward
+
+    private var jumpBackwardSeconds: Int {
+        PlaybackJumpSettings.validated(jumpBackwardRaw)
+    }
+    private var jumpForwardSeconds: Int {
+        PlaybackJumpSettings.validated(jumpForwardRaw, fallback: PlaybackJumpSettings.defaultForward)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             topBar
@@ -1408,21 +1455,25 @@ private struct ControlsOverlay: View {
 
     private var transportRow: some View {
         HStack(spacing: 40) {
-            transportButton(icon: "gobackward.15", size: 34, disabled: false) {
-                let target = max(0, viewModel.currentTime - 15)
+            transportButton(icon: "gobackward.\(jumpBackwardSeconds)", size: 34, disabled: false) {
+                let target = max(0, viewModel.currentTime - Double(jumpBackwardSeconds))
                 Task { await viewModel.seek(to: target) }
             }
 
             Button(action: { Task { await viewModel.togglePlayPause() } }) {
-                Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
+                // While buffering with playback intent, keep PAUSE on screen:
+                // showing PLAY made the video look stopped mid-load.
+                let showsPause = viewModel.isPlaying
+                    || (viewModel.isBuffering && !viewModel.userPaused)
+                Image(systemName: showsPause ? "pause.fill" : "play.fill")
                     .font(.system(size: 54, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(width: 84, height: 84)
                     .shadow(radius: 4)
             }
 
-            transportButton(icon: "goforward.30", size: 34, disabled: false) {
-                let target = min(viewModel.duration, viewModel.currentTime + 30)
+            transportButton(icon: "goforward.\(jumpForwardSeconds)", size: 34, disabled: false) {
+                let target = min(viewModel.duration, viewModel.currentTime + Double(jumpForwardSeconds))
                 Task { await viewModel.seek(to: target) }
             }
         }

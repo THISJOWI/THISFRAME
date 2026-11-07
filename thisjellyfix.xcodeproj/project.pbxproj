@@ -178,6 +178,7 @@
 		4B53EA643ED2D9A0EF924539 /* ListsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EACC0B2076B6C3D189F232 /* ListsView.swift */; };
 		4B982D84816F17DAF889341B /* CastStreamPreflight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE72973D6ADD9B41CD2B730 /* CastStreamPreflight.swift */; };
 		4C0FFDF812A5846564067CCF /* SubtitleSizeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6348BB2CAA8E2EB04A1C695D /* SubtitleSizeSettings.swift */; };
+		4CC69BF992C0D13A1E8E51B0 /* PlaybackJumpSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 971F28D880BD157260092289 /* PlaybackJumpSettings.swift */; };
 		4E860FAC7F62BDF970B968C2 /* Core-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7D37A490B1735CF546E5317 /* Core-iOS.framework */; };
 		4EAB0EF982D4A00FB4A5F0C1 /* LibraryRecommender.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BEF0CACD602DC995C25421 /* LibraryRecommender.swift */; };
 		4FA90A938AC6C9C30099D91F /* CatalogItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61CA929F31874E45C74331C8 /* CatalogItem.swift */; };
@@ -248,6 +249,7 @@
 		61CDA4F5175F73114D31C54D /* ChapterClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD507E29FA9412A60002A5DA /* ChapterClassifier.swift */; };
 		6302F06803605A866CB0EC8D /* ChapterClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD507E29FA9412A60002A5DA /* ChapterClassifier.swift */; };
 		6337E7069B2C4DBB0BFD42C2 /* Core-iOS.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F7D37A490B1735CF546E5317 /* Core-iOS.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6361FD4E7773A4DEA11F23C3 /* PlaybackJumpSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 971F28D880BD157260092289 /* PlaybackJumpSettings.swift */; };
 		639F82A10A2956BFC1EAEEA9 /* ResumeCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB62174F75826768421F5928 /* ResumeCardView.swift */; };
 		63BB7DD1F9097A73B4B39455 /* WrapLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 087463C93897C7B0140D89E7 /* WrapLayout.swift */; };
 		63CF8A9AC3F9769DC501C7D3 /* SubtitleCue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A24BC16265B62686EBD9A1B6 /* SubtitleCue.swift */; };
@@ -269,6 +271,7 @@
 		6AB14EDEA3D41E7611CB514F /* NoveltyClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A96F9C5B3D49C8454F0AED97 /* NoveltyClassifier.swift */; };
 		6AC4757212C9B6FA2EF81AF8 /* MediaCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEB7F8477231F3435F0C3EF /* MediaCardView.swift */; };
 		6ADFEDADB6206B335A7A7DC7 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39CFC19AA8E51100A6C3ECC /* HomeView.swift */; };
+		6BC44690B7C605BDA9FA7274 /* PlaybackJumpSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 971F28D880BD157260092289 /* PlaybackJumpSettings.swift */; };
 		6BEB27613BD985774DED027A /* GoogleCastStatic in Frameworks */ = {isa = PBXBuildFile; productRef = 975F20218E5150C8557B5A20 /* GoogleCastStatic */; };
 		6BFF32C1029FBCCEB1839223 /* LanguagePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AED9E47165C3D3A03CA2FA1 /* LanguagePreferences.swift */; };
 		6C0AD8F310D54FE5FACA4279 /* CastStreamPreflight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AE72973D6ADD9B41CD2B730 /* CastStreamPreflight.swift */; };
@@ -285,6 +288,7 @@
 		6FECE1B63C7B29DD65D1F8ED /* Logging.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32AABCCCB0DE1978AAC1A80 /* Logging.swift */; };
 		7006DBAD90EC2FD7B7A16FCD /* Playback-visionOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28669C5F3B409CC65EA7F335 /* Playback-visionOS.framework */; };
 		703CBD337F7A8CE3416EFBD0 /* JellyfinArtwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1291B2AB055CB771BDDC5DA5 /* JellyfinArtwork.swift */; };
+		706ACF829BA3CD90A95DB233 /* PlaybackJumpSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 971F28D880BD157260092289 /* PlaybackJumpSettings.swift */; };
 		70FC03B69466CB87EF283E08 /* Discovery-iOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4CED8DE05CD1EF647589637 /* Discovery-iOS.framework */; };
 		711FC020AF8A4343BC004893 /* DownloadQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A010E594C024E41161B0DBF4 /* DownloadQueue.swift */; };
 		7134A1331677D0F8D548C0D8 /* FloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEF3EC1DCB513D7D8D3A1B6A /* FloatingTabBar.swift */; };
@@ -1166,6 +1170,7 @@
 		8F3F6965BFCB98549AC54BC6 /* Core-visionOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "Core-visionOS.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		90CB900DFBF613262ADEB1FE /* PlaybackEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackEngine.swift; sourceTree = "<group>"; };
 		966A418CD1DDCC6DB532C337 /* thisjellyfix-macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "thisjellyfix-macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		971F28D880BD157260092289 /* PlaybackJumpSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackJumpSettings.swift; sourceTree = "<group>"; };
 		97E9EEA43F53F2987FA00763 /* Tracks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracks.swift; sourceTree = "<group>"; };
 		997AD6ED1DBB67B4AECB20DB /* SubtitleSearchResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubtitleSearchResult.swift; sourceTree = "<group>"; };
 		9DA2D836A9A324A150CEED71 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -1525,6 +1530,7 @@
 				0A0CB53C40E7A1184874167E /* PiPHandoffPolicy.swift */,
 				00193F5C845E2D76D677171B /* PlaybackDeviceProfile.swift */,
 				EF44E1A84B76AB6E359404F9 /* PlaybackInfo.swift */,
+				971F28D880BD157260092289 /* PlaybackJumpSettings.swift */,
 				325842C2350EA466B9161BAF /* PlaybackStreamPicker.swift */,
 				7A917376E4B774AA2022C981 /* RemoteSubtitle.swift */,
 				463AD44C3A21E49400899BBF /* SavedServersStore.swift */,
@@ -2600,6 +2606,7 @@
 				6F43DC17E61B90643299ECA7 /* PiPHandoffPolicy.swift in Sources */,
 				155DF913687A0FBC67603BD7 /* PlaybackDeviceProfile.swift in Sources */,
 				DF9E8588B987ADEA150BF8ED /* PlaybackInfo.swift in Sources */,
+				706ACF829BA3CD90A95DB233 /* PlaybackJumpSettings.swift in Sources */,
 				D1F227847EB8C7895BC98FC3 /* PlaybackStreamPicker.swift in Sources */,
 				EA8A50E4C7D36D2043DD7AA2 /* RemoteSubtitle.swift in Sources */,
 				602D99B0662983D39755F2A7 /* ResumePlaybackIntent.swift in Sources */,
@@ -2839,6 +2846,7 @@
 				25C8987EF7A40F139D58DD11 /* PiPHandoffPolicy.swift in Sources */,
 				F154FC7F737AEC376A7E67C8 /* PlaybackDeviceProfile.swift in Sources */,
 				F8DAC96B6EAEEB9823792B33 /* PlaybackInfo.swift in Sources */,
+				6BC44690B7C605BDA9FA7274 /* PlaybackJumpSettings.swift in Sources */,
 				020AFB7EE28BAA31D72B182B /* PlaybackStreamPicker.swift in Sources */,
 				61B88D0C5F572D17018F6EDB /* RemoteSubtitle.swift in Sources */,
 				DEE510962BE8749C9B6C7BAF /* ResumePlaybackIntent.swift in Sources */,
@@ -2903,6 +2911,7 @@
 				E14C0478D629F29BE0C250CB /* PiPHandoffPolicy.swift in Sources */,
 				BFFE664027915CD4A28924AE /* PlaybackDeviceProfile.swift in Sources */,
 				9C349B9B7CF1578FF5B4FABC /* PlaybackInfo.swift in Sources */,
+				4CC69BF992C0D13A1E8E51B0 /* PlaybackJumpSettings.swift in Sources */,
 				67693498EFE6878579436363 /* PlaybackStreamPicker.swift in Sources */,
 				786A67089346B13AA425E362 /* RemoteSubtitle.swift in Sources */,
 				D2F132E1119718B9440671E4 /* ResumePlaybackIntent.swift in Sources */,
@@ -2975,6 +2984,7 @@
 				E6CA5DB1F51D008732DD31CC /* PiPHandoffPolicy.swift in Sources */,
 				78E72C717C386A25431AF5C1 /* PlaybackDeviceProfile.swift in Sources */,
 				01824714F1DC9253E8A6D61E /* PlaybackInfo.swift in Sources */,
+				6361FD4E7773A4DEA11F23C3 /* PlaybackJumpSettings.swift in Sources */,
 				A4B4AA725AB32E755475DF6A /* PlaybackStreamPicker.swift in Sources */,
 				C14B4FEA10B0554E0CCFBA6B /* RemoteSubtitle.swift in Sources */,
 				6FD1DEE8F4404D2723B22F45 /* ResumePlaybackIntent.swift in Sources */,

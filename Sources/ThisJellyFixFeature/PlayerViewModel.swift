@@ -12,6 +12,11 @@ import ThisJellyFixCast
 final class PlayerViewModel {
     // MARK: - Playback State
     var isPlaying = false
+    /// True while the engine is waiting on the network (`waitingToPlayAt…`).
+    /// The transport uses it to keep showing PAUSE instead of flashing PLAY
+    /// while the video "thinks" (Outline: "el botón de play sigue apareciendo
+    /// cuando la reproducción se queda pensando").
+    var isBuffering = false
     /// True while playback is stopped **because the user asked for it**
     /// (play/pause control) — the auto-PiP gate must not float a pause away.
     var userPaused = false
@@ -492,6 +497,7 @@ final class PlayerViewModel {
         case .failed(let message):
             TJFLog("engine FAILED item=\(itemId ?? "nil"): \(message)")
             isPlaying = false
+            isBuffering = false
             if errorMessage == nil {
                 errorMessage = message
             }
@@ -506,9 +512,12 @@ final class PlayerViewModel {
             // Natural end — credits/next-episode UI keep showing, no error.
             TJFLog("engine ENDED item=\(itemId ?? "nil")")
             isPlaying = false
+            isBuffering = false
             finishCurrentItem()
-        case .buffering, .loading, .ready, .playing, .paused, .idle:
-            break
+        case .buffering, .loading:
+            isBuffering = true
+        case .ready, .playing, .paused, .idle:
+            isBuffering = false
         }
     }
 
@@ -949,6 +958,7 @@ final class PlayerViewModel {
 
         errorMessage = nil
         isSeeking = false
+        isBuffering = false
         currentTime = 0
         duration = 0
         playbackRate = 1.0
@@ -959,6 +969,9 @@ final class PlayerViewModel {
         segmentMarkers = []
         segmentsLoaded = false
         segmentsLoadAttempts = 0
+        // Invalidate any in-flight segment fetch for the old item (see
+        // `segmentGeneration`).
+        segmentGeneration += 1
         skipInProgress = false
         activeSegment = nil
         segmentCountdown = nil
@@ -1433,12 +1446,23 @@ final class PlayerViewModel {
 
     // MARK: - Skip Segments
 
+    /// Monotonic guard against the fetch race on episode change: ONLY the
+    /// newest item's response may install markers. The 0.5 s timer is never
+    /// stopped during `switchToEpisode`, so a tick that began fetching the
+    /// OLD item's segments can complete after `resetItemState` cleared
+    /// `segmentsLoaded` — without this guard it would install stale markers
+    /// AND flip the gate to true, permanently blocking the new episode's
+    /// fetch (symptom: the skip-intro button never appears after switching
+    /// episodes). Same pattern as `subtitleGeneration`.
+    private var segmentGeneration = 0
+
     /// Fetches skip markers once per playback session. Network/plugin failures
     /// degrade silently after a couple of attempts — the player works normally.
     private func loadSegmentsIfNeeded() async {
         guard !segmentsLoaded else { return }
         guard reportingConfigured, let serverURL, let token, let userId, let itemId else { return }
         segmentsLoadAttempts += 1
+        let generation = segmentGeneration
         do {
             let markers = try await segmentClient.fetchSegments(
                 serverURL: serverURL,
@@ -1446,9 +1470,19 @@ final class PlayerViewModel {
                 userId: userId,
                 itemId: itemId
             )
+            // A stale tick's response (old episode, fetch already in flight
+            // when the user switched) must not populate the new session.
+            guard generation == segmentGeneration else {
+                TJFLog("segments: dropped stale fetch for \(itemId) (generation \(generation))")
+                return
+            }
             segmentMarkers = markers
             segmentsLoaded = true
         } catch {
+            guard generation == segmentGeneration else {
+                TJFLog("segments: dropped stale error for \(itemId) (generation \(generation))")
+                return
+            }
             TJFLog("segments fetch error attempt=\(segmentsLoadAttempts): \(error)")
             if segmentsLoadAttempts >= 3 {
                 segmentsLoaded = true // give up quietly
