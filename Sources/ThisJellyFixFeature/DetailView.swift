@@ -169,6 +169,20 @@ struct DetailView: View {
                     onPlayPreviousEpisode: { episode in
                         Task { await playEpisode(episode) }
                     },
+                    onPlayEpisode: { episode in
+                        Task { await playEpisode(episode) }
+                    },
+                    seasonEpisodes: episodes,
+                    seasons: seasons,
+                    loadEpisodesForSeason: { season in
+                        (try? await JellyfinLibraryClient().fetchEpisodes(
+                            userId: userId,
+                            serverURL: serverURL,
+                            token: token,
+                            seriesId: item.id,
+                            seasonId: season.id
+                        )) ?? []
+                    },
                     subtitle: playerSubtitle,
                     receivedViaHandoff: startedViaHandoff
                 )
@@ -214,6 +228,20 @@ struct DetailView: View {
                         previousEpisode: previousEpisode,
                         onPlayPreviousEpisode: { episode in
                             Task { await playEpisode(episode) }
+                        },
+                        onPlayEpisode: { episode in
+                            Task { await playEpisode(episode) }
+                        },
+                        seasonEpisodes: episodes,
+                        seasons: seasons,
+                        loadEpisodesForSeason: { season in
+                            (try? await JellyfinLibraryClient().fetchEpisodes(
+                                userId: userId,
+                                serverURL: serverURL,
+                                token: token,
+                                seriesId: item.id,
+                                seasonId: season.id
+                            )) ?? []
                         },
                         subtitle: playerSubtitle,
                         receivedViaHandoff: startedViaHandoff
@@ -948,6 +976,22 @@ struct DetailView: View {
     }
 
     private func playEpisode(_ episode: JellyfinEpisode) async {
+        // The in-player season selector can start an episode from a season
+        // that is not the one on screen: adopt it first, so the episode list,
+        // next/previous wiring and the detail screen all stay coherent.
+        if !episodes.contains(where: { $0.id == episode.id }),
+           let seasonIndex = seasons.firstIndex(where: { $0.indexNumber == episode.parentIndexNumber }) {
+            selectedSeasonIndex = seasonIndex
+            if let fetched = try? await JellyfinLibraryClient().fetchEpisodes(
+                userId: userId,
+                serverURL: serverURL,
+                token: token,
+                seriesId: item.id,
+                seasonId: seasons[seasonIndex].id
+            ) {
+                episodes = fetched
+            }
+        }
         streamTitle = episode.displayTitle
         nextEpisode = nextEpisodeAfter(episode)
         previousEpisode = previousEpisodeBefore(episode)

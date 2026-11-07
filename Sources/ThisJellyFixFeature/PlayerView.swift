@@ -66,6 +66,13 @@ struct PlayerView: View {
     var onPlayEpisode: ((JellyfinEpisode) -> Void)? = nil
     /// All episodes of the current season — used for the episode list panel.
     var seasonEpisodes: [JellyfinEpisode] = []
+    /// Every season of the series. With `loadEpisodesForSeason` this turns the
+    /// in-player episode list into a season switcher (Outline: "poder pasar
+    /// de temporada dentro del reproductor").
+    var seasons: [JellyfinSeason] = []
+    /// Fetches a season's episodes for the in-player panel. nil = only the
+    /// season that is currently playing is listed.
+    var loadEpisodesForSeason: ((JellyfinSeason) async -> [JellyfinEpisode])? = nil
     /// Series name shown under the episode/movie title in the controls.
     var subtitle: String? = nil
     /// true when this playback session started from a received handoff
@@ -95,6 +102,12 @@ struct PlayerView: View {
     /// Episode list panel: shows all episodes of the current season so the
     /// user can switch without leaving the player.
     @State private var showingEpisodeList = false
+    /// Season currently displayed in the in-player episode panel. Kept apart
+    /// from `seasonEpisodes` (the season being PLAYED) so browsing another
+    /// season does not touch next/previous wiring until an episode is tapped.
+    @State private var panelSeasonIndex = 0
+    @State private var panelEpisodes: [JellyfinEpisode] = []
+    @State private var isLoadingPanelSeason = false
     /// Playback settings sheet: quality, speed, audio and subtitles in one place.
     @State private var showingPlaybackSettings = false
 
@@ -159,6 +172,8 @@ struct PlayerView: View {
         onPlayPreviousEpisode: ((JellyfinEpisode) -> Void)? = nil,
         onPlayEpisode: ((JellyfinEpisode) -> Void)? = nil,
         seasonEpisodes: [JellyfinEpisode] = [],
+        seasons: [JellyfinSeason] = [],
+        loadEpisodesForSeason: ((JellyfinSeason) async -> [JellyfinEpisode])? = nil,
         subtitle: String? = nil,
         receivedViaHandoff: Bool = false,
         restoredViewModel: PlayerViewModel? = nil
@@ -183,6 +198,8 @@ struct PlayerView: View {
         self.onPlayPreviousEpisode = onPlayPreviousEpisode
         self.onPlayEpisode = onPlayEpisode
         self.seasonEpisodes = seasonEpisodes
+        self.seasons = seasons
+        self.loadEpisodesForSeason = loadEpisodesForSeason
         self.subtitle = subtitle
         self.receivedViaHandoff = receivedViaHandoff
         #if os(iOS)
@@ -439,50 +456,74 @@ struct PlayerView: View {
         return rate == 1 ? "1×" : String(format: "%.2g×", rate)
     }
 
-    /// Episode list panel: all episodes of the current season, with the
-    /// playing one highlighted. Tapping an episode swaps playback in place.
+    /// Episode list panel: episodes of the season being browsed, with the
+    /// playing one highlighted. A season picker appears when the series has
+    /// more than one (Outline: "poder pasar de temporada dentro del
+    /// reproductor"). Tapping an episode swaps playback in place.
     @ViewBuilder
     private var episodeListView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 16) {
-                ForEach(Array(seasonEpisodes.enumerated()), id: \.element.id) { _, episode in
-                    Button {
-                        showingEpisodeList = false
-                        onPlayEpisode?(episode)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 8) {
-                            if let serverURL, let url = JellyfinArtwork.url(for: episode, serverURL: serverURL, shape: .landscape, targetWidth: 320) {
-                                MareaImageView(
-                                    url: url,
-                                    placeholder: String(episode.name.prefix(1)),
-                                    width: 0,
-                                    height: 0
-                                )
-                                .frame(width: 220, height: 124)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                            } else {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(MareaTheme.Colors.overlayFill.opacity(0.3))
-                                    .frame(width: 220, height: 124)
-                            }
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(episode.name)
-                                    .font(.subheadline.weight(.semibold))
-                                    .lineLimit(2)
-                                    .frame(width: 220, alignment: .leading)
-                                Text(episode.episodeLabel)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
+        VStack(spacing: 0) {
+            if seasons.count > 1, loadEpisodesForSeason != nil {
+                HStack {
+                    Picker("Temporada", selection: $panelSeasonIndex) {
+                        ForEach(Array(seasons.enumerated()), id: \.element.id) { index, season in
+                            Text(season.displayName).tag(index)
                         }
-                        .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .pickerStyle(.menu)
+                    .disabled(isLoadingPanelSeason)
+
+                    if isLoadingPanelSeason {
+                        ProgressView()
+                    }
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+
+                Divider()
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 16) {
+                    ForEach(Array(panelEpisodes.enumerated()), id: \.element.id) { _, episode in
+                        Button {
+                            showingEpisodeList = false
+                            onPlayEpisode?(episode)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 8) {
+                                if let serverURL, let url = JellyfinArtwork.url(for: episode, serverURL: serverURL, shape: .landscape, targetWidth: 320) {
+                                    MareaImageView(
+                                        url: url,
+                                        placeholder: String(episode.name.prefix(1)),
+                                        width: 0,
+                                        height: 0
+                                    )
+                                    .frame(width: 220, height: 124)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                } else {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(MareaTheme.Colors.overlayFill.opacity(0.3))
+                                        .frame(width: 220, height: 124)
+                                }
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(episode.name)
+                                        .font(.subheadline.weight(.semibold))
+                                        .lineLimit(2)
+                                        .frame(width: 220, alignment: .leading)
+                                    Text(episode.episodeLabel)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+            }
         }
         .navigationTitle("Episodios")
         #if os(iOS)
@@ -493,6 +534,42 @@ struct PlayerView: View {
                 Button("Cerrar") { showingEpisodeList = false }
             }
         }
+        .onAppear {
+            panelEpisodes = seasonEpisodes
+            panelSeasonIndex = seasonIndexForCurrentEpisode
+        }
+        .onChange(of: panelSeasonIndex) { _, newIndex in
+            Task { await loadPanelSeason(at: newIndex) }
+        }
+    }
+
+    /// Index in `seasons` that owns the episode being played. Falls back to 0
+    /// (the first season) when the list carries no season number.
+    private var seasonIndexForCurrentEpisode: Int {
+        let playing = seasonEpisodes.first { $0.id == itemId }
+            ?? seasonEpisodes.first
+        guard let number = playing?.parentIndexNumber,
+              let index = seasons.firstIndex(where: { $0.indexNumber == number })
+        else { return 0 }
+        return index
+    }
+
+    /// Season switch inside the panel. The playing item is untouched: this
+    /// only changes what the panel lists until an episode is tapped.
+    private func loadPanelSeason(at index: Int) async {
+        guard seasons.indices.contains(index),
+              let load = loadEpisodesForSeason
+        else { return }
+        // Already showing this season (first appearance or re-selection).
+        if index == seasonIndexForCurrentEpisode, panelEpisodes == seasonEpisodes {
+            return
+        }
+        isLoadingPanelSeason = true
+        defer { isLoadingPanelSeason = false }
+        let fetched = await load(seasons[index])
+        // The user may have switched again while the request was in flight.
+        guard panelSeasonIndex == index else { return }
+        panelEpisodes = fetched
     }
 
     /// Full controls overlay, mounted only while shown.

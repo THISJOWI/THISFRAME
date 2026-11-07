@@ -28,6 +28,9 @@ struct DirectPlayer: View {
     @State private var nextEpisode: JellyfinEpisode?
     @State private var previousEpisode: JellyfinEpisode?
     @State private var seasonEpisodes: [JellyfinEpisode] = []
+    /// Series context for the in-player season selector.
+    @State private var seasons: [JellyfinSeason] = []
+    @State private var seriesId: String?
 
     init(
         item: JellyfinMediaItem,
@@ -76,6 +79,17 @@ struct DirectPlayer: View {
                         Task { await play(episode) }
                     },
                     seasonEpisodes: seasonEpisodes,
+                    seasons: seasons,
+                    loadEpisodesForSeason: { season in
+                        guard let seriesId else { return [] }
+                        return (try? await JellyfinLibraryClient().fetchEpisodes(
+                            userId: userId,
+                            serverURL: serverURL,
+                            token: token,
+                            seriesId: seriesId,
+                            seasonId: season.id
+                        )) ?? []
+                    },
                     subtitle: playerSubtitle
                 )
                 .ignoresSafeArea()
@@ -173,6 +187,22 @@ struct DirectPlayer: View {
         currentTitle = episode.displayTitle
         currentStartPosition = episode.resumePositionSeconds
 
+        // An episode picked from another season (in-player season selector):
+        // adopt that season's list before wiring next/previous.
+        if !seasonEpisodes.contains(where: { $0.id == episode.id }),
+           let seriesId,
+           let seasonNumber = episode.parentIndexNumber,
+           let season = seasons.first(where: { $0.indexNumber == seasonNumber }),
+           let fetched = try? await JellyfinLibraryClient().fetchEpisodes(
+               userId: userId,
+               serverURL: serverURL,
+               token: token,
+               seriesId: seriesId,
+               seasonId: season.id
+           ) {
+            seasonEpisodes = fetched
+        }
+
         if let index = seasonEpisodes.firstIndex(where: { $0.id == episode.id }) {
             nextEpisode = index + 1 < seasonEpisodes.count ? seasonEpisodes[index + 1] : nil
             previousEpisode = index > 0 ? seasonEpisodes[index - 1] : nil
@@ -200,17 +230,19 @@ struct DirectPlayer: View {
         let detail = try? await JellyfinItemDetailClient().fetchItemDetail(
             userId: userId, serverURL: serverURL, token: token, itemId: item.id
         )
-        guard let seriesId = detail?.seriesId else { return }
+        guard let fetchedSeriesId = detail?.seriesId else { return }
+        seriesId = fetchedSeriesId
 
         let client = JellyfinLibraryClient()
-        guard let seasons = try? await client.fetchSeasons(
-            userId: userId, serverURL: serverURL, token: token, seriesId: seriesId
-        ), let season = seasons.first(where: { $0.indexNumber == seasonNumber })
+        guard let fetchedSeasons = try? await client.fetchSeasons(
+            userId: userId, serverURL: serverURL, token: token, seriesId: fetchedSeriesId
+        ), let season = fetchedSeasons.first(where: { $0.indexNumber == seasonNumber })
         else { return }
+        seasons = fetchedSeasons
 
         guard let episodes = try? await client.fetchEpisodes(
             userId: userId, serverURL: serverURL, token: token,
-            seriesId: seriesId, seasonId: season.id
+            seriesId: fetchedSeriesId, seasonId: season.id
         ) else { return }
 
         seasonEpisodes = episodes
