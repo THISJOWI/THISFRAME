@@ -68,6 +68,7 @@ public final class CastController: ObservableObject {
     public var devices: [CastDevice] { manager.devices }
 
     public func startDiscovery() { manager.startDiscovery() }
+    public func restartDiscovery() { manager.restartDiscovery() }
     public func stopDiscovery() { manager.stopDiscovery() }
     public func connect(to device: CastDevice) { manager.connect(to: device) }
     public func acknowledgeFailure() { manager.acknowledgeFailure() }

@@ -14,6 +14,10 @@ struct CastDevicePickerSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var connectingId: String?
+    /// Turns the neutral empty state into a diagnostic hint after the scan
+    /// has had time to find devices (~6 s).
+    @State private var hasScanTimedOut = false
+    @State private var scanTimeoutTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,12 +28,26 @@ struct CastDevicePickerSheet: View {
         .background(MareaTheme.Colors.surface)
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
-        .onAppear { controller.startDiscovery() }
-        .onDisappear {
-            // El escaneo solo hace falta con la hoja abierta (ahorro de red).
-            // Una sesión en curso no se ve afectada: stopDiscovery solo corta
-            // el scanning, no la sesión.
-            controller.stopDiscovery()
+        .onAppear {
+            controller.startDiscovery()
+            hasScanTimedOut = false
+            scanTimeoutTask = makeScanTimeoutTask()
+        }
+        // The scan stays running when the sheet closes (startDiscovery is
+        // idempotent and cheap): stopping here meant every re-open began
+        // from zero — the first seconds showed "Sin dispositivos" even with
+        // devices already on the network, the classic "no lo detecta".
+        // Detection hints live in the empty state (local-network permission).
+        .onDisappear { scanTimeoutTask?.cancel() }
+    }
+
+    /// Flags the empty state as "scan finished with nothing found" so the
+    /// local-network permission hint can be shown instead of a neutral copy.
+    private func makeScanTimeoutTask() -> Task<Void, Never> {
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(6))
+            guard !Task.isCancelled else { return }
+            hasScanTimedOut = true
         }
     }
 
@@ -83,16 +101,34 @@ struct CastDevicePickerSheet: View {
             CastIcon()
                 .stroke(Color.primary.opacity(0.35), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .frame(width: 56, height: 42)
-            Text("Sin dispositivos")
+            Text(hasScanTimedOut ? "No se encontraron dispositivos" : "Buscando dispositivos…")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Text("¿Tu Chromecast está encendido y en la misma red que este iPhone?")
+            // After ~6 s a healthy scan has found the Chromecasts. If it
+            // found none the usual culprit is the local-network permission
+            // (iOS silently denies Bonjour → the SDK sees zero devices).
+            if hasScanTimedOut {
+                Text("""
+                ¿El Chromecast está encendido y en la misma red que este \
+                iPhone? Si ya le diste permiso, revisa \
+                Ajustes → Privacidad → Red local.
+                """)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, MareaTheme.Spacing.lg)
+            } else {
+                Text("¿Tu Chromecast está encendido y en la misma red que este iPhone?")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, MareaTheme.Spacing.lg)
+            }
             Button {
-                controller.startDiscovery()
+                hasScanTimedOut = false
+                scanTimeoutTask?.cancel()
+                controller.restartDiscovery()
+                scanTimeoutTask = makeScanTimeoutTask()
             } label: {
                 Label("Reintentar", systemImage: "arrow.clockwise")
                     .font(.subheadline.weight(.semibold))

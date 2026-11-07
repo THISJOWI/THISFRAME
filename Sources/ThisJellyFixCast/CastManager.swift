@@ -51,7 +51,15 @@ public final class CastManager: ObservableObject {
 
     // MARK: - Discovery
 
-    /// Arranca el escaneo de la red. El SDK 4.5+ no escanea solo.
+    /// Listener installed flag — `add` is not idempotent in GCK, so rapid
+    /// open/dismiss cycles of the picker sheet must not stack duplicates.
+    private var isDiscoveryListenerInstalled = false
+    /// Mirrors the SDK scan state (the ObjC API exposes it only per device
+    /// category, which this app never varies — a plain flag is unambiguous).
+    private var isScanning = false
+
+    /// Arranca el escaneo de la red. Idempotente: llamarlo repetidamente
+    /// re-ordena un pase de descubrimiento sin duplicar listeners.
     /// Requiere `CastSDK.initialize()` previo (si no, no-op).
     public func startDiscovery() {
         guard CastSDK.isInitialized else {
@@ -60,16 +68,46 @@ public final class CastManager: ObservableObject {
         }
         state.discoveryRequested()
         let dm = GCKCastContext.sharedInstance().discoveryManager
-        dm.add(discoveryListener)
+        if !isDiscoveryListenerInstalled {
+            dm.add(discoveryListener)
+            isDiscoveryListenerInstalled = true
+        }
+        if !isScanning {
+            dm.startDiscovery()
+            isScanning = true
+            TJFLog("cast: discovery started")
+        } else {
+            // Scan already running — refresh the published list so a device
+            // that appeared while no listener callback fired still shows up.
+            reloadDevices()
+            TJFLog("cast: discovery already active devices=\(devices.count)")
+        }
+    }
+
+    /// Manual "Reintentar": restarts the scan from scratch. The stale list is
+    /// cleared first so a device that left the network is not offered, and a
+    /// fresh `stop`/`start` cycle makes the SDK run a new mDNS pass instead of
+    /// passively waiting on the already-running one.
+    public func restartDiscovery() {
+        guard CastSDK.isInitialized else { return }
+        devices = []
+        let dm = GCKCastContext.sharedInstance().discoveryManager
+        dm.stopDiscovery()
         dm.startDiscovery()
-        TJFLog("cast: discovery started")
+        isScanning = true
+        state.discoveryRequested()
+        TJFLog("cast: discovery restarted")
     }
 
     public func stopDiscovery() {
         guard CastSDK.isInitialized else { return }
         let dm = GCKCastContext.sharedInstance().discoveryManager
         dm.stopDiscovery()
-        dm.remove(discoveryListener)
+        isScanning = false
+        if isDiscoveryListenerInstalled {
+            dm.remove(discoveryListener)
+            isDiscoveryListenerInstalled = false
+        }
         TJFLog("cast: discovery stopped devices=\(devices.count)")
     }
 
