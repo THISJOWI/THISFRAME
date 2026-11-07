@@ -73,7 +73,12 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
 
     public func fetchViews(userId: String, serverURL: URL, token: String) async throws -> [LibraryView] {
         let url = serverURL.appendingPathComponent("Users/\(userId)/Views")
-        let data = try await fetchData(from: url, token: token)
+        let data = try await fetchData(
+            from: url, token: token,
+            // A library deleted/added on the server must be visible on the
+            // very next load — a cached body would resurrect it.
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
         let response = try JSONDecoder().decode(JellyfinViewsResponse.self, from: data)
         return response.items
     }
@@ -130,7 +135,13 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
 
         components.queryItems = queryItems
 
-        let data = try await fetchData(from: components.url!, token: token)
+        // Never serve a listing from the URL cache: this is the request behind
+        // every library row, and a cached body kept deleted series/movies on
+        // screen even after a refresh ("al eliminar una serie no desaparece").
+        let data = try await fetchData(
+            from: components.url!, token: token,
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
         let response = try JSONDecoder().decode(JellyfinItemsResponse.self, from: data)
         return response.items
     }
@@ -147,7 +158,11 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
             URLQueryItem(name: "Fields", value: "DateCreated"),
         ]
 
-        let data = try await fetchData(from: components.url!, token: token)
+        // A season added/removed server-side must show up on the next open.
+        let data = try await fetchData(
+            from: components.url!, token: token,
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
         let response = try JSONDecoder().decode(JellyfinSeasonsResponse.self, from: data)
         return response.items
     }
@@ -188,7 +203,11 @@ public struct JellyfinLibraryClient: JellyfinLibraryProviding {
             queryItems.append(URLQueryItem(name: "IncludeItemTypes", value: includeTypes))
         }
         components.queryItems = queryItems
-        let data = try await fetchData(from: components.url!, token: token)
+        // Search results must reflect the current library, not a cached one.
+        let data = try await fetchData(
+            from: components.url!, token: token,
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
         let response = try JSONDecoder().decode(JellyfinItemsResponse.self, from: data)
         return response.items
     }

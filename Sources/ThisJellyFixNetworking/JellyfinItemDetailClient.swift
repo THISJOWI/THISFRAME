@@ -15,7 +15,9 @@ public struct JellyfinItemDetailClient: JellyfinItemDetailProviding {
     public func fetchItemDetail(userId: String, serverURL: URL, token: String, itemId: String) async throws -> JellyfinItemDetail {
         let url = serverURL.appendingPathComponent("Users/\(userId)/Items/\(itemId)")
 
-        var request = URLRequest(url: url)
+        // Item detail changes server-side (progress, deletion, new episodes):
+        // a cached body would keep a deleted item openable.
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
         request.timeoutInterval = 15
         request.setValue(
             "MediaBrowser Client=\"thisjellyfix\", Device=\"\(deviceOS)\", DeviceId=\"\(DeviceIdentifier().current())\", Version=\"0.1\", Token=\"\(token)\"",
