@@ -107,15 +107,13 @@ struct ListsView: View {
         }
         .task { await load() }
         .refreshable { await load() }
-        // Single destination for this host stack. Playlists and collections
-        // open ListDetailView; any media item inside them opens DetailView.
-        // (Declaring a second `navigationDestination(for: JellyfinMediaItem.self)`
-        // in ListDetailView left two registrations for one type in the same
-        // stack — ambiguous at push time and a crash source, so the dispatch
-        // happens HERE, by item type.)
-        .navigationDestination(for: JellyfinMediaItem.self) { item in
-            destinationView(for: item)
-        }
+        // No `navigationDestination` here on purpose. This view is pushed into
+        // stacks it does not own (profile sheet, macOS/iPad sidebar), and a
+        // value-based link only resolves when its destination is registered in
+        // the SAME stack: the push silently failed and popped straight back
+        // ("abre pero retrocede"). Destination-based links push reliably in
+        // any host stack, with no type registration to collide with the
+        // parent's own JellyfinMediaItem destination.
     }
 
     /// Type-based dispatch for the stack's single media destination.
@@ -150,7 +148,9 @@ struct ListsView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(alignment: .top, spacing: 14) {
                     ForEach(Array(items.enumerated()), id: \.element.id) { _, item in
-                        NavigationLink(value: item) {
+                        NavigationLink {
+                            destinationView(for: item)
+                        } label: {
                             ListItemCard(
                                 item: item,
                                 kind: kind,

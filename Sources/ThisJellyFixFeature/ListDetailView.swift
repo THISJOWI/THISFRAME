@@ -102,7 +102,19 @@ struct ListDetailView: View {
                             ForEach(items.indices, id: \.self) { index in
                                 let item = items[index]
                                 VStack(spacing: 6) {
-                                    NavigationLink(value: item) {
+                                    // Destination-based: this view is pushed
+                                    // into a stack it does not own, so a
+                                    // value link could not resolve its
+                                    // destination and popped right back.
+                                    NavigationLink {
+                                        DetailView(
+                                            item: item,
+                                            serverURL: serverURL,
+                                            token: token,
+                                            userId: userId,
+                                            onPlayerDismiss: {}
+                                        )
+                                    } label: {
                                         MediaCardView(
                                             item: item,
                                             imageURL: item.artworkURL(serverURL: serverURL),
@@ -195,10 +207,10 @@ struct ListDetailView: View {
         }
         .task { await load() }
         .refreshable { await load() }
-        // NOTE: no `navigationDestination` here — the host stack (declared in
-        // ListsView) registers the single JellyfinMediaItem destination and
-        // dispatches playsets to DetailView by item type. Declaring a second
-        // registration for the same type on the same stack is ambiguous.
+        // NOTE: no `navigationDestination` here either — the grid uses
+        // destination-based links, which push reliably into whichever stack
+        // hosts this view (profile sheet, sidebar) without registering a
+        // JellyfinMediaItem destination that could collide with the host's.
     }
 
     @ViewBuilder
