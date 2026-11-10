@@ -18,6 +18,13 @@ struct CastDevicePickerSheet: View {
     /// has had time to find devices (~6 s).
     @State private var hasScanTimedOut = false
     @State private var scanTimeoutTask: Task<Void, Never>?
+    /// Polls the SDK's device list while the sheet is open.
+    ///
+    /// The SDK only notifies when the device SET changes, so a Chromecast that
+    /// was already on the network when the sheet opened never produced a
+    /// callback and the picker kept saying "Sin dispositivos". Re-reading the
+    /// list every couple of seconds makes what is on screen match reality.
+    @State private var pollTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,13 +39,28 @@ struct CastDevicePickerSheet: View {
             controller.startDiscovery()
             hasScanTimedOut = false
             scanTimeoutTask = makeScanTimeoutTask()
+            pollTask = makePollTask()
         }
         // The scan stays running when the sheet closes (startDiscovery is
         // idempotent and cheap): stopping here meant every re-open began
         // from zero — the first seconds showed "Sin dispositivos" even with
         // devices already on the network, the classic "no lo detecta".
         // Detection hints live in the empty state (local-network permission).
-        .onDisappear { scanTimeoutTask?.cancel() }
+        .onDisappear {
+            scanTimeoutTask?.cancel()
+            pollTask?.cancel()
+        }
+    }
+
+    /// Keeps the visible list in sync with the SDK's device list.
+    private func makePollTask() -> Task<Void, Never> {
+        Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { return }
+                controller.refreshDevices()
+            }
+        }
     }
 
     /// Flags the empty state as "scan finished with nothing found" so the
@@ -129,6 +151,9 @@ struct CastDevicePickerSheet: View {
                 scanTimeoutTask?.cancel()
                 controller.restartDiscovery()
                 scanTimeoutTask = makeScanTimeoutTask()
+                // The list was just wiped by the restart: re-read it now so a
+                // device that is still on the network comes back immediately.
+                controller.refreshDevices()
             } label: {
                 Label("Reintentar", systemImage: "arrow.clockwise")
                     .font(.subheadline.weight(.semibold))

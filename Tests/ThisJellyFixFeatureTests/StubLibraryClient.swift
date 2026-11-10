@@ -14,6 +14,9 @@ final class StubLibraryClient: JellyfinLibraryProviding, @unchecked Sendable {
     var resumeItems: [JellyfinMediaItem] = []
     var latestItems: [JellyfinMediaItem] = []
     var fetchItemsError: Error?
+    /// Fails only the requests whose `includeTypes` matches a key exactly.
+    /// Lets a test simulate ONE flaky shelf while the others succeed.
+    var fetchItemsErrorByIncludeTypes: [String: Error] = [:]
 
     /// Guards the mutable state below.
     private let lock = NSLock()
@@ -39,6 +42,9 @@ final class StubLibraryClient: JellyfinLibraryProviding, @unchecked Sendable {
         _recordedStartIndices.append(startIndex)
         lock.unlock()
         if let fetchItemsError { throw fetchItemsError }
+        if let includeTypes, let error = fetchItemsErrorByIncludeTypes[includeTypes] {
+            throw error
+        }
         return latestItems
     }
 

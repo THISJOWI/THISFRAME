@@ -26,6 +26,10 @@ final class PlayerViewModel {
     /// flicker back and forth) exactly while the video was "thinking".
     /// Starts `true`: nothing has been requested until playback begins.
     var userPaused = true
+    /// Latch that keeps the transport glyph on the user's INTENT while a
+    /// Cast receiver confirms the command (the receiver reports its state
+    /// asynchronously, so a lagging "playing" used to flip the glyph back).
+    private var transportIntent = TransportIntentLatch()
     /// Whether an automatic PiP handoff (view exit / background) may run.
     var canAutoHandoffToPiP: Bool {
         // Emisión Cast: la salida activa es el receptor — flotar el video
@@ -268,6 +272,9 @@ final class PlayerViewModel {
     /// double completion (engine notification + timer fallback, or a queued
     /// notification arriving after an episode swap).
     private var completionReported = false
+    /// True once the end of the item started the next episode. Prevents a
+    /// duplicate end notification from starting it twice.
+    private var advanceReported = false
 
     // MARK: - Handoff takeover (playback moved to another device)
     /// Name of the device that took playback of the current item away from
@@ -363,10 +370,13 @@ final class PlayerViewModel {
             Task { await self?.togglePlayPause() }
         }
         np.onSkipBackward = { [weak self] in
-            Task { await self?.seekRelative(-15) }
+            // The configured distance, not a hardcoded 15 s: the lock screen
+            // and the headphone remote are the most used skip controls, so
+            // they must honour the same setting as the on-screen buttons.
+            Task { await self?.seekRelative(-Double(PlaybackJumpSettings.current().backwardSeconds)) }
         }
         np.onSkipForward = { [weak self] in
-            Task { await self?.seekRelative(15) }
+            Task { await self?.seekRelative(Double(PlaybackJumpSettings.current().forwardSeconds)) }
         }
         np.onSeek = { [weak self] position in
             Task { await self?.seek(to: position) }
@@ -397,7 +407,10 @@ final class PlayerViewModel {
             // Mirror the receiver into the transport intent: while emitting,
             // the LOCAL engine is paused, so `userPaused` cannot stay true or
             // the icon would offer PLAY over a playing cast.
-            userPaused = !playing
+            //
+            // The latch keeps a lagging receiver from overriding what the
+            // user just asked for (see `TransportIntentLatch`).
+            userPaused = transportIntent.apply(receiverPlaying: playing)
         }
         NowPlayingController.shared.update(
             time: currentTime,
@@ -463,6 +476,7 @@ final class PlayerViewModel {
             // The receiver is playing: transport must offer PAUSE even though
             // the local engine stays paused.
             userPaused = false
+            transportIntent.setLocalIntent(paused: false)
         } catch {
             castMessage = error.localizedDescription
             TJFLog("cast: emisión fallida \(error.localizedDescription)")
@@ -486,9 +500,19 @@ final class PlayerViewModel {
         engine.play()
         isPlaying = true
         userPaused = false
+        transportIntent.setLocalIntent(paused: false)
         stopReported = false
     }
     #endif
+
+    /// Re-publish the skip distances to the lock screen / headphone remote.
+    ///
+    /// Called when the user changes the jump distance in the player: the
+    /// system's skip buttons kept offering the old interval until the next
+    /// session started.
+    func refreshTransportPreferences() {
+        NowPlayingController.shared.refreshSkipIntervals()
+    }
 
     /// Lock screen / Control Center: publish what's playing (title + poster).
     /// Called once when the player mounts; the timer keeps time/rate fresh.
@@ -530,6 +554,7 @@ final class PlayerViewModel {
             isPlaying = false
             isBuffering = false
             finishCurrentItem()
+            advanceToNextEpisodeIfNeeded()
         case .buffering, .loading:
             isBuffering = true
         case .ready, .playing, .paused, .idle:
@@ -564,6 +589,25 @@ final class PlayerViewModel {
         }
 
         onPlaybackCompleted?()
+    }
+
+    /// Start the next episode when the current one ends.
+    ///
+    /// Outline: "al final del episodio eliminar lo de saltar ending y pasar
+    /// directamente de episodio". The auto-advance used to depend on the
+    /// server exposing a "credits" segment marker, so a server without the
+    /// MediaSegments plugin (or chapters the classifier does not call credits)
+    /// simply stopped at the end of the episode. The end of the media is the
+    /// authoritative signal: if there is a next episode, it plays.
+    ///
+    /// Guarded by `advanceReported` so a duplicate end notification cannot
+    /// start the episode twice.
+    private func advanceToNextEpisodeIfNeeded() {
+        guard hasNextEpisode, !advanceReported else { return }
+        guard let next = onPlayNextEpisode else { return }
+        advanceReported = true
+        TJFLog("engine ENDED → advancing to the next episode")
+        next()
     }
 
     /// Fallback for a playhead that sits exactly on the end without an end
@@ -721,6 +765,9 @@ final class PlayerViewModel {
                 isPlaying = false
                 userPaused = true
             }
+            // The latch records the intent so a lagging receiver status
+            // cannot flip the glyph back before it applies the command.
+            transportIntent.setLocalIntent(paused: userPaused)
             return
         }
         #endif
@@ -1010,6 +1057,7 @@ final class PlayerViewModel {
         engineStopped = false
         stopReported = false
         completionReported = false
+        advanceReported = false
         pendingResumePosition = nil
         lastSeekAt = nil
     }

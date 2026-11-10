@@ -23,8 +23,11 @@ public struct ThisFrameRootView: View {
     #if os(iOS) || os(tvOS)
     @State private var selectedTab: MareaTab = .home
     #endif
-    #if os(iOS)
+    /// Foreground transitions drive the library reload on EVERY platform:
+    /// macOS/tvOS/visionOS had the same stale-content problem and only
+    /// healed with a manual pull-to-refresh.
     @Environment(\.scenePhase) private var scenePhase
+    #if os(iOS)
     /// Floating PiP whose fullscreen player was already dismissed: the root
     /// view is the only owner that survives the player, so it re-presents it
     /// when the system asks for the UI back (4.5 — the old restore closure
@@ -145,6 +148,19 @@ public struct ThisFrameRootView: View {
             }
         }
         .preferredColorScheme(preferredColorScheme)
+        .onChange(of: scenePhase) { _, phase in
+            // Coming back from another app/client: Home is still mounted, so
+            // NO onAppear fires, and progress recorded elsewhere (web, TV,
+            // another phone) never reached "Estás viendo".
+            // Full reload, not just the resume row: content deleted on the
+            // server while the app was suspended must disappear on return —
+            // a resume-only refresh kept stale cards forever.
+            //
+            // NOT iOS-only: macOS/tvOS/visionOS have the same problem, and
+            // they only healed with a manual pull-to-refresh.
+            guard phase == .active, let lib = libraryModel else { return }
+            Task { await lib.load() }
+        }
         #if os(iOS)
         // The system asks for the fullscreen UI back when the user taps the
         // floating window and no player is alive to claim the request.
@@ -157,16 +173,6 @@ public struct ThisFrameRootView: View {
             if tab == .home, let lib = libraryModel {
                 Task { await lib.refreshResume() }
             }
-        }
-        .onChange(of: scenePhase) { _, phase in
-            // Coming back from another app/client: Home is still mounted, so
-            // NO onAppear fires, and progress recorded elsewhere (web, TV,
-            // another phone) never reached "Estás viendo".
-            // Full reload, not just the resume row: content deleted on the
-            // server while the app was suspended must disappear on return —
-            // a resume-only refresh kept stale cards forever.
-            guard phase == .active, let lib = libraryModel else { return }
-            Task { await lib.load() }
         }
         .onAppear {
             configureAudioSession()

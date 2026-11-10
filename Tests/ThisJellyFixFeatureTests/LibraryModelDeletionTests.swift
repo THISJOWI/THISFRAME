@@ -69,4 +69,29 @@ final class LibraryModelDeletionTests: XCTestCase {
             "a refresh where every request failed must not blank the library"
         )
     }
+
+    /// A refresh swaps the shelves in one shot. A shelf whose request FAILED
+    /// must keep the content it had: the swap used to drop it, so one flaky
+    /// request made a whole section of the library disappear from Home.
+    func testFailedRowKeepsItsShelfOnRefresh() async {
+        let stub = StubLibraryClient()
+        stub.views = [LibraryView(id: "tv", name: "Series", collectionType: "tvshows")]
+        stub.latestItems = [series("s1", "Alpha")]
+        let model = LibraryModel(
+            libraryClient: stub, serverURL: serverURL, userId: "u1", token: "tok"
+        )
+
+        await model.load()
+        XCTAssertEqual(model.rows.first { $0.title == "Series" }?.items.map(\.id), ["s1"])
+
+        // Only the Series shelf fails; everything else answers.
+        stub.fetchItemsErrorByIncludeTypes["Series"] = URLError(.timedOut)
+        await model.load()
+
+        XCTAssertEqual(
+            model.rows.first { $0.title == "Series" }?.items.map(\.id),
+            ["s1"],
+            "a shelf whose request failed must keep its previous content"
+        )
+    }
 }

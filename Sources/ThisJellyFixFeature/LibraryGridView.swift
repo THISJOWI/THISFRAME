@@ -26,6 +26,11 @@ struct LibraryGridView: View {
     @State private var hasMore = true
     @State private var pageError: String?
 
+    /// The grid keeps its own `@State items` — Home's foreground reload does
+    /// NOT reach it. Without this the grid kept showing a series deleted on
+    /// the server until the user pulled to refresh by hand.
+    @Environment(\.scenePhase) private var scenePhase
+
     private let pageSize = 30
 
     init(
@@ -73,7 +78,21 @@ struct LibraryGridView: View {
                 } else {
                     LazyVGrid(columns: columns, spacing: MareaTheme.Spacing.md) {
                         ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                            NavigationLink(value: item) {
+                            // DESTINATION-based link: this grid is pushed into
+                            // Home's stack, which already registers a
+                            // `JellyfinMediaItem` destination. A value-based
+                            // link needs the type registered in the SAME
+                            // stack — and a second registration for the same
+                            // type is ambiguous, so the push silently failed
+                            // and popped straight back ("abre pero retrocede").
+                            NavigationLink {
+                                DetailView(
+                                    item: item,
+                                    serverURL: serverURL,
+                                    token: token,
+                                    userId: userId
+                                )
+                            } label: {
                                 MediaCardView(
                                     item: item,
                                     imageURL: model.imageURL(for: item),
@@ -125,12 +144,20 @@ struct LibraryGridView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)
         #endif
-        .navigationDestination(for: JellyfinMediaItem.self) { item in
-            DetailView(item: item, serverURL: serverURL, token: token, userId: userId)
-        }
+        // NOTE: no `navigationDestination` here — the host stack (Home)
+        // registers the single `JellyfinMediaItem` destination. Declaring a
+        // second registration for the same type on the same stack is
+        // ambiguous: the push does not resolve and the view pops back.
         .task {
             guard items.isEmpty else { return }
             await reloadFirstPage()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Coming back from the background: the server may have changed
+            // (a series deleted from another client). Re-read every loaded
+            // page so the grid stops showing items that no longer exist.
+            guard phase == .active, !items.isEmpty else { return }
+            Task { await reloadAllLoadedPages() }
         }
     }
 

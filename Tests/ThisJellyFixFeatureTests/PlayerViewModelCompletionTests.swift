@@ -142,6 +142,60 @@ final class PlayerViewModelCompletionTests: XCTestCase {
         XCTAssertTrue(reporter.stops.isEmpty, "a scrub to the end is not a played item")
     }
 
+    // MARK: - Auto-advance to the next episode
+
+    /// Outline: "Reproductor: al final del episodio eliminar lo de saltar
+    /// ending y pasar directamente de episodio".
+    ///
+    /// The auto-advance used to depend on the server exposing a "credits"
+    /// segment marker. Without that plugin (or with chapters the classifier
+    /// does not call credits) the episode simply ended and playback stopped —
+    /// the next episode never started.
+    func testEndOfEpisodeAdvancesToTheNextOne() async {
+        let (vm, _) = makeVM(duration: 2400, currentTime: 2399)
+        vm.hasNextEpisode = true
+        var advances = 0
+        vm.onPlayNextEpisode = { advances += 1 }
+
+        vm.handleEngineState(.ended(itemID: "ep-1"))
+
+        XCTAssertEqual(advances, 1, "the next episode must start on its own")
+    }
+
+    func testEndOfTheLastEpisodeDoesNotAdvance() async {
+        let (vm, _) = makeVM(duration: 2400, currentTime: 2399)
+        vm.hasNextEpisode = false
+        var advances = 0
+        vm.onPlayNextEpisode = { advances += 1 }
+
+        vm.handleEngineState(.ended(itemID: "ep-1"))
+
+        XCTAssertEqual(advances, 0, "the end of the chain must not advance")
+    }
+
+    func testEndOfEpisodeAdvancesOnlyOnce() async {
+        let (vm, _) = makeVM(duration: 2400, currentTime: 2399)
+        vm.hasNextEpisode = true
+        var advances = 0
+        vm.onPlayNextEpisode = { advances += 1 }
+
+        vm.handleEngineState(.ended(itemID: "ep-1"))
+        vm.handleEngineState(.ended(itemID: "ep-1"))
+
+        XCTAssertEqual(advances, 1, "duplicate end events must not double-advance")
+    }
+
+    func testEndNotificationFromAStaleItemDoesNotAdvance() async {
+        let (vm, _) = makeVM(duration: 2400, currentTime: 30)
+        vm.hasNextEpisode = true
+        var advances = 0
+        vm.onPlayNextEpisode = { advances += 1 }
+
+        vm.handleEngineState(.ended(itemID: "ep-previous"))
+
+        XCTAssertEqual(advances, 0, "a stale end event must not advance")
+    }
+
     // MARK: - Report ordering
 
     func testStopIsSerialisedAfterAnInFlightProgressReport() async {

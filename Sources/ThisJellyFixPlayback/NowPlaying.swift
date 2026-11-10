@@ -1,5 +1,6 @@
 import Foundation
 import MediaPlayer
+import ThisJellyFixCore
 
 #if canImport(UIKit)
 import UIKit
@@ -125,13 +126,16 @@ public final class NowPlayingController: @unchecked Sendable {
             return .success
         }))
 
-        commands.skipBackwardCommand.preferredIntervals = [15]
+        refreshSkipIntervals()
         commandTokens.append((commands.skipBackwardCommand, commands.skipBackwardCommand.addTarget { [weak self] _ in
             Task { @MainActor in self?.onSkipBackward?() }
             return .success
         }))
 
-        commands.skipForwardCommand.preferredIntervals = [15]
+        commandTokens.append((commands.skipForwardCommand, commands.skipForwardCommand.addTarget { [weak self] _ in
+            Task { @MainActor in self?.onSkipForward?() }
+            return .success
+        }))
         commandTokens.append((commands.skipForwardCommand, commands.skipForwardCommand.addTarget { [weak self] _ in
             Task { @MainActor in self?.onSkipForward?() }
             return .success
@@ -152,5 +156,21 @@ public final class NowPlayingController: @unchecked Sendable {
             entry.command.removeTarget(entry.token)
         }
         commandTokens.removeAll()
+    }
+
+    /// Publish the configured skip distances to the system.
+    ///
+    /// The lock screen and the headphone remote offer the skip buttons with
+    /// these intervals: hardcoded to 15 s they ignored the distance the user
+    /// picked in the player, so the setting did nothing on the very control
+    /// most people use to skip.
+    public func refreshSkipIntervals(defaults: UserDefaults = .standard) {
+        let settings = PlaybackJumpSettings.current(defaults)
+        commands.skipBackwardCommand.preferredIntervals = [
+            NSNumber(value: settings.backwardSeconds),
+        ]
+        commands.skipForwardCommand.preferredIntervals = [
+            NSNumber(value: settings.forwardSeconds),
+        ]
     }
 }

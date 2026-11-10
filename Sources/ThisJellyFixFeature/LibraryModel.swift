@@ -277,6 +277,7 @@ final class LibraryModel {
             publish(ContentRow(title: "Estás viendo", items: merged))
         } catch {
             noteFetchFailure(error, context: "Estás viendo row", surfaceMessage: false)
+            keepExistingRow("Estás viendo")
         }
     }
 
@@ -355,7 +356,23 @@ final class LibraryModel {
             publish(ContentRow(title: title, items: items))
         } catch {
             noteFetchFailure(error, context: "\(title) row", surfaceMessage: false)
+            keepExistingRow(title)
         }
+    }
+
+    /// A row whose fetch FAILED must keep the content it already had.
+    ///
+    /// During a refresh the rows are buffered and swapped in one shot. A row
+    /// that failed never reaches `publish`, so it was missing from the buffer
+    /// and the swap REMOVED that shelf from Home — one flaky request made a
+    /// whole section of the library disappear. The previous content is kept
+    /// instead: it is stale for a moment, but nothing the user was looking at
+    /// vanishes under their finger.
+    private func keepExistingRow(_ title: String) {
+        guard let existing = rows.first(where: { $0.title == title }),
+              !existing.items.isEmpty
+        else { return }
+        publish(existing)
     }
 
     private func publish(_ row: ContentRow) {

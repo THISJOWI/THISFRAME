@@ -93,10 +93,32 @@ public final class CastManager: ObservableObject {
         devices = []
         let dm = GCKCastContext.sharedInstance().discoveryManager
         dm.stopDiscovery()
+        // The listener may have been removed by a previous `stopDiscovery()`:
+        // without it the SDK would scan but never notify, and the picker would
+        // stay empty forever — the exact "no lo detecta" symptom.
+        if !isDiscoveryListenerInstalled {
+            dm.add(discoveryListener)
+            isDiscoveryListenerInstalled = true
+        }
         dm.startDiscovery()
         isScanning = true
         state.discoveryRequested()
-        TJFLog("cast: discovery restarted")
+        // Publish whatever the SDK already knows about: a device that was
+        // discovered before the retry is valid RIGHT NOW, so the list must not
+        // stay empty waiting for a callback that may never fire.
+        reloadDevices()
+        TJFLog("cast: discovery restarted devices=\(devices.count)")
+    }
+
+    /// Re-read the SDK's device list without touching the scan.
+    ///
+    /// The SDK only calls the listener when the device SET changes. A device
+    /// that was already on the network when the sheet opened produces no
+    /// callback, so the picker showed "Sin dispositivos" until it was closed
+    /// and reopened. Polling this method is what makes the list truthful.
+    public func refreshDevices() {
+        guard CastSDK.isInitialized else { return }
+        reloadDevices()
     }
 
     public func stopDiscovery() {
@@ -115,8 +137,13 @@ public final class CastManager: ObservableObject {
         guard CastSDK.isInitialized else { return }
         let dm = GCKCastContext.sharedInstance().discoveryManager
         var list: [CastDevice] = []
+        var seen = Set<String>()
         for index in 0..<dm.deviceCount {
             let device = dm.device(at: index)
+            // The SDK can report the same receiver twice (it appears once per
+            // discovery category). A duplicate id breaks the ForEach identity
+            // in the picker, so keep the first sighting only.
+            guard seen.insert(device.deviceID).inserted else { continue }
             list.append(
                 CastDevice(
                     id: device.deviceID,

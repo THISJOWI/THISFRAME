@@ -132,6 +132,12 @@ struct PlayerView: View {
         PlaybackJumpSettings.validated(jumpForwardRaw, fallback: PlaybackJumpSettings.defaultForward)
     }
 
+    /// The system skip buttons (lock screen, headphone remote) must offer the
+    /// same distance the user just picked.
+    private func syncRemoteSkipIntervals() {
+        viewModel.refreshTransportPreferences()
+    }
+
     private var subtitleFontSize: CGFloat {
         let base: CGFloat = 17
         let multiplier = CGFloat(
@@ -706,6 +712,19 @@ struct PlayerView: View {
                 }
             }
 
+            // Buffering indicator — the video "thinks" while AVPlayer waits on
+            // the network. Without a signal the screen looked frozen: the
+            // glyph correctly stays on PAUSE (playback intent), but nothing
+            // told the user the stream was still arriving.
+            .overlay {
+                if viewModel.isBuffering && !viewModel.userPaused {
+                    ProgressView()
+                        .controlSize(.large)
+                        .tint(.white)
+                        .allowsHitTesting(false)
+                }
+            }
+
             // AirPlay status: active (green transmitting), connecting
             // (transport blocked) or last failure (tappable to dismiss).
             .overlay(alignment: .top) {
@@ -961,6 +980,8 @@ struct PlayerView: View {
             // The credits list can resolve AFTER mount — keep the overlay wired.
             wireNextEpisode()
         }
+        .onChange(of: jumpBackwardRaw) { _, _ in syncRemoteSkipIntervals() }
+        .onChange(of: jumpForwardRaw) { _, _ in syncRemoteSkipIntervals() }
         .onDisappear {
             #if os(iOS)
             // Restore auto-rotation when leaving player
@@ -1415,6 +1436,11 @@ private struct ControlsOverlay: View {
         PlaybackJumpSettings.validated(jumpForwardRaw, fallback: PlaybackJumpSettings.defaultForward)
     }
 
+    /// Maximum width of the seek bar + time labels. The bar is centred inside
+    /// this cap so it stays visibly shorter than the controls row above it
+    /// (Outline: "Barra de duración: acortarla").
+    private static let durationBarMaxWidth: CGFloat = 420
+
     var body: some View {
         VStack(spacing: 0) {
             topBar
@@ -1665,6 +1691,11 @@ private struct ControlsOverlay: View {
             // acortarla"): the full-width track dominated the bottom of the
             // screen, so the bar and its time labels keep a comfortable inset
             // while the row above still uses the full width.
+            //
+            // A plain inset was not enough: the track still spanned almost
+            // the whole screen. The bar now has its OWN width cap and is
+            // centred, so it reads as a compact scrubber instead of a
+            // full-bleed divider.
             VStack(spacing: 6) {
                 SeekBar(
                     currentTime: viewModel.currentTime,
@@ -1683,6 +1714,8 @@ private struct ControlsOverlay: View {
                 .foregroundStyle(.white)
             }
             .padding(.horizontal, 28)
+            .frame(maxWidth: Self.durationBarMaxWidth)
+            .frame(maxWidth: .infinity)
 
             if let endsAt {
                 Text("Termina a las \(endsAt)")

@@ -56,6 +56,14 @@ public final class CastController: ObservableObject {
         manager.objectWillChange.sink { [weak self] _ in
             Task { @MainActor [weak self] in self?.syncFromManager() }
         }.store(in: &cancellables)
+        // The device list is published by the manager: mirror it explicitly so
+        // the picker sheet sees every change (the old code read it straight
+        // from the manager and the sheet could render a stale list).
+        manager.$devices
+            .sink { [weak self] devices in
+                Task { @MainActor [weak self] in self?.devices = devices }
+            }
+            .store(in: &cancellables)
     }
 
     private var cancellables = Set<AnyCancellable>()
@@ -65,10 +73,20 @@ public final class CastController: ObservableObject {
     public var isConnected: Bool { manager.state.isConnected }
     public var isConnecting: Bool { manager.state.isConnecting }
     public var sessionState: CastSessionState { manager.state }
-    public var devices: [CastDevice] { manager.devices }
+
+    /// Devices found on the network.
+    ///
+    /// Published HERE (not read through the manager) because the picker sheet
+    /// observes this controller: reading `manager.devices` directly gave the
+    /// sheet a stale list — the device list only reached the UI as a side
+    /// effect of the media state being re-assigned.
+    @Published public private(set) var devices: [CastDevice] = []
 
     public func startDiscovery() { manager.startDiscovery() }
     public func restartDiscovery() { manager.restartDiscovery() }
+    /// Re-read the SDK's device list (a device can be on the network without
+    /// the SDK ever firing a change callback).
+    public func refreshDevices() { manager.refreshDevices() }
     public func stopDiscovery() { manager.stopDiscovery() }
     public func connect(to device: CastDevice) { manager.connect(to: device) }
     public func acknowledgeFailure() { manager.acknowledgeFailure() }
