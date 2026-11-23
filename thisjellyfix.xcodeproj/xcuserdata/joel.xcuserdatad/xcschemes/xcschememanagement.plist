@@ -4,105 +4,130 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>Core-iOS.xcscheme_^#shared#^_</key>
+		<key>Cast-iOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
-		<key>Core-macOS.xcscheme_^#shared#^_</key>
+		<key>Core-iOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
-		<key>Core-tvOS.xcscheme_^#shared#^_</key>
+		<key>Core-macOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
-		<key>Core-visionOS.xcscheme_^#shared#^_</key>
+		<key>Core-tvOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>3</integer>
 		</dict>
-		<key>Feature-iOS.xcscheme_^#shared#^_</key>
+		<key>Core-visionOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>4</integer>
 		</dict>
-		<key>Feature-macOS.xcscheme_^#shared#^_</key>
+		<key>Discovery-iOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>5</integer>
 		</dict>
-		<key>Feature-tvOS.xcscheme_^#shared#^_</key>
+		<key>Discovery-macOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>6</integer>
 		</dict>
-		<key>Feature-visionOS.xcscheme_^#shared#^_</key>
+		<key>Discovery-tvOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>7</integer>
 		</dict>
-		<key>Networking-iOS.xcscheme_^#shared#^_</key>
+		<key>Discovery-visionOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>8</integer>
 		</dict>
-		<key>Networking-macOS.xcscheme_^#shared#^_</key>
+		<key>Feature-iOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>9</integer>
 		</dict>
-		<key>Networking-tvOS.xcscheme_^#shared#^_</key>
+		<key>Feature-macOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>10</integer>
 		</dict>
-		<key>Networking-visionOS.xcscheme_^#shared#^_</key>
+		<key>Feature-tvOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>11</integer>
 		</dict>
-		<key>Playback-iOS.xcscheme_^#shared#^_</key>
+		<key>Feature-visionOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>12</integer>
 		</dict>
-		<key>Playback-macOS.xcscheme_^#shared#^_</key>
+		<key>Networking-iOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>13</integer>
 		</dict>
-		<key>Playback-tvOS.xcscheme_^#shared#^_</key>
+		<key>Networking-macOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>14</integer>
 		</dict>
-		<key>Playback-visionOS.xcscheme_^#shared#^_</key>
+		<key>Networking-tvOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>15</integer>
 		</dict>
-		<key>thisjellyfix-iOS.xcscheme_^#shared#^_</key>
+		<key>Networking-visionOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>16</integer>
 		</dict>
-		<key>thisjellyfix-macOS.xcscheme_^#shared#^_</key>
+		<key>Playback-iOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>17</integer>
 		</dict>
-		<key>thisjellyfix-tvOS.xcscheme_^#shared#^_</key>
+		<key>Playback-macOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>18</integer>
 		</dict>
-		<key>thisjellyfix-visionOS.xcscheme_^#shared#^_</key>
+		<key>Playback-tvOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>19</integer>
+		</dict>
+		<key>Playback-visionOS.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>20</integer>
+		</dict>
+		<key>thisjellyfix-iOS.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>21</integer>
+		</dict>
+		<key>thisjellyfix-macOS.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>22</integer>
+		</dict>
+		<key>thisjellyfix-tvOS.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>23</integer>
+		</dict>
+		<key>thisjellyfix-visionOS.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>24</integer>
 		</dict>
 	</dict>
 </dict>
